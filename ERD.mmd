@@ -1,0 +1,169 @@
+erDiagram
+    USER {
+        int id
+        string profileImg
+        string nickname
+        int apartmentsId
+        string name
+        string email
+        string phoneNumber
+        string password
+        role role
+        register_status register_status
+        timestamp createdAt
+        timestamp updatedAt
+        timestamp deletedAt
+    }
+
+    REGISTER_REQ {
+        int id
+        int userId
+        register_status register_status
+        int apartmentId
+        role role
+        int dong
+        int ho
+        timestamp createdAt
+    }
+
+    APARTMENT {
+        int id
+        string apt_name
+        string apt_adress
+        string office_number
+        string startComplexNumber
+        string endComplexNumber
+        string startDongNumber
+        string endDongNumber
+        string startFloorNumber
+        string endFloorNumber
+        string startHoNumber
+        string endHoNumber
+        timestamp createdAt
+        timestamp updatedAt
+        timestamp deletedAt
+    }
+
+    RESIDENT {
+        int id
+        int userId
+        int apt_id
+        int dong
+        int ho
+        is_houseHold is_houseHold
+        timestamp createdAt
+        timestamp updatedAt
+        timestamp deletedAt
+    }
+
+    BOARD {
+        int id
+        int authorId
+        string title
+        string content
+        boardType boardType
+        timestamp createdAt
+        timestamp updatedAt
+        timestamp deletedAt
+    }
+
+    COMPLAINT {
+        int id
+        int boardId
+        int authorId
+        status status
+        is_public is_public
+        timestamp createdAt
+        timestamp updatedAt
+        timestamp deletedAt
+    }
+
+    VOTE {
+        int id
+        int boardId
+        int authorId
+        status status
+        string[] targetDong
+        timestamp startDate
+        timestamp endDate
+        timestamp createdAt
+        timestamp updatedAt
+        timestamp deletedAt
+    }
+
+    NOTICE {
+        int id
+        int boardId
+        int authorId
+        timestamp startDate
+        timestamp endDate
+        boolean is_pinned
+        noticeCategory category
+        timestamp createdAt
+        timestamp updatedAt
+        timestamp deletedAt
+    }
+
+    COMMENT {
+        int id
+        int userId
+        int boardId
+        string content
+        timestamp createdAt
+        timestamp updatedAt
+    }
+
+    VOTE_OPTION {
+        int id
+        int voteId
+        string option
+        timestamp createdAt
+        timestamp updatedAt
+    }
+
+    VOTE_PARTICIPATION {
+        int id
+        int residentId
+        int voteId
+        int voteOptionId
+        timestamp createdAt
+        timestamp updatedAt
+    }
+
+    NOTIFICATION {
+        int id
+        int userId
+        int boardId
+        string message
+        notificationType notificationType
+        int complaintId
+        int noticeId
+        int voteId
+        timestamp notificatedAt
+        timestamp createdAt
+    }
+
+   
+    %% Relationships
+    
+
+    APARTMENT ||--o{ USER : has
+    APARTMENT ||--o{ RESIDENT : has
+
+    USER ||--o{ RESIDENT : becomes
+    USER ||--o{ REGISTER_REQ : requests
+    USER ||--o{ BOARD : writes
+    USER ||--o{ COMMENT : writes
+    USER ||--o{ NOTIFICATION : receives
+
+    BOARD ||--o{ COMMENT : has
+    BOARD ||--|| COMPLAINT : extends
+    BOARD ||--|| VOTE : extends
+    BOARD ||--|| NOTICE : extends
+    BOARD ||--o{ NOTIFICATION : triggers
+
+    VOTE ||--o{ VOTE_OPTION : has
+    VOTE ||--o{ VOTE_PARTICIPATION : includes
+
+    RESIDENT ||--o{ VOTE_PARTICIPATION : participates
+    VOTE_OPTION ||--o{ VOTE_PARTICIPATION : selected
