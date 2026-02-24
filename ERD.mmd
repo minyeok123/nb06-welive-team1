@@ -1,9 +1,9 @@
 erDiagram
     USER {
-        int id
+        int id PK
         string profileImg
         string nickname
-        int apartmentsId
+        int apartmentsId FK
         string name
         string email
         string phoneNumber
@@ -15,19 +15,8 @@ erDiagram
         timestamp deletedAt
     }
 
-    REGISTER_REQ {
-        int id
-        int userId
-        register_status register_status
-        int apartmentId
-        role role
-        int dong
-        int ho
-        timestamp createdAt
-    }
-
     APARTMENT {
-        int id
+        int id PK
         string apt_name
         string apt_adress
         string office_number
@@ -44,10 +33,20 @@ erDiagram
         timestamp deletedAt
     }
 
+    REGISTER_REQ {
+        int id PK
+        int userId FK
+        register_status register_status
+        role role
+        int dong
+        int ho
+        timestamp createdAt
+    }
+
     RESIDENT {
-        int id
-        int userId
-        int apt_id
+        int id PK
+        int userId FK
+        int apt_id FK
         int dong
         int ho
         is_houseHold is_houseHold
@@ -57,8 +56,8 @@ erDiagram
     }
 
     BOARD {
-        int id
-        int authorId
+        int id PK
+        int authorId FK
         string title
         string content
         boardType boardType
@@ -68,9 +67,9 @@ erDiagram
     }
 
     COMPLAINT {
-        int id
-        int boardId
-        int authorId
+        int id PK
+        int boardId FK
+        int authorId FK
         status status
         is_public is_public
         timestamp createdAt
@@ -79,9 +78,9 @@ erDiagram
     }
 
     VOTE {
-        int id
-        int boardId
-        int authorId
+        int id PK
+        int boardId FK
+        int authorId FK
         status status
         string[] targetDong
         timestamp startDate
@@ -92,9 +91,9 @@ erDiagram
     }
 
     NOTICE {
-        int id
-        int boardId
-        int authorId
+        int id PK
+        int boardId FK
+        int authorId FK
         timestamp startDate
         timestamp endDate
         boolean is_pinned
@@ -105,65 +104,65 @@ erDiagram
     }
 
     COMMENT {
-        int id
-        int userId
-        int boardId
+        int id PK
+        int userId FK
+        int boardId FK
         string content
         timestamp createdAt
         timestamp updatedAt
     }
 
     VOTE_OPTION {
-        int id
-        int voteId
+        int id PK
+        int voteId FK
         string option
         timestamp createdAt
         timestamp updatedAt
     }
 
     VOTE_PARTICIPATION {
-        int id
-        int residentId
-        int voteId
-        int voteOptionId
+        int id PK
+        int residentId FK
+        int voteId FK
+        int voteOptionId FK
         timestamp createdAt
         timestamp updatedAt
     }
 
     NOTIFICATION {
-        int id
-        int userId
-        int boardId
+        int id PK
+        int userId FK
+        int boardId FK
+        int complaintId 
+        int noticeId 
+        int voteId 
         string message
         notificationType notificationType
-        int complaintId
-        int noticeId
-        int voteId
         timestamp notificatedAt
         timestamp createdAt
     }
 
-   
+    %% ======================
     %% Relationships
-    
+    %% ======================
 
-    APARTMENT ||--o{ USER : has
-    APARTMENT ||--o{ RESIDENT : has
+    APARTMENT ||--o{ USER : apartmentsId
+    APARTMENT ||--o{ RESIDENT : apt_id
 
-    USER ||--o{ RESIDENT : becomes
-    USER ||--o{ REGISTER_REQ : requests
-    USER ||--o{ BOARD : writes
-    USER ||--o{ COMMENT : writes
-    USER ||--o{ NOTIFICATION : receives
+    USER ||--o{ REGISTER_REQ : userId
+    USER ||--o{ RESIDENT : userId
+    USER ||--o{ BOARD : authorId
+    USER ||--o{ COMMENT : userId
+    USER ||--o{ NOTIFICATION : userId
 
-    BOARD ||--o{ COMMENT : has
-    BOARD ||--|| COMPLAINT : extends
-    BOARD ||--|| VOTE : extends
-    BOARD ||--|| NOTICE : extends
-    BOARD ||--o{ NOTIFICATION : triggers
+    BOARD ||--o{ COMMENT : boardId
+    BOARD ||--|| COMPLAINT : boardId
+    BOARD ||--|| VOTE : boardId
+    BOARD ||--|| NOTICE : boardId
+    BOARD ||--o{ NOTIFICATION : boardId
 
-    VOTE ||--o{ VOTE_OPTION : has
-    VOTE ||--o{ VOTE_PARTICIPATION : includes
+    VOTE ||--o{ VOTE_OPTION : voteId
+    VOTE ||--o{ VOTE_PARTICIPATION : voteId
 
-    RESIDENT ||--o{ VOTE_PARTICIPATION : participates
-    VOTE_OPTION ||--o{ VOTE_PARTICIPATION : selected
+    RESIDENT ||--o{ VOTE_PARTICIPATION : residentId
+    VOTE_OPTION ||--o{ VOTE_PARTICIPATION : voteOptionId
