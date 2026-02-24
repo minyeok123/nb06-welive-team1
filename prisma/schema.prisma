@@ -12,8 +12,8 @@ datasource db {
 // ----------------------------------------------------------------------------
 
 model User {
-  id              Int            @id @default(autoincrement())
-  resientRosterId Int?           @unique @map("resient_roster_id")
+  id Int @id @default(autoincrement())
+
   profileImg      String?        @map("profile_img")
   nickname        String
   aptId           Int            @map("apt_id")
@@ -28,13 +28,12 @@ model User {
   deletedAt       DateTime?      @map("deleted_at")
 
   // Relations
-  apartment       Apartment       @relation(fields: [aptId], references: [id])
-  residentRosters residentRoster? @relation(fields: [resientRosterId], references: [id], onDelete: Cascade)
-  resident        Resident?
-  registerReq     RegisterReq?
-  boards          Board[]
-  comments        Comment[]
-  notifications   Notification[]
+  apartment     Apartment      @relation(fields: [aptId], references: [id])
+  resident      Resident?
+  registerReq   RegisterReq?
+  boards        Board[]
+  comments      Comment[]
+  notifications Notification[]
 
   // residentRoster 테이블에서 참조하는 외래키들의 역방향 관계 (관계 이름으로 연결)
   userResidentRoster   residentRoster?  @relation("userResidentRosters")
@@ -296,10 +295,9 @@ model residentRoster {
   updatedAt     DateTime    @updatedAt @map("updated_at")
 
   // Relations
-  apartment  Apartment @relation(fields: [aptId], references: [id])
-  admin      User      @relation("adminResidentRosters", fields: [adminId], references: [id])
-  user       User?     @relation("userResidentRosters", fields: [userId], references: [id])
-  userRoster User?
+  apartment Apartment @relation(fields: [aptId], references: [id])
+  admin     User      @relation("adminResidentRosters", fields: [adminId], references: [id])
+  user      User?     @relation("userResidentRosters", fields: [userId], references: [id])
 }
 
 // ----------------------------------------------------------------------------
