@@ -8,7 +8,10 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node dist/app.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon --watch src --exec ts-node src/app.ts",
+    "build": "tsc && tsc-alias"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",

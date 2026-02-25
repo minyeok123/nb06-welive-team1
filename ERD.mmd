@@ -1,168 +1,213 @@
 erDiagram
-    USER {
-        int id PK
-        string profileImg
-        string nickname
-        int apartmentsId FK
-        string name
-        string email
-        string phoneNumber
-        string password
-        role role
-        register_status register_status
-        timestamp createdAt
-        timestamp updatedAt
-        timestamp deletedAt
+    User {
+        Int id PK
+        String profileImg
+        String nickname
+        Int aptId FK
+        String name
+        String email "UK"
+        String phoneNumber
+        String password
+        Role role
+        RegisterStatus register_status
+        DateTime createdAt
+        DateTime updatedAt
+        DateTime deletedAt
     }
 
-    APARTMENT {
-        int id PK
-        string apt_name
-        string apt_adress
-        string office_number
-        string startComplexNumber
-        string endComplexNumber
-        string startDongNumber
-        string endDongNumber
-        string startFloorNumber
-        string endFloorNumber
-        string startHoNumber
-        string endHoNumber
-        timestamp createdAt
-        timestamp updatedAt
-        timestamp deletedAt
+    RegisterReq {
+        Int id PK
+        Int userId FK "UK"
+        RegisterStatus register_status
+        Int aptId
+        Role requestedRole
+        String dong
+        String ho
+        DateTime createdAt
+        DateTime updatedAt
     }
 
-    REGISTER_REQ {
-        int id PK
-        int userId FK
-        register_status register_status
-        role role
-        int dong
-        int ho
-        timestamp createdAt
+    ApartmentReq {
+        Int id PK
+        Int userId FK "UK"
+        String aptName
+        String aptAdress "UK"
+        String officeNumber
+        String startComplexNumber
+        String endComplexNumber
+        String startDongNumber
+        String endDongNumber
+        String startFloorNumber
+        String endFloorNumber
+        String startHoNumber
+        String endHoNumber
+        DateTime createdAt
     }
 
-    RESIDENT {
-        int id PK
-        int userId FK
-        int apt_id FK
-        int dong
-        int ho
-        is_houseHold is_houseHold
-        timestamp createdAt
-        timestamp updatedAt
-        timestamp deletedAt
+    Apartment {
+        Int id PK
+        String aptName
+        String aptAdress "UK"
+        String officeNumber "UK"
+        String startComplexNumber
+        String endComplexNumber
+        String startDongNumber
+        String endDongNumber
+        String startFloorNumber
+        String endFloorNumber
+        String startHoNumber
+        String endHoNumber
+        DateTime createdAt
+        DateTime updatedAt
+        DateTime deletedAt
     }
 
-    BOARD {
-        int id PK
-        int authorId FK
-        string title
-        string content
-        boardType boardType
-        timestamp createdAt
-        timestamp updatedAt
-        timestamp deletedAt
+    Resident {
+        Int id PK
+        Int userId FK "UK"
+        Int aptId FK
+        Int dong
+        Int ho
+        IsHouseHold is_houseHold
+        DateTime createdAt
+        DateTime updatedAt
+        DateTime deletedAt
     }
 
-    COMPLAINT {
-        int id PK
-        int boardId FK
-        int authorId FK
-        status status
-        is_public is_public
-        timestamp createdAt
-        timestamp updatedAt
-        timestamp deletedAt
+    Complaint {
+        Int id PK
+        Int boardId FK "UK"
+        Int authorId
+        String title
+        String content
+        Status status
+        IsPublic is_public
+        DateTime createdAt
+        DateTime updatedAt
+        DateTime deletedAt
     }
 
-    VOTE {
-        int id PK
-        int boardId FK
-        int authorId FK
-        status status
-        string[] targetDong
-        timestamp startDate
-        timestamp endDate
-        timestamp createdAt
-        timestamp updatedAt
-        timestamp deletedAt
+    Vote {
+        Int id PK
+        Int boardId FK "UK"
+        Int authorId
+        String title
+        String content
+        Status status
+        String_Array targetDong
+        DateTime startDate
+        DateTime endDate
+        DateTime createdAt
+        DateTime updatedAt
+        DateTime deletedAt
     }
 
-    NOTICE {
-        int id PK
-        int boardId FK
-        int authorId FK
-        timestamp startDate
-        timestamp endDate
-        boolean is_pinned
-        noticeCategory category
-        timestamp createdAt
-        timestamp updatedAt
-        timestamp deletedAt
+    Notice {
+        Int id PK
+        Int boardId FK "UK"
+        Int authorId
+        String title
+        String content
+        DateTime startDate
+        DateTime endDate
+        Boolean is_pinned
+        NoticeCategory category
+        DateTime createdAt
+        DateTime updatedAt
+        DateTime deletedAt
     }
 
-    COMMENT {
-        int id PK
-        int userId FK
-        int boardId FK
-        string content
-        timestamp createdAt
-        timestamp updatedAt
+    Board {
+        Int id PK
+        Int authorId FK
+        BoardType boardType
+        DateTime createdAt
+        DateTime updatedAt
+        DateTime deletedAt
     }
 
-    VOTE_OPTION {
-        int id PK
-        int voteId FK
-        string option
-        timestamp createdAt
-        timestamp updatedAt
+    Comment {
+        Int id PK
+        Int userId FK
+        Int boardId FK
+        String content
+        DateTime createdAt
+        DateTime updatedAt
     }
 
-    VOTE_PARTICIPATION {
-        int id PK
-        int residentId FK
-        int voteId FK
-        int voteOptionId FK
-        timestamp createdAt
-        timestamp updatedAt
+    VoteOption {
+        Int id PK
+        Int voteId FK
+        String option
+        DateTime createdAt
+        DateTime updatedAt
     }
 
-    NOTIFICATION {
-        int id PK
-        int userId FK
-        int boardId FK
-        int complaintId 
-        int noticeId 
-        int voteId 
-        string message
-        notificationType notificationType
-        timestamp notificatedAt
-        timestamp createdAt
+    VoteParticipation {
+        Int id PK
+        Int residentId FK
+        Int voteId FK
+        Int voteOptionId FK
+        DateTime createdAt
+        DateTime updatedAt
+    }
+
+    Notification {
+        Int id PK
+        Int userId FK
+        Int boardId FK
+        String message
+        Boolean is_read
+        NotificationType notificationType
+        Int complaintId
+        Int noticeId
+        Int voteId
+        DateTime notificatedAt
+        DateTime createdAt
+        DateTime updatedAt
+    }
+
+    residentRoster {
+        Int id PK
+        Int aptId FK
+        Int adminId FK
+        Int userId FK "UK"
+        Int dong
+        Int ho
+        String name
+        String phoneNumber
+        IsHouseHold is_houseHold
+        Boolean is_registered
+        Boolean is_residence
+        DateTime createdAt
+        DateTime updatedAt
     }
 
     %% ======================
     %% Relationships
     %% ======================
+    User ||--o{ Board : "boards"
+    User ||--o{ Comment : "comments"
+    User ||--o{ Notification : "notifications"
+    User ||--o| RegisterReq : "registerReq"
+    User }o--|| Apartment : "apartment"
+    User ||--o| Resident : "resident"
+    User ||--o| residentRoster : "userResidentRoster"
+    User ||--o{ residentRoster : "adminResidentRosters"
 
-    APARTMENT ||--o{ USER : apartmentsId
-    APARTMENT ||--o{ RESIDENT : apt_id
+    RegisterReq ||--o| ApartmentReq : "apartmentReq"
 
-    USER ||--o{ REGISTER_REQ : userId
-    USER ||--o{ RESIDENT : userId
-    USER ||--o{ BOARD : authorId
-    USER ||--o{ COMMENT : userId
-    USER ||--o{ NOTIFICATION : userId
+    Apartment ||--o{ Resident : "residents"
+    Apartment ||--o{ residentRoster : "residentRosters"
 
-    BOARD ||--o{ COMMENT : boardId
-    BOARD ||--|| COMPLAINT : boardId
-    BOARD ||--|| VOTE : boardId
-    BOARD ||--|| NOTICE : boardId
-    BOARD ||--o{ NOTIFICATION : boardId
+    Board ||--o| Complaint : "complaint"
+    Board ||--o| Vote : "vote"
+    Board ||--o| Notice : "notice"
+    Board ||--o{ Comment : "comments"
+    Board ||--o{ Notification : "notifications"
 
-    VOTE ||--o{ VOTE_OPTION : voteId
-    VOTE ||--o{ VOTE_PARTICIPATION : voteId
+    Vote ||--o{ VoteOption : "options"
+    Vote ||--o{ VoteParticipation : "participations"
 
-    RESIDENT ||--o{ VOTE_PARTICIPATION : residentId
-    VOTE_OPTION ||--o{ VOTE_PARTICIPATION : voteOptionId
+    Resident ||--o{ VoteParticipation : "voteParticipations"
+    VoteOption ||--o{ VoteParticipation : "participations"
