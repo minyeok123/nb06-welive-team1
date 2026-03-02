@@ -8,7 +8,7 @@ const app = express();
 
 app.use(express.json());
 
-app.use('/auth', authRouter);
+app.use('/api/auth', authRouter);
 
 app.use(defaultNotFoundHandler);
 app.use(globalErrorHandler);
