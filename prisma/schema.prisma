@@ -12,8 +12,7 @@ datasource db {
 // ----------------------------------------------------------------------------
 
 model User {
-  id Int @id @default(autoincrement())
-
+  id              Int            @id @default(autoincrement())
   profileImg      String?        @map("profile_img")
   nickname        String
   aptId           Int            @map("apt_id")

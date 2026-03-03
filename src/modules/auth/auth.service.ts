@@ -3,11 +3,12 @@ import { RegisterStatus } from '@prisma/client';
 import { AuthRepo } from './auth.repo';
 import { CustomError } from '@libs/error';
 import { AdminSignupInput, SignupInput, SuperAdminSignupInput } from './auth.validate';
+import { createTokens } from './utils/token';
 
 export class AuthService {
   constructor(private repo: AuthRepo) {}
 
-  async signup(input: SignupInput) {
+  signup = async (input: SignupInput) => {
     const existingUser = await this.repo.findUserByUniqueFields({
       email: input.email,
       nickname: input.username,
@@ -55,9 +56,9 @@ export class AuthService {
       isActive: user.deletedAt === null,
       role: user.role,
     };
-  }
+  };
 
-  async signupAdmin(input: AdminSignupInput) {
+  signupAdmin = async (input: AdminSignupInput) => {
     if (input.role !== 'ADMIN') {
       throw new CustomError(400, '관리자 회원가입 요청이 아닙니다');
     }
@@ -77,7 +78,9 @@ export class AuthService {
       throw new CustomError(409, '이미 등록된 아파트입니다');
     }
 
-    const existingOffice = await this.repo.findApartmentByOfficeNumber(input.apartmentManagementNumber);
+    const existingOffice = await this.repo.findApartmentByOfficeNumber(
+      input.apartmentManagementNumber,
+    );
     if (existingOffice) {
       throw new CustomError(409, '이미 등록된 관리소 번호입니다');
     }
@@ -146,9 +149,9 @@ export class AuthService {
       isActive: user.deletedAt === null,
       role: user.role,
     };
-  }
+  };
 
-  async signupSuperAdmin(input: SuperAdminSignupInput) {
+  signupSuperAdmin = async (input: SuperAdminSignupInput) => {
     if (input.role !== 'SUPER_ADMIN') {
       throw new CustomError(400, '슈퍼 관리자 회원가입 요청이 아닙니다');
     }
@@ -199,5 +202,23 @@ export class AuthService {
       isActive: user.deletedAt === null,
       role: user.role,
     };
-  }
+  };
+
+  login = async (email: string, password: string) => {
+    const user = await this.repo.findUserByEmail(email);
+    if (!user) throw new CustomError(401, '존재하지 않은 유저 또는 비밀번호가 일치하지 않습니다');
+
+    const verifyPassword = await bcrypt.compare(password, user.password);
+    if (!verifyPassword)
+      throw new CustomError(401, '존재하지 않은 유저 또는 비밀번호가 일치하지 않습니다');
+
+    const { password: _, ...withoutPassowrd } = user;
+    const { accessToken, refreshToken } = createTokens(user.id);
+    return { accessToken, refreshToken, withoutPassowrd };
+  };
+
+  refresh = async (userId: number) => {
+    const { accessToken, refreshToken } = createTokens(userId);
+    return { accessToken, refreshToken };
+  };
 }
