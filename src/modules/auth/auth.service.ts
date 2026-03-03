@@ -205,7 +205,7 @@ export class AuthService {
   };
 
   login = async (username: string, password: string) => {
-    const user = await this.repo.findUserByEmail(username);
+    const user = await this.repo.findUserByUsername(username);
     if (!user) throw new CustomError(404, '존재하지 않은 유저 또는 비밀번호가 일치하지 않습니다');
 
     const verifyPassword = await bcrypt.compare(password, user.password);
@@ -225,7 +225,7 @@ export class AuthService {
     return { accessToken, refreshToken, withoutPassowrd };
   };
 
-  refresh = async (userId: number) => {
+  refresh = async (userId: string) => {
     const { accessToken, refreshToken } = createTokens(userId);
     return { accessToken, refreshToken };
   };

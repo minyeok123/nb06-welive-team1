@@ -2,10 +2,10 @@ import { JWT_ACCESS_SECRET, JWT_REFRESH_SECRET } from '../../../libs/constants';
 import jwt from 'jsonwebtoken';
 
 interface Payload {
-  id: number;
+  id: string;
 }
 
-export const createTokens = (userId: number) => {
+export const createTokens = (userId: string) => {
   const payload = { id: userId };
   const accessToken = jwt.sign(payload, JWT_ACCESS_SECRET, { expiresIn: '15m' });
   const refreshToken = jwt.sign(payload, JWT_REFRESH_SECRET, { expiresIn: '7d' });

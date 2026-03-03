@@ -77,13 +77,13 @@ export class AuthRepo {
   createApartmentRequest = async (data: Prisma.ApartmentReqCreateInput) => {
     return prisma.apartmentReq.create({ data });
   };
-  findUserByEmail = async (email: string) => {
+  findUserByUsername = async (username: string) => {
     return await prisma.user.findUnique({
-      where: { email },
+      where: { username },
       select: {
         id: true,
         name: true,
-        nickname: true,
+        username: true,
         email: true,
         aptId: true,
         register_status: true,
@@ -112,7 +112,7 @@ export class AuthRepo {
     });
   };
 
-  findUserById = async (id: number) => {
+  findUserById = async (id: string) => {
     return await prisma.user.findUnique({ where: { id } });
   };
 }

@@ -15,7 +15,7 @@ model User {
   id              String         @id @default(uuid())
   profileImg      String?        @map("profile_img")
   registerId      String         @unique @map("register_id")
-  nickname        String
+  username        String         @unique
   aptId           String         @map("apt_id")
   name            String
   email           String         @unique
