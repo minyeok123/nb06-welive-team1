@@ -1,9 +1,9 @@
 interface USER {
-  id: number;
+  id: string;
   email: string;
   profileImg: string | null;
-  nickname: string;
-  aptId: number;
+  username: string;
+  aptId: string;
   name: string;
   phoneNumber: string;
   role: string;

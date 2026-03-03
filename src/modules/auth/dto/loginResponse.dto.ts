@@ -1,9 +1,9 @@
 interface LoginDtoOptions {
-  id: number;
+  id: string;
   name: string;
-  nickname: string;
+  username: string;
   email: string;
-  aptId: number;
+  aptId: string;
   register_status: string;
   role: string;
   phoneNumber: string;
@@ -15,7 +15,7 @@ interface LoginDtoOptions {
     dong: number;
   } | null;
   boards: {
-    id: number;
+    id: string;
     boardType: string;
   }[];
 }
@@ -35,7 +35,7 @@ export const loginDto = (options: LoginDtoOptions) => {
       NOTICE: options.boards.find((board) => board.boardType === 'NOTICE')?.id,
       POLL: options.boards.find((board) => board.boardType === 'VOTE')?.id,
     },
-    username: options.nickname,
+    username: options.username,
     contact: options.phoneNumber,
     avatar: options.profileImg,
   };
