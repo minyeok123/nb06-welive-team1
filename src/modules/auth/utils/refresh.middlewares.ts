@@ -1,20 +1,20 @@
-import { Request, Response, NextFunction } from 'express';
-import token from '../modules/auth/utils/token';
-import { CustomError } from '../libs/error';
-import { AuthRepo } from '../modules/auth/auth.repo';
+import { CustomError } from '../../../libs/error';
+import { AuthRepo } from '../auth.repo';
+import { NextFunction, Request, Response } from 'express';
+import token from '../utils/token';
 
 const authRepo = new AuthRepo();
 
-export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
-  const accessToken = req.cookies.accessToken;
+export const authenticateRefresh = async (req: Request, res: Response, next: NextFunction) => {
+  const refreshToken = req.cookies.refreshToken;
 
-  if (!accessToken) {
+  if (!refreshToken) {
     throw new CustomError(401, '잘못된 접근입니다.');
   }
 
   try {
     // 토큰 검증
-    const payload = token.verifyAccessToken(accessToken);
+    const payload = token.verifyRefreshToken(refreshToken);
     const user = await authRepo.findUserById(payload.id);
 
     if (!user) {

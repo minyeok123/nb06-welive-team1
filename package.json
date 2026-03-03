@@ -10,16 +10,16 @@
   "scripts": {
     "start": "node dist/app.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon --watch src --exec ts-node src/app.ts",
+    "dev": "nodemon --watch src --exec ts-node -r tsconfig-paths/register src/app.ts",
     "build": "tsc && tsc-alias"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
-    "express": "^5.2.1",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
+    "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.0.2",
     "zod": "^4.2.1"
@@ -31,11 +31,11 @@
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/multer": "^2.0.0",
-    "prisma": "^5.22.0",
-    "typescript": "^5.9.3",
     "nodemon": "^3.1.11",
+    "prisma": "^5.22.0",
     "ts-node": "^10.9.2",
     "tsc-alias": "^1.8.16",
-    "tsconfig-paths": "^4.2.0"
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.9.3"
   }
 }
