@@ -1,11 +1,13 @@
-<<<<<<< HEAD
 import { z } from 'zod';
 
 export const signupSchema = z
   .object({
     username: z.string().trim().min(2).max(30),
     password: z.string().min(8).max(100),
-    contact: z.string().trim().regex(/^\d{9,15}$/, '연락처 형식이 올바르지 않습니다'),
+    contact: z
+      .string()
+      .trim()
+      .regex(/^\d{9,15}$/, '연락처 형식이 올바르지 않습니다'),
     name: z.string().trim().min(2).max(50),
     email: z.string().trim().email(),
     role: z.enum(['USER', 'ADMIN', 'SUPER_ADMIN']),
@@ -37,7 +39,10 @@ export type SignupInput = z.infer<typeof signupSchema>;
 export const adminSignupSchema = z.object({
   username: z.string().trim().min(2).max(30),
   password: z.string().min(8).max(100),
-  contact: z.string().trim().regex(/^\d{9,15}$/, '연락처 형식이 올바르지 않습니다'),
+  contact: z
+    .string()
+    .trim()
+    .regex(/^\d{9,15}$/, '연락처 형식이 올바르지 않습니다'),
   name: z.string().trim().min(2).max(50),
   email: z.string().trim().email(),
   description: z.string().trim().max(1000).optional(),
@@ -52,7 +57,10 @@ export const adminSignupSchema = z.object({
   role: z.literal('ADMIN'),
   apartmentName: z.string().trim().min(1),
   apartmentAddress: z.string().trim().min(1),
-  apartmentManagementNumber: z.string().trim().regex(/^\d{5,15}$/),
+  apartmentManagementNumber: z
+    .string()
+    .trim()
+    .regex(/^\d{5,15}$/),
 });
 
 export type AdminSignupInput = z.infer<typeof adminSignupSchema>;
@@ -60,7 +68,10 @@ export type AdminSignupInput = z.infer<typeof adminSignupSchema>;
 export const superAdminSignupSchema = z.object({
   username: z.string().trim().min(2).max(30),
   password: z.string().min(8).max(100),
-  contact: z.string().trim().regex(/^\d{9,15}$/, '연락처 형식이 올바르지 않습니다'),
+  contact: z
+    .string()
+    .trim()
+    .regex(/^\d{9,15}$/, '연락처 형식이 올바르지 않습니다'),
   name: z.string().trim().min(2).max(50),
   email: z.string().trim().email(),
   role: z.literal('SUPER_ADMIN'),
@@ -68,6 +79,10 @@ export const superAdminSignupSchema = z.object({
 });
 
 export type SuperAdminSignupInput = z.infer<typeof superAdminSignupSchema>;
-=======
-import z from 'zod';
->>>>>>> 76a8dbb (로그인,로그아웃,토큰갱신 비지니스 로직 개발)
+
+export const loginSchema = z.object({
+  username: z.string(),
+  password: z.string().min(8).max(15),
+});
+
+export type LoginInput = z.infer<typeof loginSchema>;

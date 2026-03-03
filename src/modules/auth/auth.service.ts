@@ -146,7 +146,7 @@ export class AuthService {
       name: user.name,
       email: user.email,
       joinStatus: user.register_status,
-      isActive: user.deletedAt === null,
+      isActive: user.register_status === RegisterStatus.APPROVED,
       role: user.role,
     };
   };
@@ -199,18 +199,26 @@ export class AuthService {
       name: user.name,
       email: user.email,
       joinStatus: user.register_status,
-      isActive: user.deletedAt === null,
+      isActive: user.register_status === RegisterStatus.APPROVED,
       role: user.role,
     };
   };
 
-  login = async (email: string, password: string) => {
-    const user = await this.repo.findUserByEmail(email);
-    if (!user) throw new CustomError(401, '존재하지 않은 유저 또는 비밀번호가 일치하지 않습니다');
+  login = async (username: string, password: string) => {
+    const user = await this.repo.findUserByEmail(username);
+    if (!user) throw new CustomError(404, '존재하지 않은 유저 또는 비밀번호가 일치하지 않습니다');
 
     const verifyPassword = await bcrypt.compare(password, user.password);
     if (!verifyPassword)
       throw new CustomError(401, '존재하지 않은 유저 또는 비밀번호가 일치하지 않습니다');
+
+    if (user.register_status === RegisterStatus.PENDING) {
+      throw new CustomError(403, '아직 승인되지 않은 유저입니다');
+    }
+
+    if (user.deletedAt !== null) {
+      throw new CustomError(403, '탈퇴한 유저입니다');
+    }
 
     const { password: _, ...withoutPassowrd } = user;
     const { accessToken, refreshToken } = createTokens(user.id);

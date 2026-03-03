@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import { AuthRepo } from './auth.repo';
 import { AuthService } from './auth.service';
 import { setTokensCookies } from './utils/cookies';
-import { loginDto } from './dto/login.dto';
+import { loginDto } from './dto/loginResponse.dto';
 import { clearCookies } from './utils/cookies';
 import { adminSignupSchema, signupSchema, superAdminSignupSchema } from './auth.validate';
 
@@ -28,9 +28,9 @@ export class AuthController {
   };
 
   login = async (req: Request, res: Response, next: NextFunction) => {
-    const { email, password } = req.body;
+    const { username, password } = req.body;
     const { accessToken, refreshToken, withoutPassowrd } = await this.authService.login(
-      email,
+      username,
       password,
     );
     setTokensCookies(res, accessToken, refreshToken);

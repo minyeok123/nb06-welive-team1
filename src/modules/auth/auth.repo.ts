@@ -91,6 +91,7 @@ export class AuthRepo {
         phoneNumber: true,
         password: true,
         profileImg: true,
+        deletedAt: true,
         apartment: {
           select: {
             aptName: true,

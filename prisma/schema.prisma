@@ -12,10 +12,11 @@ datasource db {
 // ----------------------------------------------------------------------------
 
 model User {
-  id              Int            @id @default(autoincrement())
+  id              String         @id @default(uuid())
   profileImg      String?        @map("profile_img")
+  registerId      String         @unique @map("register_id")
   nickname        String
-  aptId           Int            @map("apt_id")
+  aptId           String         @map("apt_id")
   name            String
   email           String         @unique
   phoneNumber     String         @map("phone_number")
@@ -29,10 +30,10 @@ model User {
   // Relations
   apartment     Apartment      @relation(fields: [aptId], references: [id])
   resident      Resident?
-  registerReq   RegisterReq?
   boards        Board[]
   comments      Comment[]
   notifications Notification[]
+  register      Register       @relation(fields: [registerId], references: [id])
 
   // residentRoster 테이블에서 참조하는 외래키들의 역방향 관계 (관계 이름으로 연결)
   userResidentRoster   residentRoster?  @relation("userResidentRosters")
@@ -41,64 +42,42 @@ model User {
   @@map("users")
 }
 
-model RegisterReq {
-  id              Int            @id @default(autoincrement())
-  userId          Int            @unique @map("user_id")
+model Register {
+  id              String         @id @default(uuid())
   register_status RegisterStatus
-  aptId           Int?           @map("apt_id")
+  aptId           String?        @map("apt_id")
   requestedRole   Role           @map("requested_role")
-  dong            String?
-  ho              String?
+  dong            Int?
+  ho              Int?
   createdAt       DateTime       @default(now()) @map("created_at")
   updatedAt       DateTime       @updatedAt @map("updated_at")
+  deletedAt       DateTime?      @map("deleted_at")
 
   // Relations
-  user         User          @relation(fields: [userId], references: [id])
-  apartmentReq ApartmentReq?
+  user User?
 
   @@index([aptId, register_status])
   @@index([requestedRole, register_status])
-  @@map("register_reqs")
-}
-
-model ApartmentReq {
-  id                 Int      @id @default(autoincrement())
-  userId             Int      @unique @map("user_id")
-  aptName            String   @map("apt_name")
-  aptAdress          String   @unique @map("apt_adress")
-  officeNumber       String   @map("office_number")
-  startComplexNumber String   @map("start_complex_number")
-  endComplexNumber   String   @map("end_complex_number")
-  startDongNumber    String   @map("start_dong_number")
-  endDongNumber      String   @map("end_dong_number")
-  startFloorNumber   String   @map("start_floor_number")
-  endFloorNumber     String   @map("end_floor_number")
-  startHoNumber      String   @map("start_ho_number")
-  endHoNumber        String   @map("end_ho_number")
-  createdAt          DateTime @default(now()) @map("created_at")
-
-  // Relations
-  registerReq RegisterReq @relation(fields: [userId], references: [userId])
-
-  @@map("apartment_req")
+  @@map("registers")
 }
 
 model Apartment {
-  id                 Int       @id @default(autoincrement())
-  aptName            String    @map("apt_name")
-  aptAdress          String    @unique @map("apt_adress")
-  officeNumber       String    @unique @map("office_number")
-  startComplexNumber String    @map("start_complex_number")
-  endComplexNumber   String    @map("end_complex_number")
-  startDongNumber    String    @map("start_dong_number")
-  endDongNumber      String    @map("end_dong_number")
-  startFloorNumber   String    @map("start_floor_number")
-  endFloorNumber     String    @map("end_floor_number")
-  startHoNumber      String    @map("start_ho_number")
-  endHoNumber        String    @map("end_ho_number")
-  createdAt          DateTime  @default(now()) @map("created_at")
-  updatedAt          DateTime  @updatedAt @map("updated_at")
-  deletedAt          DateTime? @map("deleted_at")
+  id                 String         @id @default(uuid())
+  aptName            String         @map("apt_name")
+  aptAdress          String         @unique @map("apt_adress")
+  officeNumber       String         @unique @map("office_number")
+  startComplexNumber Int            @map("start_complex_number")
+  endComplexNumber   Int            @map("end_complex_number")
+  startDongNumber    Int            @map("start_dong_number")
+  endDongNumber      Int            @map("end_dong_number")
+  startFloorNumber   Int            @map("start_floor_number")
+  endFloorNumber     Int            @map("end_floor_number")
+  startHoNumber      Int            @map("start_ho_number")
+  endHoNumber        Int            @map("end_ho_number")
+  aptStatus          RegisterStatus @default(PENDING)
+  createdAt          DateTime       @default(now()) @map("created_at")
+  updatedAt          DateTime       @updatedAt @map("updated_at")
+  deletedAt          DateTime?      @map("deleted_at")
 
   // Relations
   users           User[]
@@ -109,9 +88,9 @@ model Apartment {
 }
 
 model Resident {
-  id           Int         @id @default(autoincrement())
-  userId       Int         @unique @map("user_id")
-  aptId        Int         @map("apt_id")
+  id           String      @id @default(uuid())
+  userId       String      @unique @map("user_id")
+  aptId        String      @map("apt_id")
   dong         Int
   ho           Int
   is_houseHold IsHouseHold
@@ -129,9 +108,9 @@ model Resident {
 }
 
 model Complaint {
-  id        Int       @id @default(autoincrement())
-  boardId   Int       @unique @map("board_id")
-  authorId  Int       @map("author_id")
+  id        String    @id @default(uuid())
+  boardId   String    @unique @map("board_id")
+  authorId  String    @map("author_id")
   title     String
   content   String
   status    Status
@@ -148,9 +127,9 @@ model Complaint {
 }
 
 model Vote {
-  id         Int       @id @default(autoincrement())
-  boardId    Int       @unique @map("board_id")
-  authorId   Int       @map("author_id")
+  id         String    @id @default(uuid())
+  boardId    String    @unique @map("board_id")
+  authorId   String    @map("author_id")
   title      String
   content    String
   status     Status
@@ -170,9 +149,9 @@ model Vote {
 }
 
 model Notice {
-  id        Int            @id @default(autoincrement())
-  boardId   Int            @unique @map("board_id")
-  authorId  Int            @map("author_id")
+  id        String         @id @default(uuid())
+  boardId   String         @unique @map("board_id")
+  authorId  String         @map("author_id")
   title     String
   content   String
   startDate DateTime?      @map("start_date")
@@ -190,8 +169,8 @@ model Notice {
 }
 
 model Board {
-  id        Int       @id @default(autoincrement())
-  authorId  Int       @map("author_id")
+  id        String    @id @default(uuid())
+  authorId  String    @map("author_id")
   boardType BoardType @map("board_type")
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
@@ -211,9 +190,9 @@ model Board {
 }
 
 model Comment {
-  id        Int      @id @default(autoincrement())
-  userId    Int      @map("user_id")
-  boardId   Int      @map("board_id")
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  boardId   String   @map("board_id")
   content   String
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -226,8 +205,8 @@ model Comment {
 }
 
 model VoteOption {
-  id        Int      @id @default(autoincrement())
-  voteId    Int      @map("vote_id")
+  id        String   @id @default(uuid())
+  voteId    String   @map("vote_id")
   option    String   @db.VarChar(20)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -241,10 +220,10 @@ model VoteOption {
 }
 
 model VoteParticipation {
-  id           Int      @id @default(autoincrement())
-  residentId   Int      @map("resident_id")
-  voteId       Int      @map("vote_id")
-  voteOptionId Int      @map("vote_option_id")
+  id           String   @id @default(uuid())
+  residentId   String   @map("resident_id")
+  voteId       String   @map("vote_id")
+  voteOptionId String?  @map("vote_option_id")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
@@ -258,15 +237,15 @@ model VoteParticipation {
 }
 
 model Notification {
-  id               Int              @id @default(autoincrement())
-  userId           Int              @map("user_id")
-  boardId          Int              @map("board_id")
+  id               String           @id @default(uuid())
+  userId           String           @map("user_id")
+  boardId          String           @map("board_id")
   message          String
   is_read          Boolean          @default(false)
   notificationType NotificationType @map("notification_type")
-  complaintId      Int?
-  noticeId         Int?
-  voteId           Int?
+  complaintId      String?
+  noticeId         String?
+  voteId           String?
   notificatedAt    DateTime?        @map("notificated_at")
   createdAt        DateTime         @default(now()) @map("created_at")
   updatedAt        DateTime         @updatedAt @map("updated_at")
@@ -279,10 +258,10 @@ model Notification {
 }
 
 model residentRoster {
-  id            Int         @id @default(autoincrement())
-  aptId         Int         @map("apt_id")
-  adminId       Int         @map("admin_id")
-  userId        Int?        @unique @map("user_id")
+  id            String      @id @default(uuid())
+  aptId         String      @map("apt_id")
+  adminId       String      @map("admin_id")
+  userId        String?     @unique @map("user_id")
   dong          Int
   ho            Int
   name          String
