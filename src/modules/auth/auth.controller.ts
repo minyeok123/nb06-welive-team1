@@ -29,12 +29,12 @@ export class AuthController {
 
   login = async (req: Request, res: Response, next: NextFunction) => {
     const { username, password } = req.body;
-    const { accessToken, refreshToken, withoutPassowrd } = await this.authService.login(
+    const { accessToken, refreshToken, withoutPassword } = await this.authService.login(
       username,
       password,
     );
     setTokensCookies(res, accessToken, refreshToken);
-    res.status(200).json(loginDto(withoutPassowrd));
+    res.status(200).json(loginDto(withoutPassword));
   };
 
   logout = async (req: Request, res: Response, next: NextFunction) => {

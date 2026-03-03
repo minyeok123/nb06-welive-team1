@@ -6,21 +6,21 @@ export class AuthRepo {
 
   findUserByUniqueFields = async (params: {
     email: string;
-    nickname: string;
+    username: string;
     phoneNumber: string;
   }) => {
     return prisma.user.findFirst({
       where: {
         OR: [
           { email: params.email },
-          { nickname: params.nickname },
+          { username: params.username },
           { phoneNumber: params.phoneNumber },
         ],
       },
       select: {
         id: true,
         email: true,
-        nickname: true,
+        username: true,
         phoneNumber: true,
       },
     });
@@ -54,14 +54,6 @@ export class AuthRepo {
     });
   };
 
-  findApartmentReqByAddress = async (apartmentAddress: string) => {
-    return prisma.apartmentReq.findFirst({
-      where: {
-        aptAdress: apartmentAddress,
-      },
-    });
-  };
-
   createUser = async (data: Prisma.UserCreateInput) => {
     return prisma.user.create({ data });
   };
@@ -70,12 +62,8 @@ export class AuthRepo {
     return prisma.apartment.create({ data });
   };
 
-  createRegisterRequest = async (data: Prisma.RegisterReqCreateInput) => {
-    return prisma.registerReq.create({ data });
-  };
-
-  createApartmentRequest = async (data: Prisma.ApartmentReqCreateInput) => {
-    return prisma.apartmentReq.create({ data });
+  createRegister = async (data: Prisma.RegisterCreateInput) => {
+    return prisma.register.create({ data });
   };
   findUserByUsername = async (username: string) => {
     return await prisma.user.findUnique({

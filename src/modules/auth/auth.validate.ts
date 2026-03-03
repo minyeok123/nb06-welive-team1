@@ -1,5 +1,13 @@
 import { z } from 'zod';
 
+const intValue = z.preprocess((value) => Number(value), z.number().int());
+const optionalIntValue = z.preprocess((value) => {
+  if (value === undefined || value === null || value === '') {
+    return undefined;
+  }
+  return Number(value);
+}, z.number().int());
+
 export const signupSchema = z
   .object({
     username: z.string().trim().min(2).max(30),
@@ -12,8 +20,8 @@ export const signupSchema = z
     email: z.string().trim().email(),
     role: z.enum(['USER', 'ADMIN', 'SUPER_ADMIN']),
     apartmentName: z.string().trim().min(1),
-    apartmentDong: z.string().trim().regex(/^\d+$/).optional(),
-    apartmentHo: z.string().trim().regex(/^\d+$/).optional(),
+    apartmentDong: optionalIntValue.optional(),
+    apartmentHo: optionalIntValue.optional(),
   })
   .superRefine((data, ctx) => {
     if (data.role === 'USER') {
@@ -46,14 +54,14 @@ export const adminSignupSchema = z.object({
   name: z.string().trim().min(2).max(50),
   email: z.string().trim().email(),
   description: z.string().trim().max(1000).optional(),
-  startComplexNumber: z.string().trim().regex(/^\d+$/),
-  endComplexNumber: z.string().trim().regex(/^\d+$/),
-  startDongNumber: z.string().trim().regex(/^\d+$/),
-  endDongNumber: z.string().trim().regex(/^\d+$/),
-  startFloorNumber: z.string().trim().regex(/^\d+$/),
-  endFloorNumber: z.string().trim().regex(/^\d+$/),
-  startHoNumber: z.string().trim().regex(/^\d+$/),
-  endHoNumber: z.string().trim().regex(/^\d+$/),
+  startComplexNumber: intValue,
+  endComplexNumber: intValue,
+  startDongNumber: intValue,
+  endDongNumber: intValue,
+  startFloorNumber: intValue,
+  endFloorNumber: intValue,
+  startHoNumber: intValue,
+  endHoNumber: intValue,
   role: z.literal('ADMIN'),
   apartmentName: z.string().trim().min(1),
   apartmentAddress: z.string().trim().min(1),
