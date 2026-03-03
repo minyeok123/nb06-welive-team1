@@ -11,7 +11,7 @@ export class AuthService {
   signup = async (input: SignupInput) => {
     const existingUser = await this.repo.findUserByUniqueFields({
       email: input.email,
-      nickname: input.username,
+      username: input.username,
       phoneNumber: input.contact,
     });
 
@@ -26,26 +26,26 @@ export class AuthService {
 
     const hashedPassword = await bcrypt.hash(input.password, 10);
 
+    const register = await this.repo.createRegister({
+      register_status: RegisterStatus.PENDING,
+      aptId: apartment.id,
+      requestedRole: input.role,
+      dong: input.role === 'USER' ? input.apartmentDong : undefined,
+      ho: input.role === 'USER' ? input.apartmentHo : undefined,
+    });
+
     const user = await this.repo.createUser({
-      nickname: input.username,
+      username: input.username,
       phoneNumber: input.contact,
       name: input.name,
       email: input.email,
       password: hashedPassword,
       role: input.role,
       register_status: RegisterStatus.PENDING,
+      register: { connect: { id: register.id } },
       apartment: {
         connect: { id: apartment.id },
       },
-    });
-
-    await this.repo.createRegisterRequest({
-      user: { connect: { id: user.id } },
-      register_status: RegisterStatus.PENDING,
-      aptId: apartment.id,
-      requestedRole: input.role,
-      dong: input.role === 'USER' ? input.apartmentDong : undefined,
-      ho: input.role === 'USER' ? input.apartmentHo : undefined,
     });
 
     return {
@@ -65,7 +65,7 @@ export class AuthService {
 
     const existingUser = await this.repo.findUserByUniqueFields({
       email: input.email,
-      nickname: input.username,
+      username: input.username,
       phoneNumber: input.contact,
     });
 
@@ -85,11 +85,6 @@ export class AuthService {
       throw new CustomError(409, '이미 등록된 관리소 번호입니다');
     }
 
-    const existingApartmentReq = await this.repo.findApartmentReqByAddress(input.apartmentAddress);
-    if (existingApartmentReq) {
-      throw new CustomError(409, '이미 등록 요청된 아파트입니다');
-    }
-
     const hashedPassword = await bcrypt.hash(input.password, 10);
 
     const apartment = await this.repo.createApartment({
@@ -106,39 +101,24 @@ export class AuthService {
       endHoNumber: input.endHoNumber,
     });
 
+    const register = await this.repo.createRegister({
+      register_status: RegisterStatus.PENDING,
+      aptId: apartment.id,
+      requestedRole: input.role,
+    });
+
     const user = await this.repo.createUser({
-      nickname: input.username,
+      username: input.username,
       phoneNumber: input.contact,
       name: input.name,
       email: input.email,
       password: hashedPassword,
       role: input.role,
       register_status: RegisterStatus.PENDING,
+      register: { connect: { id: register.id } },
       apartment: {
         connect: { id: apartment.id },
       },
-    });
-
-    await this.repo.createRegisterRequest({
-      user: { connect: { id: user.id } },
-      register_status: RegisterStatus.PENDING,
-      aptId: apartment.id,
-      requestedRole: input.role,
-    });
-
-    await this.repo.createApartmentRequest({
-      registerReq: { connect: { userId: user.id } },
-      aptName: input.apartmentName,
-      aptAdress: input.apartmentAddress,
-      officeNumber: input.apartmentManagementNumber,
-      startComplexNumber: input.startComplexNumber,
-      endComplexNumber: input.endComplexNumber,
-      startDongNumber: input.startDongNumber,
-      endDongNumber: input.endDongNumber,
-      startFloorNumber: input.startFloorNumber,
-      endFloorNumber: input.endFloorNumber,
-      startHoNumber: input.startHoNumber,
-      endHoNumber: input.endHoNumber,
     });
 
     return {
@@ -146,7 +126,7 @@ export class AuthService {
       name: user.name,
       email: user.email,
       joinStatus: user.register_status,
-      isActive: user.register_status === RegisterStatus.APPROVED,
+      isActive: user.deletedAt === null,
       role: user.role,
     };
   };
@@ -158,7 +138,7 @@ export class AuthService {
 
     const existingUser = await this.repo.findUserByUniqueFields({
       email: input.email,
-      nickname: input.username,
+      username: input.username,
       phoneNumber: input.contact,
     });
 
@@ -174,24 +154,24 @@ export class AuthService {
     const hashedPassword = await bcrypt.hash(input.password, 10);
     const registerStatus = input.joinStatus ?? RegisterStatus.PENDING;
 
+    const register = await this.repo.createRegister({
+      register_status: registerStatus,
+      aptId: apartment.id,
+      requestedRole: input.role,
+    });
+
     const user = await this.repo.createUser({
-      nickname: input.username,
+      username: input.username,
       phoneNumber: input.contact,
       name: input.name,
       email: input.email,
       password: hashedPassword,
       role: input.role,
       register_status: registerStatus,
+      register: { connect: { id: register.id } },
       apartment: {
         connect: { id: apartment.id },
       },
-    });
-
-    await this.repo.createRegisterRequest({
-      user: { connect: { id: user.id } },
-      register_status: registerStatus,
-      aptId: apartment.id,
-      requestedRole: input.role,
     });
 
     return {
@@ -199,7 +179,7 @@ export class AuthService {
       name: user.name,
       email: user.email,
       joinStatus: user.register_status,
-      isActive: user.register_status === RegisterStatus.APPROVED,
+      isActive: user.deletedAt === null,
       role: user.role,
     };
   };
@@ -220,9 +200,9 @@ export class AuthService {
       throw new CustomError(403, '탈퇴한 유저입니다');
     }
 
-    const { password: _, ...withoutPassowrd } = user;
+    const { password: _, ...withoutPassword } = user;
     const { accessToken, refreshToken } = createTokens(user.id);
-    return { accessToken, refreshToken, withoutPassowrd };
+    return { accessToken, refreshToken, withoutPassword };
   };
 
   refresh = async (userId: string) => {
