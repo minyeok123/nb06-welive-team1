@@ -161,7 +161,7 @@ export class AuthService {
     }
 
     const hashedPassword = await bcrypt.hash(input.password, 10);
-    const registerStatus = input.joinStatus ?? RegisterStatus.PENDING;
+    const registerStatus = RegisterStatus.APPROVED;
 
     const register = await this.repo.createRegister({
       register_status: registerStatus,
