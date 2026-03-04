@@ -10,7 +10,7 @@ const router = express.Router();
 router.post(
   '/',
   authenticate,
-  validate(createComplaintSchema),
+  validate(createComplaintSchema), // 요청 검증
   asyncHandler(complaintController.createComplaint),
 );
 

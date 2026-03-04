@@ -11,6 +11,7 @@ export class ComplaintRepo {
     boardId?: string;
   }) => {
     return prisma.$transaction(async (tx) => {
+      // 게시판 생성 후 민원과 연결
       const board = await tx.board.create({
         data: {
           id: params.boardId,
@@ -56,6 +57,7 @@ export class ComplaintRepo {
       return { count: 0 };
     }
 
+    // 관리자 알림 다건 생성
     return prisma.notification.createMany({
       data: params.userIds.map((userId) => ({
         userId,

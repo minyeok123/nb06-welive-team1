@@ -7,7 +7,7 @@ export class ComplaintController {
   constructor(private complaintService: ComplaintService) {}
 
   createComplaint = async (req: Request, res: Response) => {
-    const input = createComplaintSchema.parse(req.body);
+    const input = createComplaintSchema.parse(req.body); // 본문 유효성 검사
     const result = await this.complaintService.createComplaint(input, req.user);
     return res.status(201).json(result);
   };
