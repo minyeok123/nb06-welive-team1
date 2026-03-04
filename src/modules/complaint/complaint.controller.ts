@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { ComplaintRepo } from './complaint.repo';
 import { ComplaintService } from './complaint.service';
-import { createComplaintSchema } from './complaint.validate';
+import { createComplaintSchema, listComplaintsSchema } from './complaint.validate';
 
 export class ComplaintController {
   constructor(private complaintService: ComplaintService) {}
@@ -10,6 +10,14 @@ export class ComplaintController {
     const input = createComplaintSchema.parse(req.body); // 본문 유효성 검사
     const result = await this.complaintService.createComplaint(input, req.user);
     return res.status(201).json(result);
+  };
+
+  listComplaints = async (req: Request, res: Response) => {
+    const query = (req.validatedQuery ?? req.query) as ReturnType<
+      typeof listComplaintsSchema.parse
+    >;
+    const result = await this.complaintService.listComplaints(query, req.user);
+    return res.status(200).json(result);
   };
 }
 

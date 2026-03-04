@@ -1,5 +1,5 @@
 import { prisma } from '@libs/prisma';
-import { IsPublic, NotificationType, Status } from '@prisma/client';
+import { IsPublic, NotificationType, Prisma, Status } from '@prisma/client';
 
 export class ComplaintRepo {
   createComplaintWithBoard = async (params: {
@@ -67,5 +67,47 @@ export class ComplaintRepo {
         complaintId: params.complaintId,
       })),
     });
+  };
+
+  findComplaints = async (params: {
+    where: Prisma.ComplaintWhereInput;
+    skip: number;
+    take: number;
+  }) => {
+    const [items, totalCount] = await prisma.$transaction([
+      prisma.complaint.findMany({
+        where: params.where,
+        skip: params.skip,
+        take: params.take,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          board: {
+            select: {
+              author: {
+                select: {
+                  id: true,
+                  name: true,
+                  aptId: true,
+                  resident: {
+                    select: {
+                      dong: true,
+                      ho: true,
+                    },
+                  },
+                },
+              },
+              _count: {
+                select: {
+                  comments: true,
+                },
+              },
+            },
+          },
+        },
+      }),
+      prisma.complaint.count({ where: params.where }),
+    ]);
+
+    return { items, totalCount };
   };
 }
