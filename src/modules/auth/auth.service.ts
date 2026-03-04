@@ -14,7 +14,6 @@ export class AuthService {
       username: input.username,
       phoneNumber: input.contact,
     });
-
     if (existingUser) {
       throw new CustomError(409, '이미 사용 중인 정보입니다');
     }
@@ -43,27 +42,13 @@ export class AuthService {
       ho: input.role === 'USER' ? input.apartmentHo : undefined,
     });
 
-    const user = await this.repo.createUser({
-      username: input.username,
-      phoneNumber: input.contact,
-      name: input.name,
-      email: input.email,
-      password: hashedPassword,
-      role: input.role,
-      register_status: RegisterStatus.PENDING,
-      register: { connect: { id: register.id } },
-      apartment: {
-        connect: { id: apartment.id },
-      },
-    });
-
     return {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      joinStatus: user.register_status,
-      isActive: user.deletedAt === null,
-      role: user.role,
+      id: register.id,
+      name: register.name,
+      email: register.email,
+      joinStatus: register.register_status,
+      isActive: register.deletedAt === null && register.register_status === 'APPROVED',
+      role: register.requestedRole,
     };
   };
 
@@ -121,27 +106,13 @@ export class AuthService {
       requestedRole: input.role,
     });
 
-    const user = await this.repo.createUser({
-      username: input.username,
-      phoneNumber: input.contact,
-      name: input.name,
-      email: input.email,
-      password: hashedPassword,
-      role: input.role,
-      register_status: RegisterStatus.PENDING,
-      register: { connect: { id: register.id } },
-      apartment: {
-        connect: { id: apartment.id },
-      },
-    });
-
     return {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      joinStatus: user.register_status,
-      isActive: user.deletedAt === null,
-      role: user.role,
+      id: register.id,
+      name: register.name,
+      email: register.email,
+      joinStatus: register.register_status,
+      isActive: register.deletedAt === null && register.register_status === 'APPROVED',
+      role: register.requestedRole,
     };
   };
 
@@ -160,18 +131,8 @@ export class AuthService {
       throw new CustomError(409, '이미 사용 중인 정보입니다');
     }
 
-    const hashedPassword = await bcrypt.hash(input.password, 10); // 비밀번호 해시(서명) 저장
-    const registerStatus = RegisterStatus.APPROVED;
-
-    const register = await this.repo.createRegister({
-      register_status: registerStatus,
-      username: input.username,
-      phoneNumber: input.contact,
-      name: input.name,
-      email: input.email,
-      password: hashedPassword,
-      requestedRole: input.role,
-    });
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(input.password, salt); // 비밀번호 해시(서명) 저장
 
     const user = await this.repo.createUser({
       username: input.username,
@@ -180,8 +141,7 @@ export class AuthService {
       email: input.email,
       password: hashedPassword,
       role: input.role,
-      register_status: registerStatus,
-      register: { connect: { id: register.id } },
+      register_status: RegisterStatus.APPROVED,
     });
 
     return {
@@ -244,8 +204,9 @@ export class AuthService {
         apartment: { connect: { id: register.aptId } },
       });
       await this.repo.createManyBoard([
-        { authorId: user.id, boardType: 'NOTICE' },
-        { authorId: user.id, boardType: 'VOTE' },
+        { aptId: user.aptId!, boardType: 'NOTICE' },
+        { aptId: user.aptId!, boardType: 'VOTE' },
+        { aptId: user.aptId!, boardType: 'COMPLAINT' },
       ]);
     } else {
       await this.repo.registerReject(adminRegisterId);
@@ -286,11 +247,6 @@ export class AuthService {
         apartment: { connect: { id: register.aptId } },
         dong: register.dong,
         ho: register.ho,
-        is_houseHold: IsHouseHold.HOUSEHOLD,
-      });
-      await this.repo.createBoard({
-        author: { connect: { id: user.id } },
-        boardType: 'COMPLAINT',
       });
     } else {
       await this.repo.registerReject(residentRegisterId);

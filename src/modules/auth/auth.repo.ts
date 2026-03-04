@@ -83,17 +83,17 @@ export class AuthRepo {
         apartment: {
           select: {
             aptName: true,
+            boards: {
+              select: {
+                id: true,
+                boardType: true,
+              },
+            },
           },
         },
         resident: {
           select: {
             dong: true,
-          },
-        },
-        boards: {
-          select: {
-            id: true,
-            boardType: true,
           },
         },
       },
