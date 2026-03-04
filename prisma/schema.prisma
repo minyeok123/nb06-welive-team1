@@ -14,7 +14,7 @@ datasource db {
 model User {
   id              String         @id @default(uuid())
   profileImg      String?        @map("profile_img")
-  registerId      String         @unique @map("register_id")
+  registerId      String?        @unique @map("register_id")
   username        String         @unique
   aptId           String?        @map("apt_id")
   name            String
@@ -32,7 +32,7 @@ model User {
   resident      Resident?
   comments      Comment[]
   notifications Notification[]
-  register      Register       @relation(fields: [registerId], references: [id])
+  register      Register?      @relation(fields: [registerId], references: [id])
 
   // residentRoster 테이블에서 참조하는 외래키들의 역방향 관계 (관계 이름으로 연결)
   userResidentRoster   residentRoster?  @relation("userResidentRosters")
