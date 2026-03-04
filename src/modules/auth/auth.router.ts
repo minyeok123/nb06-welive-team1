@@ -3,7 +3,9 @@ import asyncHandler from '../../middlewares/asyncHandler';
 import { authController } from './auth.controller';
 import { authenticateRefresh } from './utils/refresh.middlewares';
 import { validate } from '../../middlewares/validate';
-import { loginSchema, adminIdSchema, updateAdminStatusSchema } from './auth.validate';
+import { loginSchema, registerIdSchema, updateRegisterStatusSchema } from './auth.validate';
+import { authenticate } from '@/middlewares/authenticate';
+import { superAdminAuthorize } from '@/middlewares/authorize';
 
 const router = express.Router();
 
@@ -15,9 +17,18 @@ router.post('/refresh', authenticateRefresh, asyncHandler(authController.refresh
 router.post('/logout', asyncHandler(authController.logout));
 router.patch(
   '/admins/:adminId/status',
-  validate(adminIdSchema, 'params'),
-  validate(updateAdminStatusSchema, 'body'),
+  validate(registerIdSchema, 'params'),
+  validate(updateRegisterStatusSchema, 'body'),
+  authenticate,
+  superAdminAuthorize,
   asyncHandler(authController.updateAdminStatus),
 );
-
+router.patch(
+  '/reisents/:residentId/status',
+  validate(registerIdSchema, 'params'),
+  validate(updateRegisterStatusSchema, 'body'),
+  authenticate,
+  superAdminAuthorize,
+  asyncHandler(authController.updateResidentStatus),
+);
 export default router;

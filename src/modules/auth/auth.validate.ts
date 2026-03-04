@@ -101,10 +101,10 @@ export const loginSchema = z.object({
   password: z.string().min(8).max(15),
 });
 
-export const updateAdminStatusSchema = z.object({
+export const updateRegisterStatusSchema = z.object({
   status: z.enum(['APPROVED', 'REJECTED']),
 });
 
-export const adminIdSchema = z.object({
-  adminId: z.uuid(),
+export const registerIdSchema = z.object({
+  registerId: z.uuid(),
 });

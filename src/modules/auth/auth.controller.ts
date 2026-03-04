@@ -50,10 +50,23 @@ export class AuthController {
   };
 
   updateAdminStatus = async (req: Request, res: Response, next: NextFunction) => {
-    const adminId = String(req.params.adminId);
+    const adminRegisterId = req.params.adminId;
+    if (typeof adminRegisterId !== 'string') {
+      return res.status(400).json({ message: '잘못된 관리자 ID 형식입니다' });
+    }
     const { status } = req.body;
-    await this.authService.updateAdminStatus(adminId, status);
-    res.status(200).json({ message: '관리자 승인 상태가 변경되었습니다' });
+    await this.authService.updateAdminStatus(adminRegisterId, status);
+    return res.status(200).json({ message: '작업이 성공적으로 완료되었습니다' });
+  };
+
+  updateResidentStatus = async (req: Request, res: Response, next: NextFunction) => {
+    const residentRegisterId = req.params.residentId;
+    if (typeof residentRegisterId !== 'string') {
+      return res.status(400).json({ message: '잘못된 사용자 ID 형식입니다' });
+    }
+    const { status } = req.body;
+    await this.authService.updateResidentStatus(residentRegisterId, status);
+    return res.status(200).json({ message: '작업이 성공적으로 완료되었습니다' });
   };
 }
 
