@@ -30,7 +30,6 @@ model User {
   // Relations
   apartment     Apartment?     @relation(fields: [aptId], references: [id])
   resident      Resident?
-  boards        Board[]
   comments      Comment[]
   notifications Notification[]
   register      Register       @relation(fields: [registerId], references: [id])
@@ -38,6 +37,10 @@ model User {
   // residentRoster 테이블에서 참조하는 외래키들의 역방향 관계 (관계 이름으로 연결)
   userResidentRoster   residentRoster?  @relation("userResidentRosters")
   adminResidentRosters residentRoster[] @relation("adminResidentRosters")
+  boards               Board[]
+  complaints           Complaint[]
+  votes                Vote[]
+  notices              Notice[]
 
   @@map("users")
 }
@@ -86,6 +89,7 @@ model Apartment {
 
   // Relations
   users           User[]
+  boards          Board[]
   residents       Resident[]
   residentRosters residentRoster[]
 
@@ -125,7 +129,8 @@ model Complaint {
   deletedAt DateTime? @map("deleted_at")
 
   // Relations
-  board Board @relation(fields: [boardId], references: [id])
+  board  Board @relation(fields: [boardId], references: [id])
+  author User  @relation(fields: [authorId], references: [id])
 
   @@index([status])
   @@map("complaints")
@@ -147,6 +152,7 @@ model Vote {
 
   // Relations
   board          Board               @relation(fields: [boardId], references: [id])
+  author         User                @relation(fields: [authorId], references: [id])
   options        VoteOption[]
   participations VoteParticipation[]
 
@@ -168,29 +174,31 @@ model Notice {
   deletedAt DateTime?      @map("deleted_at")
 
   // Relations
-  board Board @relation(fields: [boardId], references: [id])
+  board  Board @relation(fields: [boardId], references: [id])
+  author User  @relation(fields: [authorId], references: [id])
 
   @@map("notices")
 }
 
 model Board {
   id        String    @id @default(uuid())
-  authorId  String    @map("author_id")
+  aptId     String    @map("apt_id")
   boardType BoardType @map("board_type")
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
 
   // Relations
-  author        User           @relation(fields: [authorId], references: [id])
   complaint     Complaint?
   vote          Vote?
   notice        Notice?
+  apartment     Apartment      @relation(fields: [aptId], references: [id])
   comments      Comment[]
   notifications Notification[]
+  user          User?          @relation(fields: [userId], references: [id])
+  userId        String?
 
-  @@index([boardType, createdAt])
-  @@index([authorId])
+  @@index([boardType, aptId])
   @@map("boards")
 }
 
