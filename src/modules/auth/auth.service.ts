@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import { RegisterStatus } from '@prisma/client';
+import { IsHouseHold, RegisterStatus } from '@prisma/client';
 import { AuthRepo } from './auth.repo';
 import { CustomError } from '@libs/error';
 import { AdminSignupInput, SignupInput, SuperAdminSignupInput } from './auth.validate';
@@ -28,7 +28,7 @@ export class AuthService {
       throw new CustomError(400, '존재하지 않는 아파트입니다');
     }
 
-    const hashedPassword = await bcrypt.hash(input.password, 10);
+    const hashedPassword = await bcrypt.hash(input.password, 10); // 비밀번호 해시(서명) 저장
 
     const register = await this.repo.createRegister({
       register_status: RegisterStatus.PENDING,
@@ -94,7 +94,7 @@ export class AuthService {
       throw new CustomError(409, '이미 등록된 관리소 번호입니다');
     }
 
-    const hashedPassword = await bcrypt.hash(input.password, 10);
+    const hashedPassword = await bcrypt.hash(input.password, 10); // 비밀번호 해시(서명) 저장
 
     const apartment = await this.repo.createApartment({
       aptName: input.apartmentName,
@@ -160,17 +160,11 @@ export class AuthService {
       throw new CustomError(409, '이미 사용 중인 정보입니다');
     }
 
-    const apartment = await this.repo.findAnyApartment();
-    if (!apartment) {
-      throw new CustomError(400, '아파트가 존재하지 않습니다');
-    }
-
-    const hashedPassword = await bcrypt.hash(input.password, 10);
-    const registerStatus = input.joinStatus ?? RegisterStatus.PENDING;
+    const hashedPassword = await bcrypt.hash(input.password, 10); // 비밀번호 해시(서명) 저장
+    const registerStatus = RegisterStatus.APPROVED;
 
     const register = await this.repo.createRegister({
       register_status: registerStatus,
-      aptId: apartment.id,
       username: input.username,
       phoneNumber: input.contact,
       name: input.name,
@@ -188,9 +182,6 @@ export class AuthService {
       role: input.role,
       register_status: registerStatus,
       register: { connect: { id: register.id } },
-      apartment: {
-        connect: { id: apartment.id },
-      },
     });
 
     return {
@@ -207,7 +198,7 @@ export class AuthService {
     const user = await this.repo.findUserByUsername(username);
     if (!user) throw new CustomError(404, '존재하지 않은 유저 또는 비밀번호가 일치하지 않습니다');
 
-    const verifyPassword = await bcrypt.compare(password, user.password);
+    const verifyPassword = await bcrypt.compare(password, user.password); // 비밀번호 해시(서명) 검증
     if (!verifyPassword)
       throw new CustomError(401, '존재하지 않은 유저 또는 비밀번호가 일치하지 않습니다');
 
@@ -236,6 +227,9 @@ export class AuthService {
     }
 
     if (status === 'APPROVED') {
+      if (!register.aptId) {
+        throw new CustomError(400, '아파트 정보가 없습니다');
+      }
       await this.repo.registerApprove(adminRegisterId);
       await this.repo.aptApprove(register.aptId);
       const user = await this.repo.createUser({
@@ -255,7 +249,9 @@ export class AuthService {
       ]);
     } else {
       await this.repo.registerReject(adminRegisterId);
-      await this.repo.aptReject(register.aptId);
+      if (register.aptId) {
+        await this.repo.aptReject(register.aptId);
+      }
     }
     return;
   };
@@ -267,6 +263,12 @@ export class AuthService {
     }
 
     if (status === 'APPROVED') {
+      if (!register.aptId) {
+        throw new CustomError(400, '아파트 정보가 없습니다');
+      }
+      if (register.dong === null || register.ho === null) {
+        throw new CustomError(400, '동/호 정보가 없습니다');
+      }
       await this.repo.registerApprove(residentRegisterId);
       const user = await this.repo.createUser({
         username: register.username,
@@ -281,9 +283,10 @@ export class AuthService {
       });
       await this.repo.createResident({
         user: { connect: { id: user.id } },
-        apartment: { connect: { id: user.aptId } },
-        dong: register.dong!,
-        ho: register.ho!,
+        apartment: { connect: { id: register.aptId } },
+        dong: register.dong,
+        ho: register.ho,
+        is_houseHold: IsHouseHold.HOUSEHOLD,
       });
       await this.repo.createBoard({
         author: { connect: { id: user.id } },

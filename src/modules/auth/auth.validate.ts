@@ -91,7 +91,6 @@ export const superAdminSignupSchema = z.object({
   name: z.string().trim().min(2).max(50),
   email: z.string().trim().email(),
   role: z.literal('SUPER_ADMIN'),
-  joinStatus: z.enum(['PENDING', 'APPROVED', 'REJECTED']).optional(),
 });
 
 export type SuperAdminSignupInput = z.infer<typeof superAdminSignupSchema>;

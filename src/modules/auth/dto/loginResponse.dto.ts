@@ -3,14 +3,14 @@ interface LoginDtoOptions {
   name: string;
   username: string;
   email: string;
-  aptId: string;
+  aptId: string | null;
   register_status: string;
   role: string;
   phoneNumber: string;
   profileImg: string | null;
   apartment: {
     aptName: string;
-  };
+  } | null;
   resident: {
     dong: number;
   } | null;
@@ -27,8 +27,8 @@ export const loginDto = (options: LoginDtoOptions) => {
     email: options.email,
     role: options.role,
     joinStatus: options.register_status,
-    apartmentId: options.aptId,
-    apartmentName: options.apartment.aptName,
+    apartmentId: options.aptId ?? null,
+    apartmentName: options.apartment?.aptName ?? null,
     residentDong: options.resident?.dong,
     boardIds: {
       COMPLAINT: options.boards.find((board) => board.boardType === 'COMPLAINT')?.id,
