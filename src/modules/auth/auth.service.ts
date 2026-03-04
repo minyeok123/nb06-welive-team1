@@ -28,7 +28,7 @@ export class AuthService {
       throw new CustomError(400, '존재하지 않는 아파트입니다');
     }
 
-    const hashedPassword = await bcrypt.hash(input.password, 10);
+    const hashedPassword = await bcrypt.hash(input.password, 10); // 비밀번호 해시(서명) 저장
 
     const register = await this.repo.createRegister({
       register_status: RegisterStatus.PENDING,
@@ -94,7 +94,7 @@ export class AuthService {
       throw new CustomError(409, '이미 등록된 관리소 번호입니다');
     }
 
-    const hashedPassword = await bcrypt.hash(input.password, 10);
+    const hashedPassword = await bcrypt.hash(input.password, 10); // 비밀번호 해시(서명) 저장
 
     const apartment = await this.repo.createApartment({
       aptName: input.apartmentName,
@@ -160,7 +160,7 @@ export class AuthService {
       throw new CustomError(409, '이미 사용 중인 정보입니다');
     }
 
-    const hashedPassword = await bcrypt.hash(input.password, 10);
+    const hashedPassword = await bcrypt.hash(input.password, 10); // 비밀번호 해시(서명) 저장
     const registerStatus = RegisterStatus.APPROVED;
 
     const register = await this.repo.createRegister({
@@ -198,7 +198,7 @@ export class AuthService {
     const user = await this.repo.findUserByUsername(username);
     if (!user) throw new CustomError(404, '존재하지 않은 유저 또는 비밀번호가 일치하지 않습니다');
 
-    const verifyPassword = await bcrypt.compare(password, user.password);
+    const verifyPassword = await bcrypt.compare(password, user.password); // 비밀번호 해시(서명) 검증
     if (!verifyPassword)
       throw new CustomError(401, '존재하지 않은 유저 또는 비밀번호가 일치하지 않습니다');
 
