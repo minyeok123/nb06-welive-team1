@@ -19,7 +19,11 @@ export class AuthService {
       throw new CustomError(409, '이미 사용 중인 정보입니다');
     }
 
-    const apartment = await this.repo.findApartmentByName(input.apartmentName);
+    const apartment = input.apartmentAddress
+      ? await this.repo.findApartmentByAddress(input.apartmentAddress)
+      : input.apartmentName
+        ? await this.repo.findApartmentByName(input.apartmentName)
+        : null;
     if (!apartment) {
       throw new CustomError(400, '존재하지 않는 아파트입니다');
     }

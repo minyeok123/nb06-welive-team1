@@ -26,16 +26,16 @@ export class AuthRepo {
     });
   };
 
+  findAnyApartment = async () => {
+    return prisma.apartment.findFirst();
+  };
+
   findApartmentByName = async (apartmentName: string) => {
     return prisma.apartment.findFirst({
       where: {
         aptName: apartmentName,
       },
     });
-  };
-
-  findAnyApartment = async () => {
-    return prisma.apartment.findFirst();
   };
 
   findApartmentByAddress = async (apartmentAddress: string) => {
