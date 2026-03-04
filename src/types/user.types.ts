@@ -3,7 +3,7 @@ interface USER {
   email: string;
   profileImg: string | null;
   username: string;
-  aptId: string;
+  aptId: string | null;
   name: string;
   phoneNumber: string;
   role: string;

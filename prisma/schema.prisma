@@ -16,7 +16,7 @@ model User {
   profileImg      String?        @map("profile_img")
   registerId      String         @unique @map("register_id")
   username        String         @unique
-  aptId           String         @map("apt_id")
+  aptId           String?        @map("apt_id")
   name            String
   email           String         @unique
   phoneNumber     String         @map("phone_number")
@@ -28,7 +28,7 @@ model User {
   deletedAt       DateTime?      @map("deleted_at")
 
   // Relations
-  apartment     Apartment      @relation(fields: [aptId], references: [id])
+  apartment     Apartment?     @relation(fields: [aptId], references: [id])
   resident      Resident?
   boards        Board[]
   comments      Comment[]
@@ -45,7 +45,7 @@ model User {
 model Register {
   id              String         @id @default(uuid())
   register_status RegisterStatus
-  aptId           String         @map("apt_id")
+  aptId           String?        @map("apt_id")
   username        String         @unique
   phoneNumber     String         @map("phone_number")
   name            String
