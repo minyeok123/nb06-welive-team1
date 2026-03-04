@@ -3,9 +3,14 @@ import asyncHandler from '../../middlewares/asyncHandler';
 import { authController } from './auth.controller';
 import { authenticateRefresh } from './utils/refresh.middlewares';
 import { validate } from '../../middlewares/validate';
-import { loginSchema, registerIdSchema, updateRegisterStatusSchema } from './auth.validate';
+import {
+  loginSchema,
+  adminIdSchema,
+  residentIdSchema,
+  updateRegisterStatusSchema,
+} from './auth.validate';
 import { authenticate } from '@/middlewares/authenticate';
-import { superAdminAuthorize } from '@/middlewares/authorize';
+import { superAdminAuthorize, adminAuthorize } from '@/middlewares/authorize';
 
 const router = express.Router();
 
@@ -17,18 +22,18 @@ router.post('/refresh', authenticateRefresh, asyncHandler(authController.refresh
 router.post('/logout', asyncHandler(authController.logout));
 router.patch(
   '/admins/:adminId/status',
-  validate(registerIdSchema, 'params'),
+  validate(adminIdSchema, 'params'),
   validate(updateRegisterStatusSchema, 'body'),
   authenticate,
   superAdminAuthorize,
   asyncHandler(authController.updateAdminStatus),
 );
 router.patch(
-  '/reisents/:residentId/status',
-  validate(registerIdSchema, 'params'),
+  '/residents/:residentId/status',
+  validate(residentIdSchema, 'params'),
   validate(updateRegisterStatusSchema, 'body'),
   authenticate,
-  superAdminAuthorize,
+  adminAuthorize,
   asyncHandler(authController.updateResidentStatus),
 );
 export default router;

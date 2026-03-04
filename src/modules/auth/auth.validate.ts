@@ -104,6 +104,10 @@ export const updateRegisterStatusSchema = z.object({
   status: z.enum(['APPROVED', 'REJECTED']),
 });
 
-export const registerIdSchema = z.object({
-  registerId: z.uuid(),
+export const adminIdSchema = z.object({
+  adminId: z.uuid(),
+});
+
+export const residentIdSchema = z.object({
+  residentId: z.uuid(),
 });

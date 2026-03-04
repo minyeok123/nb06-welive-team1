@@ -37,7 +37,6 @@ model User {
   // residentRoster 테이블에서 참조하는 외래키들의 역방향 관계 (관계 이름으로 연결)
   userResidentRoster   residentRoster?  @relation("userResidentRosters")
   adminResidentRosters residentRoster[] @relation("adminResidentRosters")
-  boards               Board[]
   complaints           Complaint[]
   votes                Vote[]
   notices              Notice[]
@@ -195,8 +194,6 @@ model Board {
   apartment     Apartment      @relation(fields: [aptId], references: [id])
   comments      Comment[]
   notifications Notification[]
-  user          User?          @relation(fields: [userId], references: [id])
-  userId        String?
 
   @@index([boardType, aptId])
   @@map("boards")
