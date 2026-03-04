@@ -48,6 +48,13 @@ export class AuthController {
     setTokensCookies(res, accessToken, newRefreshToken);
     res.status(200).json({ message: '작업이 성공적으로 완료되었습니다' });
   };
+
+  updateAdminStatus = async (req: Request, res: Response, next: NextFunction) => {
+    const adminId = String(req.params.adminId);
+    const { status } = req.body;
+    await this.authService.updateAdminStatus(adminId, status);
+    res.status(200).json({ message: '관리자 승인 상태가 변경되었습니다' });
+  };
 }
 
 const authRepo = new AuthRepo();

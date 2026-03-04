@@ -33,6 +33,11 @@ export class AuthService {
     const register = await this.repo.createRegister({
       register_status: RegisterStatus.PENDING,
       aptId: apartment.id,
+      username: input.username,
+      phoneNumber: input.contact,
+      name: input.name,
+      email: input.email,
+      password: hashedPassword,
       requestedRole: input.role,
       dong: input.role === 'USER' ? input.apartmentDong : undefined,
       ho: input.role === 'USER' ? input.apartmentHo : undefined,
@@ -108,6 +113,11 @@ export class AuthService {
     const register = await this.repo.createRegister({
       register_status: RegisterStatus.PENDING,
       aptId: apartment.id,
+      username: input.username,
+      phoneNumber: input.contact,
+      name: input.name,
+      email: input.email,
+      password: hashedPassword,
       requestedRole: input.role,
     });
 
@@ -161,6 +171,11 @@ export class AuthService {
     const register = await this.repo.createRegister({
       register_status: registerStatus,
       aptId: apartment.id,
+      username: input.username,
+      phoneNumber: input.contact,
+      name: input.name,
+      email: input.email,
+      password: hashedPassword,
       requestedRole: input.role,
     });
 
