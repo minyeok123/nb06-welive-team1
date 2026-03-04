@@ -19,12 +19,20 @@ export const signupSchema = z
     name: z.string().trim().min(2).max(50),
     email: z.string().trim().email(),
     role: z.enum(['USER', 'ADMIN', 'SUPER_ADMIN']),
-    apartmentName: z.string().trim().min(1),
+    apartmentName: z.string().trim().min(1).optional(),
+    apartmentAddress: z.string().trim().min(1).optional(),
     apartmentDong: optionalIntValue.optional(),
     apartmentHo: optionalIntValue.optional(),
   })
   .superRefine((data, ctx) => {
     if (data.role === 'USER') {
+      if (!data.apartmentAddress && !data.apartmentName) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['apartmentAddress'],
+          message: '아파트 주소 또는 이름이 필요합니다',
+        });
+      }
       if (!data.apartmentDong) {
         ctx.addIssue({
           code: 'custom',
