@@ -6,7 +6,10 @@ import { CreateComplaintInput } from './complaint.validate';
 export class ComplaintService {
   constructor(private repo: ComplaintRepo) {}
 
-  createComplaint = async (input: CreateComplaintInput, user: { id: string; aptId: string }) => {
+  createComplaint = async (
+    input: CreateComplaintInput,
+    user: { id: string; aptId: string | null },
+  ) => {
     if (!user?.id || !user?.aptId) {
       throw new CustomError(403, '접근 권한이 없습니다');
     }
