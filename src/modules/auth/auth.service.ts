@@ -213,4 +213,29 @@ export class AuthService {
     const { accessToken, refreshToken } = createTokens(userId);
     return { accessToken, refreshToken };
   };
+
+  updateAdminStatus = async (adminRegisterId: string, status: string) => {
+    const register = await this.repo.findRegisterById(adminRegisterId);
+    if (!register) {
+      throw new CustomError(404, '존재하지 않는 관리자 회원가입 요청입니다');
+    }
+
+    if (status === 'APPROVED') {
+      await this.repo.approveAdmin(adminRegisterId);
+      await this.repo.createUser({
+        username: register.username,
+        phoneNumber: register.phoneNumber,
+        name: register.name,
+        email: register.email,
+        password: register.password,
+        role: register.requestedRole,
+        register_status: RegisterStatus.APPROVED,
+        register: { connect: { id: register.id } },
+        apartment: { connect: { id: register.aptId } },
+      });
+    } else {
+      await this.repo.rejectAdmin(adminRegisterId);
+    }
+    return;
+  };
 }
