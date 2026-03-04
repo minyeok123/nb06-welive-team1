@@ -1,9 +1,37 @@
 import { prisma } from '@libs/prisma';
 import { IsPublic, NotificationType, Prisma, Status } from '@prisma/client';
 
+export type ComplaintWithRelations = Prisma.ComplaintGetPayload<{
+  include: {
+    board: {
+      select: {
+        user: {
+          select: {
+            id: true;
+            name: true;
+            aptId: true;
+            resident: {
+              select: {
+                dong: true;
+                ho: true;
+              };
+            };
+          };
+        };
+        _count: {
+          select: {
+            comments: true;
+          };
+        };
+      };
+    };
+  };
+}>;
+
 export class ComplaintRepo {
   createComplaintWithBoard = async (params: {
     authorId: string;
+    aptId: string;
     title: string;
     content: string;
     status: Status;
@@ -15,8 +43,9 @@ export class ComplaintRepo {
       const board = await tx.board.create({
         data: {
           id: params.boardId,
-          authorId: params.authorId,
           boardType: 'COMPLAINT',
+          apartment: { connect: { id: params.aptId } },
+          user: { connect: { id: params.authorId } },
         },
       });
 
@@ -73,7 +102,7 @@ export class ComplaintRepo {
     where: Prisma.ComplaintWhereInput;
     skip: number;
     take: number;
-  }) => {
+  }): Promise<{ items: ComplaintWithRelations[]; totalCount: number }> => {
     const [items, totalCount] = await prisma.$transaction([
       prisma.complaint.findMany({
         where: params.where,
@@ -83,7 +112,7 @@ export class ComplaintRepo {
         include: {
           board: {
             select: {
-              author: {
+              user: {
                 select: {
                   id: true,
                   name: true,

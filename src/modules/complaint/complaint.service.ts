@@ -1,6 +1,6 @@
 import { IsPublic, Status } from '@prisma/client';
 import { CustomError } from '@libs/error';
-import { ComplaintRepo } from './complaint.repo';
+import { ComplaintRepo, ComplaintWithRelations } from './complaint.repo';
 import { CreateComplaintInput, ListComplaintsQuery } from './complaint.validate';
 
 export class ComplaintService {
@@ -17,6 +17,7 @@ export class ComplaintService {
     // 민원 등록과 게시판 생성은 트랜잭션으로 처리
     const { board, complaint } = await this.repo.createComplaintWithBoard({
       authorId: user.id,
+      aptId: user.aptId,
       title: input.title,
       content: input.content,
       status: input.status ?? Status.PENDING,
@@ -72,8 +73,8 @@ export class ComplaintService {
     if (user.aptId) {
       where.board = {
         ...(where.board ?? {}),
-        author: {
-          ...(where.board?.author ?? {}),
+        user: {
+          ...(where.board?.user ?? {}),
           aptId: user.aptId,
         },
       };
@@ -82,8 +83,8 @@ export class ComplaintService {
     if (query.dong !== undefined || query.ho !== undefined) {
       where.board = {
         ...(where.board ?? {}),
-        author: {
-          ...(where.board?.author ?? {}),
+        user: {
+          ...(where.board?.user ?? {}),
           resident: {
             ...(query.dong !== undefined ? { dong: query.dong } : {}),
             ...(query.ho !== undefined ? { ho: query.ho } : {}),
@@ -110,19 +111,19 @@ export class ComplaintService {
       take: limit,
     });
 
-    const complaints = items.map((item) => ({
+    const complaints = (items as ComplaintWithRelations[]).map((item) => ({
       complaintId: item.id,
       userId: item.authorId,
       title: item.title,
-      writerName: item.board?.author?.name ?? '',
+      writerName: item.board?.user?.name ?? '',
       createdAt: item.createdAt,
       updatedAt: item.updatedAt,
       isPublic: item.is_public === IsPublic.PUBLIC,
       viewsCount: 0,
       commentsCount: item.board?._count.comments ?? 0,
       status: item.status === 'DONE' ? 'RESOLVED' : item.status,
-      dong: item.board?.author?.resident?.dong?.toString(),
-      ho: item.board?.author?.resident?.ho?.toString(),
+      dong: item.board?.user?.resident?.dong?.toString(),
+      ho: item.board?.user?.resident?.ho?.toString(),
     }));
 
     return { complaints, totalCount };
