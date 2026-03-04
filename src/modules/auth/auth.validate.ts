@@ -101,4 +101,10 @@ export const loginSchema = z.object({
   password: z.string().min(8).max(15),
 });
 
-export type LoginInput = z.infer<typeof loginSchema>;
+export const updateAdminStatusSchema = z.object({
+  status: z.enum(['APPROVED', 'REJECTED']),
+});
+
+export const adminIdSchema = z.object({
+  adminId: z.uuid(),
+});

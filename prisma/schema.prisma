@@ -45,7 +45,12 @@ model User {
 model Register {
   id              String         @id @default(uuid())
   register_status RegisterStatus
-  aptId           String?        @map("apt_id")
+  aptId           String         @map("apt_id")
+  username        String         @unique
+  phoneNumber     String         @map("phone_number")
+  name            String
+  email           String         @unique
+  password        String
   requestedRole   Role           @map("requested_role")
   dong            Int?
   ho              Int?
