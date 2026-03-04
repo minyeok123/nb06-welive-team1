@@ -236,8 +236,9 @@ export class AuthService {
     }
 
     if (status === 'APPROVED') {
-      await this.repo.approveAdmin(adminRegisterId);
-      await this.repo.createUser({
+      await this.repo.registerApprove(adminRegisterId);
+      await this.repo.aptApprove(register.aptId);
+      const user = await this.repo.createUser({
         username: register.username,
         phoneNumber: register.phoneNumber,
         name: register.name,
@@ -248,8 +249,48 @@ export class AuthService {
         register: { connect: { id: register.id } },
         apartment: { connect: { id: register.aptId } },
       });
+      await this.repo.createManyBoard([
+        { authorId: user.id, boardType: 'NOTICE' },
+        { authorId: user.id, boardType: 'VOTE' },
+      ]);
     } else {
-      await this.repo.rejectAdmin(adminRegisterId);
+      await this.repo.registerReject(adminRegisterId);
+      await this.repo.aptReject(register.aptId);
+    }
+    return;
+  };
+
+  updateResidentStatus = async (residentRegisterId: string, status: string) => {
+    const register = await this.repo.findRegisterById(residentRegisterId);
+    if (!register) {
+      throw new CustomError(404, '존재하지 않는 주민 회원가입 요청입니다');
+    }
+
+    if (status === 'APPROVED') {
+      await this.repo.registerApprove(residentRegisterId);
+      const user = await this.repo.createUser({
+        username: register.username,
+        phoneNumber: register.phoneNumber,
+        name: register.name,
+        email: register.email,
+        password: register.password,
+        role: register.requestedRole,
+        register_status: RegisterStatus.APPROVED,
+        register: { connect: { id: register.id } },
+        apartment: { connect: { id: register.aptId } },
+      });
+      await this.repo.createResident({
+        user: { connect: { id: user.id } },
+        apartment: { connect: { id: user.aptId } },
+        dong: register.dong!,
+        ho: register.ho!,
+      });
+      await this.repo.createBoard({
+        author: { connect: { id: user.id } },
+        boardType: 'COMPLAINT',
+      });
+    } else {
+      await this.repo.registerReject(residentRegisterId);
     }
     return;
   };

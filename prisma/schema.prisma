@@ -98,7 +98,7 @@ model Resident {
   aptId        String      @map("apt_id")
   dong         Int
   ho           Int
-  is_houseHold IsHouseHold
+  is_houseHold IsHouseHold @default(MEMBER)
   createdAt    DateTime    @default(now()) @map("created_at")
   updatedAt    DateTime    @updatedAt @map("updated_at")
   deletedAt    DateTime?   @map("deleted_at")

@@ -108,17 +108,40 @@ export class AuthRepo {
     return await prisma.register.findUnique({ where: { id } });
   };
 
-  approveAdmin = async (id: string) => {
+  registerApprove = async (id: string) => {
     return await prisma.register.update({
       where: { id },
       data: { register_status: 'APPROVED' },
     });
   };
 
-  rejectAdmin = async (id: string) => {
+  registerReject = async (id: string) => {
     return await prisma.register.update({
       where: { id },
       data: { register_status: 'REJECTED' },
     });
+  };
+  aptApprove = async (id: string) => {
+    return await prisma.apartment.update({
+      where: { id },
+      data: { aptStatus: 'APPROVED' },
+    });
+  };
+  aptReject = async (id: string) => {
+    return await prisma.apartment.update({
+      where: { id },
+      data: { aptStatus: 'REJECTED' },
+    });
+  };
+
+  createResident = async (data: Prisma.ResidentCreateInput) => {
+    return await prisma.resident.create({ data });
+  };
+
+  createBoard = async (data: Prisma.BoardCreateInput) => {
+    return await prisma.board.create({ data });
+  };
+  createManyBoard = async (data: Prisma.BoardCreateManyInput[]) => {
+    return await prisma.board.createMany({ data });
   };
 }
