@@ -1,9 +1,37 @@
 import { prisma } from '@libs/prisma';
-import { IsPublic, NotificationType, Status } from '@prisma/client';
+import { IsPublic, NotificationType, Prisma, Status } from '@prisma/client';
+
+export type ComplaintWithRelations = Prisma.ComplaintGetPayload<{
+  include: {
+    author: {
+      select: {
+        id: true;
+        name: true;
+        aptId: true;
+        resident: {
+          select: {
+            dong: true;
+            ho: true;
+          };
+        };
+      };
+    };
+    board: {
+      select: {
+        _count: {
+          select: {
+            comments: true;
+          };
+        };
+      };
+    };
+  };
+}>;
 
 export class ComplaintRepo {
   createComplaintWithBoard = async (params: {
     authorId: string;
+    aptId: string;
     title: string;
     content: string;
     status: Status;
@@ -11,12 +39,12 @@ export class ComplaintRepo {
     boardId?: string;
   }) => {
     return prisma.$transaction(async (tx) => {
-      // 게시판 생성 후 민원과 연결
+      // 게시판 생성 후 민원과 연결(같은 트랜잭션)
       const board = await tx.board.create({
         data: {
           id: params.boardId,
-          authorId: params.authorId,
           boardType: 'COMPLAINT',
+          apartment: { connect: { id: params.aptId } },
         },
       });
 
@@ -54,6 +82,7 @@ export class ComplaintRepo {
     message: string;
   }) => {
     if (params.userIds.length === 0) {
+      // 알림 대상이 없으면 생성 생략
       return { count: 0 };
     }
 
@@ -67,5 +96,49 @@ export class ComplaintRepo {
         complaintId: params.complaintId,
       })),
     });
+  };
+
+  findComplaints = async (params: {
+    where: Prisma.ComplaintWhereInput;
+    skip: number;
+    take: number;
+  }): Promise<{ items: ComplaintWithRelations[]; totalCount: number }> => {
+    const [items, totalCount] = await prisma.$transaction([
+      prisma.complaint.findMany({
+        where: params.where,
+        skip: params.skip,
+        take: params.take,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          // 작성자(입주민 정보 포함)
+          author: {
+            select: {
+              id: true,
+              name: true,
+              aptId: true,
+              resident: {
+                select: {
+                  dong: true,
+                  ho: true,
+                },
+              },
+            },
+          },
+          // 댓글 수만 필요
+          board: {
+            select: {
+              _count: {
+                select: {
+                  comments: true,
+                },
+              },
+            },
+          },
+        },
+      }),
+      prisma.complaint.count({ where: params.where }),
+    ]);
+
+    return { items, totalCount };
   };
 }
