@@ -9,23 +9,23 @@ const booleanSchema = z.preprocess((value) => {
 }, z.boolean());
 
 export const createComplaintSchema = z.object({
-  title: z.string().trim().min(1).max(200),
-  content: z.string().trim().min(1).max(5000),
+  title: z.string().trim().min(1).max(200), // 민원 제목
+  content: z.string().trim().min(1).max(5000), // 민원 내용
   isPublic: z.boolean(), // 공개 여부
-  boardId: z.string().uuid().optional(),
-  status: z.enum(['PENDING', 'IN_PROGRESS', 'DONE']).optional(),
+  boardId: z.string().uuid().optional(), // 게시판 ID(있으면 기존 게시판 재사용)
+  status: z.enum(['PENDING', 'IN_PROGRESS', 'DONE']).optional(), // 처리 상태
 });
 
 export type CreateComplaintInput = z.infer<typeof createComplaintSchema>;
 
 export const listComplaintsSchema = z.object({
-  page: pageSchema.optional(),
-  limit: limitSchema.optional(),
-  status: z.enum(['PENDING', 'IN_PROGRESS', 'DONE', 'RESOLVED', 'REJECTED']).optional(),
-  isPublic: booleanSchema.optional(),
-  dong: z.coerce.number().int().optional(),
-  ho: z.coerce.number().int().optional(),
-  keyword: z.string().trim().min(1).optional(),
+  page: pageSchema.optional(), // 페이지 번호
+  limit: limitSchema.optional(), // 페이지 크기
+  status: z.enum(['PENDING', 'IN_PROGRESS', 'DONE', 'RESOLVED', 'REJECTED']).optional(), // 처리 상태
+  isPublic: booleanSchema.optional(), // 공개 여부
+  dong: z.coerce.number().int().optional(), // 동
+  ho: z.coerce.number().int().optional(), // 호
+  keyword: z.string().trim().min(1).optional(), // 제목/내용 검색어
 });
 
 export type ListComplaintsQuery = z.infer<typeof listComplaintsSchema>;

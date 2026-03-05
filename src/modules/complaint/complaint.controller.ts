@@ -16,6 +16,7 @@ export class ComplaintController {
     const query = (req.validatedQuery ?? req.query) as ReturnType<
       typeof listComplaintsSchema.parse
     >;
+    // 쿼리 검증 후 서비스로 전달
     const result = await this.complaintService.listComplaints(query, req.user);
     return res.status(200).json(result);
   };

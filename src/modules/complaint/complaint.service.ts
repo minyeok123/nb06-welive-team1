@@ -42,15 +42,18 @@ export class ComplaintService {
       throw new CustomError(403, '접근 권한이 없습니다');
     }
 
+    // 관리자 여부 확인
     const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
     if (!isAdmin && !user.aptId) {
       throw new CustomError(403, '접근 권한이 없습니다');
     }
 
     if (query.status === 'REJECTED') {
+      // 스펙: REJECTED는 조회 결과에서 제외
       return { complaints: [], totalCount: 0 };
     }
 
+    // RESOLVED는 DONE으로 매핑
     const statusFilter =
       query.status === 'RESOLVED' ? 'DONE' : query.status;
 
@@ -63,37 +66,36 @@ export class ComplaintService {
     }
 
     if (typeof query.isPublic === 'boolean') {
+      // 공개/비공개 필터
       where.is_public = query.isPublic ? IsPublic.PUBLIC : IsPublic.PRIVATE;
     }
 
     if (!isAdmin) {
+      // 입주민은 공개글 또는 본인 글만 조회
       where.OR = [{ is_public: IsPublic.PUBLIC }, { authorId: user.id }];
     }
 
     if (user.aptId) {
-      where.board = {
-        ...(where.board ?? {}),
-        user: {
-          ...(where.board?.user ?? {}),
-          aptId: user.aptId,
-        },
+      // 동일 아파트 기준 필터
+      where.author = {
+        ...(where.author ?? {}),
+        aptId: user.aptId,
       };
     }
 
     if (query.dong !== undefined || query.ho !== undefined) {
-      where.board = {
-        ...(where.board ?? {}),
-        user: {
-          ...(where.board?.user ?? {}),
-          resident: {
-            ...(query.dong !== undefined ? { dong: query.dong } : {}),
-            ...(query.ho !== undefined ? { ho: query.ho } : {}),
-          },
+      // 동/호 필터
+      where.author = {
+        ...(where.author ?? {}),
+        resident: {
+          ...(query.dong !== undefined ? { dong: query.dong } : {}),
+          ...(query.ho !== undefined ? { ho: query.ho } : {}),
         },
       };
     }
 
     if (query.keyword) {
+      // 제목/내용 키워드 검색
       where.OR = [
         ...(where.OR ?? []),
         { title: { contains: query.keyword, mode: 'insensitive' } },
@@ -115,15 +117,15 @@ export class ComplaintService {
       complaintId: item.id,
       userId: item.authorId,
       title: item.title,
-      writerName: item.board?.user?.name ?? '',
+      writerName: item.author?.name ?? '',
       createdAt: item.createdAt,
       updatedAt: item.updatedAt,
       isPublic: item.is_public === IsPublic.PUBLIC,
       viewsCount: 0,
       commentsCount: item.board?._count.comments ?? 0,
       status: item.status === 'DONE' ? 'RESOLVED' : item.status,
-      dong: item.board?.user?.resident?.dong?.toString(),
-      ho: item.board?.user?.resident?.ho?.toString(),
+      dong: item.author?.resident?.dong?.toString(),
+      ho: item.author?.resident?.ho?.toString(),
     }));
 
     return { complaints, totalCount };
