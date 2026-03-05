@@ -117,7 +117,7 @@ model Resident {
 
 model Complaint {
   id        String    @id @default(uuid())
-  boardId   String    @unique @map("board_id")
+  boardId   String    @map("board_id")
   authorId  String    @map("author_id")
   title     String
   content   String
@@ -137,7 +137,7 @@ model Complaint {
 
 model Vote {
   id         String    @id @default(uuid())
-  boardId    String    @unique @map("board_id")
+  boardId    String    @map("board_id")
   authorId   String    @map("author_id")
   title      String
   content    String
@@ -160,7 +160,7 @@ model Vote {
 
 model Notice {
   id        String         @id @default(uuid())
-  boardId   String         @unique @map("board_id")
+  boardId   String         @map("board_id")
   authorId  String         @map("author_id")
   title     String
   content   String
@@ -188,9 +188,9 @@ model Board {
   deletedAt DateTime? @map("deleted_at")
 
   // Relations
-  complaint     Complaint?
-  vote          Vote?
-  notice        Notice?
+  complaint     Complaint[]
+  vote          Vote[]
+  notice        Notice[]
   apartment     Apartment      @relation(fields: [aptId], references: [id])
   comments      Comment[]
   notifications Notification[]
