@@ -1,11 +1,12 @@
 erDiagram
     User {
-        Int id PK
+        String id PK
         String profileImg
-        String nickname
-        Int aptId FK
+        String registerId FK
+        String username
+        String aptId FK
         String name
-        String email "UK"
+        String email
         String phoneNumber
         String password
         Role role
@@ -15,57 +16,46 @@ erDiagram
         DateTime deletedAt
     }
 
-    RegisterReq {
-        Int id PK
-        Int userId FK "UK"
+    Register {
+        String id PK
         RegisterStatus register_status
-        Int aptId
+        String aptId FK
+        String username
+        String phoneNumber
+        String name
+        String email
+        String password
         Role requestedRole
-        String dong
-        String ho
+        Int dong
+        Int ho
         DateTime createdAt
         DateTime updatedAt
-    }
-
-    ApartmentReq {
-        Int id PK
-        Int userId FK "UK"
-        String aptName
-        String aptAdress "UK"
-        String officeNumber
-        String startComplexNumber
-        String endComplexNumber
-        String startDongNumber
-        String endDongNumber
-        String startFloorNumber
-        String endFloorNumber
-        String startHoNumber
-        String endHoNumber
-        DateTime createdAt
+        DateTime deletedAt
     }
 
     Apartment {
-        Int id PK
+        String id PK
         String aptName
-        String aptAdress "UK"
-        String officeNumber "UK"
-        String startComplexNumber
-        String endComplexNumber
-        String startDongNumber
-        String endDongNumber
-        String startFloorNumber
-        String endFloorNumber
-        String startHoNumber
-        String endHoNumber
+        String aptAdress
+        String officeNumber
+        Int startComplexNumber
+        Int endComplexNumber
+        Int startDongNumber
+        Int endDongNumber
+        Int startFloorNumber
+        Int endFloorNumber
+        Int startHoNumber
+        Int endHoNumber
+        RegisterStatus aptStatus
         DateTime createdAt
         DateTime updatedAt
         DateTime deletedAt
     }
 
     Resident {
-        Int id PK
-        Int userId FK "UK"
-        Int aptId FK
+        String id PK
+        String userId FK
+        String aptId FK
         Int dong
         Int ho
         IsHouseHold is_houseHold
@@ -75,9 +65,9 @@ erDiagram
     }
 
     Complaint {
-        Int id PK
-        Int boardId FK "UK"
-        Int authorId
+        String id PK
+        String boardId FK
+        String authorId FK
         String title
         String content
         Status status
@@ -88,13 +78,13 @@ erDiagram
     }
 
     Vote {
-        Int id PK
-        Int boardId FK "UK"
-        Int authorId
+        String id PK
+        String boardId FK
+        String authorId FK
         String title
         String content
         Status status
-        String_Array targetDong
+        String[] targetDong
         DateTime startDate
         DateTime endDate
         DateTime createdAt
@@ -103,9 +93,9 @@ erDiagram
     }
 
     Notice {
-        Int id PK
-        Int boardId FK "UK"
-        Int authorId
+        String id PK
+        String boardId FK
+        String authorId FK
         String title
         String content
         DateTime startDate
@@ -118,8 +108,8 @@ erDiagram
     }
 
     Board {
-        Int id PK
-        Int authorId FK
+        String id PK
+        String aptId FK
         BoardType boardType
         DateTime createdAt
         DateTime updatedAt
@@ -127,51 +117,51 @@ erDiagram
     }
 
     Comment {
-        Int id PK
-        Int userId FK
-        Int boardId FK
+        String id PK
+        String userId FK
+        String boardId FK
         String content
         DateTime createdAt
         DateTime updatedAt
     }
 
     VoteOption {
-        Int id PK
-        Int voteId FK
+        String id PK
+        String voteId FK
         String option
         DateTime createdAt
         DateTime updatedAt
     }
 
     VoteParticipation {
-        Int id PK
-        Int residentId FK
-        Int voteId FK
-        Int voteOptionId FK
+        String id PK
+        String residentId FK
+        String voteId FK
+        String voteOptionId FK
         DateTime createdAt
         DateTime updatedAt
     }
 
     Notification {
-        Int id PK
-        Int userId FK
-        Int boardId FK
+        String id PK
+        String userId FK
+        String boardId FK
         String message
         Boolean is_read
         NotificationType notificationType
-        Int complaintId
-        Int noticeId
-        Int voteId
+        String complaintId
+        String noticeId
+        String voteId
         DateTime notificatedAt
         DateTime createdAt
         DateTime updatedAt
     }
 
     residentRoster {
-        Int id PK
-        Int aptId FK
-        Int adminId FK
-        Int userId FK "UK"
+        String id PK
+        String aptId FK
+        String adminId FK
+        String userId FK
         Int dong
         Int ho
         String name
@@ -183,31 +173,32 @@ erDiagram
         DateTime updatedAt
     }
 
-    %% ======================
     %% Relationships
-    %% ======================
-    User ||--o{ Board : "boards"
-    User ||--o{ Comment : "comments"
-    User ||--o{ Notification : "notifications"
-    User ||--o| RegisterReq : "registerReq"
-    User }o--|| Apartment : "apartment"
-    User ||--o| Resident : "resident"
-    User ||--o| residentRoster : "userResidentRoster"
-    User ||--o{ residentRoster : "adminResidentRosters"
-
-    RegisterReq ||--o| ApartmentReq : "apartmentReq"
-
+    Apartment ||--o{ User : "users"
+    Apartment ||--o{ Board : "boards"
     Apartment ||--o{ Resident : "residents"
     Apartment ||--o{ residentRoster : "residentRosters"
 
-    Board ||--o| Complaint : "complaint"
-    Board ||--o| Vote : "vote"
-    Board ||--o| Notice : "notice"
-    Board ||--o{ Comment : "comments"
-    Board ||--o{ Notification : "notifications"
+    Register |o--o| User : "creates"
 
-    Vote ||--o{ VoteOption : "options"
-    Vote ||--o{ VoteParticipation : "participations"
+    User ||--o| Resident : "has"
+    User ||--o{ Comment : "writes"
+    User ||--o{ Notification : "receives"
+    User |o--o| residentRoster : "matches"
+    User ||--o{ residentRoster : "manages_as_admin"
+    User ||--o{ Complaint : "authors"
+    User ||--o{ Vote : "authors"
+    User ||--o{ Notice : "authors"
 
-    Resident ||--o{ VoteParticipation : "voteParticipations"
-    VoteOption ||--o{ VoteParticipation : "participations"
+    Resident ||--o{ VoteParticipation : "participates"
+
+    Board ||--o| Complaint : "has"
+    Board ||--o| Vote : "has"
+    Board ||--o| Notice : "has"
+    Board ||--o{ Comment : "has"
+    Board ||--o{ Notification : "triggers"
+
+    Vote ||--o{ VoteOption : "has"
+    Vote ||--o{ VoteParticipation : "has"
+    
+    VoteOption ||--o{ VoteParticipation : "receives"
