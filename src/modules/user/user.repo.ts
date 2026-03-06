@@ -20,4 +20,11 @@ export class UserRepo {
       },
     });
   };
+
+  updateUserProfile = async (id: string, data: { password?: string; profileImg?: string }) => {
+    return await prisma.user.update({
+      where: { id },
+      data,
+    });
+  };
 }

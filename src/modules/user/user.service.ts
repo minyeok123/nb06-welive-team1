@@ -1,6 +1,8 @@
 import { UserRepo } from './user.repo';
 import { CustomError } from '@libs/error';
 import bcrypt from 'bcrypt';
+import { putImage } from './utils/s3.handler';
+import path from 'path';
 
 export class UserService {
   constructor(private userRepo: UserRepo) {}
@@ -19,6 +21,49 @@ export class UserService {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(newPassword, salt);
     const updatedUser = await this.userRepo.updateUserPassword(userId, hashedPassword);
+    return updatedUser;
+  };
+
+  updateProfile = async (
+    userId: string,
+    file?: Express.Multer.File,
+    currentPassword?: string,
+    newPassword?: string,
+  ) => {
+    const user = await this.userRepo.findUserById(userId);
+    if (!user) {
+      throw new CustomError(404, '존재하지 않은 유저입니다');
+    }
+
+    const data: { password?: string; profileImg?: string } = {};
+
+    const isProduction = process.env.NODE_ENV === 'production';
+    if (file) {
+      if (isProduction && file.buffer) {
+        // 프로덕션: S3로 파일 전송 (multer.memoryStorage)
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+        const ext = path.extname(file.originalname);
+        const key = `profiles/profile-${uniqueSuffix}${ext}`;
+
+        const s3Result = await putImage(file, key);
+
+        data.profileImg = s3Result.key; // S3 Key 값을 DB에 저장
+      } else {
+        // 개발 환경: 로컬 폴더에 저장된 파일 이름 사용 (multer.diskStorage)
+        data.profileImg = `/uploads/profiles/${file.filename}`;
+      }
+    }
+
+    if (currentPassword && newPassword) {
+      const verifyPassword = await bcrypt.compare(currentPassword, user.password);
+      if (!verifyPassword) {
+        throw new CustomError(401, '기존 비밀번호와 일치하지 않습니다');
+      }
+      const salt = await bcrypt.genSalt(10);
+      data.password = await bcrypt.hash(newPassword, salt);
+    }
+
+    const updatedUser = await this.userRepo.updateUserProfile(userId, data);
     return updatedUser;
   };
 }
