@@ -4,7 +4,6 @@ import { IsPublic, NotificationType, Status } from '@prisma/client';
 export class ComplaintRepo {
   createComplaintWithBoard = async (params: {
     authorId: string;
-    aptId: string;
     title: string;
     content: string;
     status: Status;
@@ -15,8 +14,8 @@ export class ComplaintRepo {
       // 게시판 생성 후 민원과 연결
       const board = await tx.board.create({
         data: {
-          ...(params.boardId && { id: params.boardId }),
-          aptId: params.aptId,
+          id: params.boardId,
+          authorId: params.authorId,
           boardType: 'COMPLAINT',
         },
       });
