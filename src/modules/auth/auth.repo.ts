@@ -108,6 +108,10 @@ export class AuthRepo {
     return await prisma.register.findUnique({ where: { id } });
   };
 
+  findRegisterByUsername = async (username: string) => {
+    return await prisma.register.findUnique({ where: { username } });
+  };
+
   registerApprove = async (id: string) => {
     return await prisma.register.update({
       where: { id },

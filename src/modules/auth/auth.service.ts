@@ -4,6 +4,7 @@ import { AuthRepo } from './auth.repo';
 import { CustomError } from '@libs/error';
 import { AdminSignupInput, SignupInput, SuperAdminSignupInput } from './auth.validate';
 import { createTokens } from './utils/token';
+import { getImage } from '../user/utils/s3.handler';
 
 export class AuthService {
   constructor(private repo: AuthRepo) {}
@@ -155,6 +156,10 @@ export class AuthService {
   };
 
   login = async (username: string, password: string) => {
+    const register = await this.repo.findRegisterByUsername(username);
+    if (register?.register_status === 'PENDING')
+      throw new CustomError(403, '회원가입이 승인되지 않은 유저입니다');
+
     const user = await this.repo.findUserByUsername(username);
     if (!user) throw new CustomError(404, '존재하지 않은 유저 또는 비밀번호가 일치하지 않습니다');
 
@@ -171,6 +176,12 @@ export class AuthService {
     }
 
     const { password: _, ...withoutPassword } = user;
+
+    // 프로덕션 환경이고 프로필 이미지가 있는 경우 S3의 Presigned URL 발급
+    if (withoutPassword.profileImg && process.env.NODE_ENV === 'production') {
+      withoutPassword.profileImg = await getImage(withoutPassword.profileImg);
+    }
+
     const { accessToken, refreshToken } = createTokens(user.id);
     return { accessToken, refreshToken, withoutPassword };
   };
