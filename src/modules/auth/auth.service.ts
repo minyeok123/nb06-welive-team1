@@ -253,4 +253,18 @@ export class AuthService {
     }
     return;
   };
+
+  updateAdminsStatusBatch = async (adminRegisterIds: string[], status: string) => {
+    for (const id of adminRegisterIds) {
+      await this.updateAdminStatus(id, status);
+    }
+    return;
+  };
+
+  updateResidentsStatusBatch = async (residentRegisterIds: string[], status: string) => {
+    for (const id of residentRegisterIds) {
+      await this.updateResidentStatus(id, status);
+    }
+    return;
+  };
 }

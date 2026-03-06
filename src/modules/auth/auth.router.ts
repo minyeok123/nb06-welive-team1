@@ -8,6 +8,8 @@ import {
   adminIdSchema,
   residentIdSchema,
   updateRegisterStatusSchema,
+  updateAdminsStatusBatchSchema,
+  updateResidentsStatusBatchSchema,
 } from './auth.validate';
 import { authenticate } from '@/middlewares/authenticate';
 import { superAdminAuthorize, adminAuthorize } from '@/middlewares/authorize';
@@ -21,12 +23,26 @@ router.post('/login', validate(loginSchema), asyncHandler(authController.login))
 router.post('/refresh', authenticateRefresh, asyncHandler(authController.refresh));
 router.post('/logout', asyncHandler(authController.logout));
 router.patch(
+  '/admins/status',
+  validate(updateAdminsStatusBatchSchema, 'body'),
+  authenticate,
+  superAdminAuthorize,
+  asyncHandler(authController.updateAdminsStatusBatch),
+);
+router.patch(
   '/admins/:adminId/status',
   validate(adminIdSchema, 'params'),
   validate(updateRegisterStatusSchema, 'body'),
   authenticate,
   superAdminAuthorize,
   asyncHandler(authController.updateAdminStatus),
+);
+router.patch(
+  '/residents/status',
+  validate(updateResidentsStatusBatchSchema, 'body'),
+  authenticate,
+  adminAuthorize,
+  asyncHandler(authController.updateResidentsStatusBatch),
 );
 router.patch(
   '/residents/:residentId/status',
