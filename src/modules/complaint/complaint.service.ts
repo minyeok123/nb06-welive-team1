@@ -17,6 +17,7 @@ export class ComplaintService {
     // 민원 등록과 게시판 생성은 트랜잭션으로 처리
     const { board, complaint } = await this.repo.createComplaintWithBoard({
       authorId: user.id,
+      aptId: user.aptId,
       title: input.title,
       content: input.content,
       status: input.status ?? Status.PENDING,
