@@ -28,6 +28,42 @@ export type ComplaintWithRelations = Prisma.ComplaintGetPayload<{
   };
 }>;
 
+export type ComplaintDetailWithRelations = Prisma.ComplaintGetPayload<{
+  include: {
+    author: {
+      select: {
+        id: true;
+        name: true;
+        aptId: true;
+        resident: {
+          select: {
+            dong: true;
+            ho: true;
+          };
+        };
+      };
+    };
+    board: {
+      select: {
+        comments: {
+          select: {
+            id: true;
+            userId: true;
+            content: true;
+            createdAt: true;
+            updatedAt: true;
+            user: {
+              select: {
+                name: true;
+              };
+            };
+          };
+        };
+      };
+    };
+  };
+}>;
+
 export class ComplaintRepo {
   createComplaintWithBoard = async (params: {
     authorId: string;
@@ -64,6 +100,7 @@ export class ComplaintRepo {
   };
 
   findAdminsByApartment = async (aptId: string) => {
+    // 동일 아파트 관리자 목록 조회
     return prisma.user.findMany({
       where: {
         aptId,
@@ -103,6 +140,7 @@ export class ComplaintRepo {
     skip: number;
     take: number;
   }): Promise<{ items: ComplaintWithRelations[]; totalCount: number }> => {
+    // 민원 목록 + 총 개수 동시 조회
     const [items, totalCount] = await prisma.$transaction([
       prisma.complaint.findMany({
         where: params.where,
@@ -140,5 +178,50 @@ export class ComplaintRepo {
     ]);
 
     return { items, totalCount };
+  };
+
+  findComplaintById = async (complaintId: string): Promise<ComplaintDetailWithRelations | null> => {
+    // 민원 상세(작성자/댓글 포함) 조회
+    return prisma.complaint.findFirst({
+      where: {
+        id: complaintId,
+        deletedAt: null,
+      },
+      include: {
+        // 작성자(입주민 정보 포함)
+        author: {
+          select: {
+            id: true,
+            name: true,
+            aptId: true,
+            resident: {
+              select: {
+                dong: true,
+                ho: true,
+              },
+            },
+          },
+        },
+        board: {
+          select: {
+            comments: {
+              orderBy: { createdAt: 'asc' },
+              select: {
+                id: true,
+                userId: true,
+                content: true,
+                createdAt: true,
+                updatedAt: true,
+                user: {
+                  select: {
+                    name: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
   };
 }

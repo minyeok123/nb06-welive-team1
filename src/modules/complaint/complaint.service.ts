@@ -1,6 +1,6 @@
 import { IsPublic, Status } from '@prisma/client';
 import { CustomError } from '@libs/error';
-import { ComplaintRepo, ComplaintWithRelations } from './complaint.repo';
+import { ComplaintDetailWithRelations, ComplaintRepo, ComplaintWithRelations } from './complaint.repo';
 import { CreateComplaintInput, ListComplaintsQuery } from './complaint.validate';
 
 export class ComplaintService {
@@ -103,6 +103,7 @@ export class ComplaintService {
       ];
     }
 
+    // 페이징 계산
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
     const skip = (page - 1) * limit;
@@ -113,6 +114,7 @@ export class ComplaintService {
       take: limit,
     });
 
+    // 응답 포맷 매핑
     const complaints = (items as ComplaintWithRelations[]).map((item) => ({
       complaintId: item.id,
       userId: item.authorId,
@@ -129,5 +131,58 @@ export class ComplaintService {
     }));
 
     return { complaints, totalCount };
+  };
+
+  getComplaint = async (complaintId: string, user: { id: string; aptId: string | null; role: string }) => {
+    if (!user?.id) {
+      throw new CustomError(403, '접근 권한이 없습니다');
+    }
+
+    // 민원 상세 조회
+    const complaint = await this.repo.findComplaintById(complaintId);
+    if (!complaint) {
+      throw new CustomError(404, '민원을 찾을 수 없습니다');
+    }
+
+    // 관리자 여부 확인
+    const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
+    if (!isAdmin && complaint.is_public === IsPublic.PRIVATE && complaint.authorId !== user.id) {
+      // 비공개 글은 작성자/관리자만 조회
+      throw new CustomError(403, '비밀글은 확인할 수 없습니다');
+    }
+
+    if (user.aptId && complaint.author?.aptId && complaint.author.aptId !== user.aptId) {
+      // 다른 아파트 민원 차단
+      throw new CustomError(403, '접근 권한이 없습니다');
+    }
+
+    const detail = (complaint as ComplaintDetailWithRelations);
+    // 댓글 목록
+    const comments = detail.board?.comments ?? [];
+
+    return {
+      complaintId: detail.id,
+      userId: detail.authorId,
+      title: detail.title,
+      writerName: detail.author?.name ?? '',
+      createdAt: detail.createdAt,
+      updatedAt: detail.updatedAt,
+      isPublic: detail.is_public === IsPublic.PUBLIC,
+      viewsCount: 0,
+      commentsCount: comments.length,
+      status: detail.status === 'DONE' ? 'RESOLVED' : detail.status,
+      dong: detail.author?.resident?.dong?.toString(),
+      ho: detail.author?.resident?.ho?.toString(),
+      content: detail.content,
+      boardType: '민원',
+      comments: comments.map((comment) => ({
+        id: comment.id,
+        userId: comment.userId,
+        content: comment.content,
+        createdAt: comment.createdAt,
+        updatedAt: comment.updatedAt,
+        writerName: comment.user?.name ?? '',
+      })),
+    };
   };
 }
