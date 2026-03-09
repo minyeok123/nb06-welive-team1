@@ -71,7 +71,7 @@ model Register {
 model Apartment {
   id                 String         @id @default(uuid())
   aptName            String         @map("apt_name")
-  aptAdress          String         @unique @map("apt_adress")
+  aptAddress         String         @unique @map("apt_address")
   officeNumber       String         @unique @map("office_number")
   startComplexNumber Int            @map("start_complex_number")
   endComplexNumber   Int            @map("end_complex_number")

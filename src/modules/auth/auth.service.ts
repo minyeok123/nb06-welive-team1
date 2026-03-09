@@ -84,7 +84,7 @@ export class AuthService {
 
     const apartment = await this.repo.createApartment({
       aptName: input.apartmentName,
-      aptAdress: input.apartmentAddress,
+      aptAddress: input.apartmentAddress,
       officeNumber: input.apartmentManagementNumber,
       startComplexNumber: input.startComplexNumber,
       endComplexNumber: input.endComplexNumber,
