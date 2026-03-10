@@ -41,7 +41,7 @@ export class AuthRepo {
   findApartmentByAddress = async (apartmentAddress: string) => {
     return prisma.apartment.findFirst({
       where: {
-        aptAdress: apartmentAddress,
+        aptAddress: apartmentAddress,
       },
     });
   };

@@ -61,7 +61,7 @@ export const adminSignupSchema = z.object({
     .regex(/^\d{9,15}$/, '연락처 형식이 올바르지 않습니다'),
   name: z.string().trim().min(2).max(50),
   email: z.string().trim().email(),
-  description: z.string().trim().max(1000).optional(),
+  description: z.string().trim().max(1000),
   startComplexNumber: intValue,
   endComplexNumber: intValue,
   startDongNumber: intValue,
