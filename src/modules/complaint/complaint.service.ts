@@ -1,7 +1,7 @@
 import { IsPublic, Status } from '@prisma/client';
 import { CustomError } from '@libs/error';
 import { ComplaintDetailWithRelations, ComplaintRepo, ComplaintWithRelations } from './complaint.repo';
-import { CreateComplaintInput, ListComplaintsQuery } from './complaint.validate';
+import { CreateComplaintInput, ListComplaintsQuery, UpdateComplaintInput } from './complaint.validate';
 
 export class ComplaintService {
   constructor(private repo: ComplaintRepo) {}
@@ -183,6 +183,54 @@ export class ComplaintService {
         updatedAt: comment.updatedAt,
         writerName: comment.user?.name ?? '',
       })),
+    };
+  };
+
+  updateComplaint = async (
+    complaintId: string,
+    input: UpdateComplaintInput,
+    user: { id: string; aptId: string | null },
+  ) => {
+    if (!user?.id) {
+      throw new CustomError(403, '접근 권한이 없습니다');
+    }
+
+    // 수정 대상 조회
+    const complaint = await this.repo.findComplaintById(complaintId);
+    if (!complaint) {
+      throw new CustomError(404, '민원을 찾을 수 없습니다');
+    }
+
+    if (complaint.authorId !== user.id) {
+      // 작성자만 수정 가능
+      throw new CustomError(403, '접근 권한이 없습니다');
+    }
+
+    if (complaint.status === 'IN_PROGRESS' || complaint.status === 'DONE') {
+      // 처리 중/처리 완료 민원은 수정 불가
+      throw new CustomError(403, '처리 중이거나 완료된 민원은 수정할 수 없습니다');
+    }
+
+    const updated = await this.repo.updateComplaint({
+      complaintId,
+      title: input.title,
+      content: input.content,
+      isPublic: input.isPublic,
+    });
+
+    return {
+      complaintId: updated.id,
+      userId: updated.authorId,
+      title: updated.title,
+      writerName: updated.author?.name ?? '',
+      createdAt: updated.createdAt,
+      updatedAt: updated.updatedAt,
+      isPublic: updated.is_public === IsPublic.PUBLIC,
+      viewsCount: 0,
+      commentsCount: updated.board?._count.comments ?? 0,
+      status: updated.status === 'DONE' ? 'RESOLVED' : updated.status,
+      dong: updated.author?.resident?.dong?.toString(),
+      ho: updated.author?.resident?.ho?.toString(),
     };
   };
 }
