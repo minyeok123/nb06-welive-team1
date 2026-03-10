@@ -8,6 +8,7 @@ const booleanSchema = z.preprocess((value) => {
   return value;
 }, z.boolean());
 
+// 민원 등록 요청 본문 스키마
 export const createComplaintSchema = z.object({
   title: z.string().trim().min(1).max(200), // 민원 제목
   content: z.string().trim().min(1).max(5000), // 민원 내용
@@ -18,6 +19,7 @@ export const createComplaintSchema = z.object({
 
 export type CreateComplaintInput = z.infer<typeof createComplaintSchema>;
 
+// 민원 목록 조회 쿼리 스키마
 export const listComplaintsSchema = z.object({
   page: pageSchema.optional(), // 페이지 번호
   limit: limitSchema.optional(), // 페이지 크기
@@ -29,3 +31,10 @@ export const listComplaintsSchema = z.object({
 });
 
 export type ListComplaintsQuery = z.infer<typeof listComplaintsSchema>;
+
+// 민원 상세 조회 경로 파라미터 스키마
+export const complaintIdParamSchema = z.object({
+  complaintId: z.string().uuid(), // 민원 ID
+});
+
+export type ComplaintIdParam = z.infer<typeof complaintIdParamSchema>;
