@@ -111,3 +111,13 @@ export const adminIdSchema = z.object({
 export const residentIdSchema = z.object({
   residentId: z.uuid(),
 });
+
+export const updateAdminsStatusBatchSchema = z.object({
+  ids: z.array(z.string().uuid()).min(1, '최소 1개 이상의 ID가 필요합니다'),
+  status: z.enum(['APPROVED', 'REJECTED']),
+});
+
+export const updateResidentsStatusBatchSchema = z.object({
+  ids: z.array(z.string().uuid()).min(1, '최소 1개 이상의 ID가 필요합니다'),
+  status: z.enum(['APPROVED', 'REJECTED']),
+});
