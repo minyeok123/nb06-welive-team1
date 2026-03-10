@@ -1,7 +1,13 @@
 import { Request, Response } from 'express';
 import { ComplaintRepo } from './complaint.repo';
 import { ComplaintService } from './complaint.service';
-import { complaintIdParamSchema, createComplaintSchema, listComplaintsSchema, updateComplaintSchema } from './complaint.validate';
+import {
+  complaintIdParamSchema,
+  createComplaintSchema,
+  listComplaintsSchema,
+  updateComplaintSchema,
+  updateComplaintStatusSchema,
+} from './complaint.validate';
 
 export class ComplaintController {
   constructor(private complaintService: ComplaintService) {}
@@ -33,6 +39,14 @@ export class ComplaintController {
     const params = complaintIdParamSchema.parse(req.params); // 경로 파라미터 검증
     const input = updateComplaintSchema.parse(req.body); // 본문 유효성 검사
     const result = await this.complaintService.updateComplaint(params.complaintId, input, req.user);
+    return res.status(200).json(result);
+  };
+
+  updateComplaintStatus = async (req: Request, res: Response) => {
+    // 민원 상태 변경 요청 처리
+    const params = complaintIdParamSchema.parse(req.params); // 경로 파라미터 검증
+    const input = updateComplaintStatusSchema.parse(req.body); // 본문 유효성 검사
+    const result = await this.complaintService.updateComplaintStatus(params.complaintId, input, req.user);
     return res.status(200).json(result);
   };
 }
