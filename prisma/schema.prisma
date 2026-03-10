@@ -73,6 +73,7 @@ model Apartment {
   aptName            String         @map("apt_name")
   aptAddress         String         @unique @map("apt_address")
   officeNumber       String         @unique @map("office_number")
+  description        String         @map("description")
   startComplexNumber Int            @map("start_complex_number")
   endComplexNumber   Int            @map("end_complex_number")
   startDongNumber    Int            @map("start_dong_number")

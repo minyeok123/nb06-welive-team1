@@ -5,14 +5,36 @@ import { AptRepo } from '@modules/apartment/apt.repo';
 export class AptController {
   constructor(private aptService: AptService) {}
 
-  getListApt = async (req: Request, res: Response, next: NextFunction) => {
-    const { keyword, name, adress } = req.validatedQuery as unknown as {
+  getListAptForSignUp = async (req: Request, res: Response, next: NextFunction) => {
+    const { keyword, name, address } = req.validatedQuery as unknown as {
       keyword?: string;
       name?: string;
-      adress?: string;
+      address?: string;
     };
 
-    const aptList = await this.aptService.getListApt(keyword, name, adress);
+    const aptList = await this.aptService.getListAptForSignUp(keyword, name, address);
+    res.status(200).json(aptList);
+  };
+
+  getListApt = async (req: Request, res: Response, next: NextFunction) => {
+    const { name, address, searchKeyword, apartmentStatus, page, limit } =
+      req.validatedQuery as unknown as {
+        name?: string;
+        address?: string;
+        searchKeyword?: string;
+        apartmentStatus?: string;
+        page?: number;
+        limit?: number;
+      };
+
+    const aptList = await this.aptService.getListApt(
+      name,
+      address,
+      searchKeyword,
+      apartmentStatus,
+      page,
+      limit,
+    );
     res.status(200).json(aptList);
   };
 }
