@@ -2,7 +2,7 @@ import express from 'express';
 import asyncHandler from '../../middlewares/asyncHandler';
 import { validate } from '../../middlewares/validate';
 import { authenticate } from '../../middlewares/authenticate';
-import { complaintIdParamSchema, createComplaintSchema, listComplaintsSchema } from './complaint.validate';
+import { complaintIdParamSchema, createComplaintSchema, listComplaintsSchema, updateComplaintSchema } from './complaint.validate';
 import { complaintController } from './complaint.controller';
 
 const router = express.Router();
@@ -29,6 +29,15 @@ router.get(
   authenticate,
   validate(complaintIdParamSchema, 'params'),
   asyncHandler(complaintController.getComplaint),
+);
+
+// 민원 수정
+router.patch(
+  '/:complaintId',
+  authenticate,
+  validate(complaintIdParamSchema, 'params'),
+  validate(updateComplaintSchema),
+  asyncHandler(complaintController.updateComplaint),
 );
 
 export default router;

@@ -224,4 +224,47 @@ export class ComplaintRepo {
       },
     });
   };
+
+  updateComplaint = async (params: {
+    complaintId: string;
+    title: string;
+    content: string;
+    isPublic: boolean;
+  }): Promise<ComplaintWithRelations> => {
+    // 민원 내용 수정
+    return prisma.complaint.update({
+      where: { id: params.complaintId },
+      data: {
+        title: params.title,
+        content: params.content,
+        is_public: params.isPublic ? IsPublic.PUBLIC : IsPublic.PRIVATE,
+      },
+      include: {
+        // 작성자(입주민 정보 포함)
+        author: {
+          select: {
+            id: true,
+            name: true,
+            aptId: true,
+            resident: {
+              select: {
+                dong: true,
+                ho: true,
+              },
+            },
+          },
+        },
+        // 댓글 수만 필요
+        board: {
+          select: {
+            _count: {
+              select: {
+                comments: true,
+              },
+            },
+          },
+        },
+      },
+    });
+  };
 }

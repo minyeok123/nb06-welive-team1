@@ -38,3 +38,12 @@ export const complaintIdParamSchema = z.object({
 });
 
 export type ComplaintIdParam = z.infer<typeof complaintIdParamSchema>;
+
+// 민원 수정 요청 본문 스키마
+export const updateComplaintSchema = z.object({
+  title: z.string().trim().min(1).max(200), // 민원 제목
+  content: z.string().trim().min(1).max(5000), // 민원 내용
+  isPublic: z.boolean(), // 공개 여부
+});
+
+export type UpdateComplaintInput = z.infer<typeof updateComplaintSchema>;
