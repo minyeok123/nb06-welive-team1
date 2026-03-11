@@ -1,7 +1,12 @@
 import { IsPublic, Status } from '@prisma/client';
 import { CustomError } from '@libs/error';
 import { ComplaintDetailWithRelations, ComplaintRepo, ComplaintWithRelations } from './complaint.repo';
-import { CreateComplaintInput, ListComplaintsQuery, UpdateComplaintInput } from './complaint.validate';
+import {
+  CreateComplaintInput,
+  ListComplaintsQuery,
+  UpdateComplaintInput,
+  UpdateComplaintStatusInput,
+} from './complaint.validate';
 
 export class ComplaintService {
   constructor(private repo: ComplaintRepo) {}
@@ -156,34 +161,7 @@ export class ComplaintService {
       throw new CustomError(403, '접근 권한이 없습니다');
     }
 
-    const detail = (complaint as ComplaintDetailWithRelations);
-    // 댓글 목록
-    const comments = detail.board?.comments ?? [];
-
-    return {
-      complaintId: detail.id,
-      userId: detail.authorId,
-      title: detail.title,
-      writerName: detail.author?.name ?? '',
-      createdAt: detail.createdAt,
-      updatedAt: detail.updatedAt,
-      isPublic: detail.is_public === IsPublic.PUBLIC,
-      viewsCount: 0,
-      commentsCount: comments.length,
-      status: detail.status === 'DONE' ? 'RESOLVED' : detail.status,
-      dong: detail.author?.resident?.dong?.toString(),
-      ho: detail.author?.resident?.ho?.toString(),
-      content: detail.content,
-      boardType: '민원',
-      comments: comments.map((comment) => ({
-        id: comment.id,
-        userId: comment.userId,
-        content: comment.content,
-        createdAt: comment.createdAt,
-        updatedAt: comment.updatedAt,
-        writerName: comment.user?.name ?? '',
-      })),
-    };
+    return this.mapComplaintDetail(complaint as ComplaintDetailWithRelations);
   };
 
   updateComplaint = async (
@@ -231,6 +209,74 @@ export class ComplaintService {
       status: updated.status === 'DONE' ? 'RESOLVED' : updated.status,
       dong: updated.author?.resident?.dong?.toString(),
       ho: updated.author?.resident?.ho?.toString(),
+    };
+  };
+
+  updateComplaintStatus = async (
+    complaintId: string,
+    input: UpdateComplaintStatusInput,
+    user: { id: string; aptId: string | null; role: string },
+  ) => {
+    if (!user?.id) {
+      throw new CustomError(403, '접근 권한이 없습니다');
+    }
+
+    // 관리자 여부 확인
+    const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
+    if (!isAdmin) {
+      throw new CustomError(403, '접근 권한이 없습니다');
+    }
+
+    const complaint = await this.repo.findComplaintById(complaintId);
+    if (!complaint) {
+      throw new CustomError(404, '민원을 찾을 수 없습니다');
+    }
+
+    if (user.aptId && complaint.author?.aptId && complaint.author.aptId !== user.aptId) {
+      // 다른 아파트 민원 차단
+      throw new CustomError(403, '접근 권한이 없습니다');
+    }
+
+    const status = input.status === 'RESOLVED' ? Status.DONE : input.status;
+    const updated = await this.repo.updateComplaintStatus({
+      complaintId,
+      status,
+    });
+
+    if (!updated) {
+      throw new CustomError(404, '민원을 찾을 수 없습니다');
+    }
+
+    return this.mapComplaintDetail(updated);
+  };
+
+  private mapComplaintDetail = (detail: ComplaintDetailWithRelations) => {
+    // 댓글 목록
+    const comments = detail.board?.comments ?? [];
+
+    return {
+      complaintId: detail.id,
+      userId: detail.authorId,
+      title: detail.title,
+      writerName: detail.author?.name ?? '',
+      createdAt: detail.createdAt,
+      updatedAt: detail.updatedAt,
+      isPublic: detail.is_public === IsPublic.PUBLIC,
+      viewsCount: 0,
+      commentsCount: comments.length,
+      status: detail.status === 'DONE' ? 'RESOLVED' : detail.status,
+      dong: detail.author?.resident?.dong?.toString(),
+      ho: detail.author?.resident?.ho?.toString(),
+      content: detail.content,
+      boardType: '민원',
+      comments: comments.map((comment) => ({
+        id: comment.id,
+        userId: comment.userId,
+        content: comment.content,
+        createdAt: comment.createdAt,
+        updatedAt: comment.updatedAt,
+        writerName: comment.user?.name ?? '',
+      })),
     };
   };
 }

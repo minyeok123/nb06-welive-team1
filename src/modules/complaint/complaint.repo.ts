@@ -267,4 +267,17 @@ export class ComplaintRepo {
       },
     });
   };
+
+  updateComplaintStatus = async (params: {
+    complaintId: string;
+    status: Status;
+  }): Promise<ComplaintDetailWithRelations | null> => {
+    // 민원 상태 수정
+    await prisma.complaint.update({
+      where: { id: params.complaintId },
+      data: { status: params.status },
+    });
+
+    return this.findComplaintById(params.complaintId);
+  };
 }

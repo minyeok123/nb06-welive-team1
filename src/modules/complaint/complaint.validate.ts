@@ -47,3 +47,10 @@ export const updateComplaintSchema = z.object({
 });
 
 export type UpdateComplaintInput = z.infer<typeof updateComplaintSchema>;
+
+// 민원 상태 변경 요청 본문 스키마(관리자 전용)
+export const updateComplaintStatusSchema = z.object({
+  status: z.enum(['PENDING', 'IN_PROGRESS', 'RESOLVED']), // 처리 상태
+});
+
+export type UpdateComplaintStatusInput = z.infer<typeof updateComplaintStatusSchema>;

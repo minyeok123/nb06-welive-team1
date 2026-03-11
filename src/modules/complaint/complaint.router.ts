@@ -2,7 +2,13 @@ import express from 'express';
 import asyncHandler from '../../middlewares/asyncHandler';
 import { validate } from '../../middlewares/validate';
 import { authenticate } from '../../middlewares/authenticate';
-import { complaintIdParamSchema, createComplaintSchema, listComplaintsSchema, updateComplaintSchema } from './complaint.validate';
+import {
+  complaintIdParamSchema,
+  createComplaintSchema,
+  listComplaintsSchema,
+  updateComplaintSchema,
+  updateComplaintStatusSchema,
+} from './complaint.validate';
 import { complaintController } from './complaint.controller';
 
 const router = express.Router();
@@ -38,6 +44,15 @@ router.patch(
   validate(complaintIdParamSchema, 'params'),
   validate(updateComplaintSchema),
   asyncHandler(complaintController.updateComplaint),
+);
+
+// 민원 상태 변경(관리자 이상)
+router.patch(
+  '/:complaintId/status',
+  authenticate,
+  validate(complaintIdParamSchema, 'params'),
+  validate(updateComplaintStatusSchema),
+  asyncHandler(complaintController.updateComplaintStatus),
 );
 
 export default router;
