@@ -280,4 +280,12 @@ export class ComplaintRepo {
 
     return this.findComplaintById(params.complaintId);
   };
+
+  softDeleteComplaint = async (complaintId: string) => {
+    // 민원 소프트 삭제(deletedAt 설정)
+    await prisma.complaint.update({
+      where: { id: complaintId },
+      data: { deletedAt: new Date() },
+    });
+  };
 }

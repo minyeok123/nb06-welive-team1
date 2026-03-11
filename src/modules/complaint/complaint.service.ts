@@ -212,6 +212,32 @@ export class ComplaintService {
     };
   };
 
+  deleteComplaint = async (complaintId: string, user: { id: string }) => {
+    if (!user?.id) {
+      throw new CustomError(403, '접근 권한이 없습니다');
+    }
+
+    // 삭제 대상 조회
+    const complaint = await this.repo.findComplaintById(complaintId);
+    if (!complaint) {
+      throw new CustomError(404, '민원을 찾을 수 없습니다');
+    }
+
+    if (complaint.authorId !== user.id) {
+      // 작성자만 삭제 가능
+      throw new CustomError(403, '접근 권한이 없습니다');
+    }
+
+    if (complaint.status === 'IN_PROGRESS' || complaint.status === 'DONE') {
+      // 처리 중/처리 완료 민원은 삭제 불가
+      throw new CustomError(403, '처리 중이거나 완료된 민원은 삭제할 수 없습니다');
+    }
+
+    await this.repo.softDeleteComplaint(complaintId);
+
+    return { message: '정상적으로 삭제 처리되었습니다' };
+  };
+
   updateComplaintStatus = async (
     complaintId: string,
     input: UpdateComplaintStatusInput,
