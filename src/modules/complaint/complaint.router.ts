@@ -37,6 +37,14 @@ router.get(
   asyncHandler(complaintController.getComplaint),
 );
 
+// 민원 삭제
+router.delete(
+  '/:complaintId',
+  authenticate,
+  validate(complaintIdParamSchema, 'params'),
+  asyncHandler(complaintController.deleteComplaint),
+);
+
 // 민원 수정
 router.patch(
   '/:complaintId',
