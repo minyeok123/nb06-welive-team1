@@ -1,7 +1,11 @@
 import { AptRepo } from './apt.repo';
 import { Prisma, RegisterStatus, Role } from '@prisma/client';
-import { aptListDto } from './dto/response.dto';
-import { TargetObjectKeyFormat$ } from '@aws-sdk/client-s3';
+import {
+  aptListDto,
+  aptListForSignUpDto,
+  aptDetailDto,
+  aptDetailPublicDto,
+} from './dto/response.dto';
 
 export class AptService {
   constructor(private aptRepo: AptRepo) {}
@@ -31,7 +35,7 @@ export class AptService {
     }
 
     return {
-      apartments: aptList,
+      apartments: aptListForSignUpDto(aptList),
       count: totalCount,
     };
   };
@@ -79,5 +83,21 @@ export class AptService {
       apartments: aptListDto(apartments),
       count: totalCount,
     };
+  };
+
+  getAptDetail = async (id: string) => {
+    const aptDetail = await this.aptRepo.getAptDetail(id);
+    if (!aptDetail) {
+      throw new Error('아파트 상세 조회 실패');
+    }
+    return aptDetailDto(aptDetail);
+  };
+
+  getAptDetailPublic = async (id: string) => {
+    const aptDetail = await this.aptRepo.getAptDetail(id);
+    if (!aptDetail) {
+      throw new Error('아파트 상세 조회 실패');
+    }
+    return aptDetailPublicDto(aptDetail);
   };
 }

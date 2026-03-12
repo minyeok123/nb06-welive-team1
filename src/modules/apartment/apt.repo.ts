@@ -70,4 +70,56 @@ export class AptRepo {
 
     return { totalCount, apartments };
   };
+
+  getAptDetail = async (id: string) => {
+    const aptDetail = await prisma.apartment.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        aptName: true,
+        aptAddress: true,
+        aptStatus: true,
+        description: true,
+        officeNumber: true,
+        startComplexNumber: true,
+        endComplexNumber: true,
+        startDongNumber: true,
+        endDongNumber: true,
+        startFloorNumber: true,
+        endFloorNumber: true,
+        startHoNumber: true,
+        endHoNumber: true,
+        users: {
+          where: { role: Role.ADMIN },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phoneNumber: true,
+          },
+        },
+      },
+    });
+    return aptDetail;
+  };
+
+  getAptDetailPublic = async (id: string) => {
+    const aptDetail = await prisma.apartment.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        aptName: true,
+        aptAddress: true,
+        startComplexNumber: true,
+        endComplexNumber: true,
+        startDongNumber: true,
+        endDongNumber: true,
+        startFloorNumber: true,
+        endFloorNumber: true,
+        startHoNumber: true,
+        endHoNumber: true,
+      },
+    });
+    return aptDetail;
+  };
 }

@@ -5,6 +5,7 @@ import { validate } from '@/middlewares/validate';
 import {
   getListAptForSignupQuerySchema,
   getListAptQuerySchema,
+  getAptDetailParamSchema,
 } from '@/modules/apartment/apt.validate';
 import { authenticate } from '@/middlewares/authenticate';
 import { isNotUser } from '@/middlewares/authorize';
@@ -22,6 +23,19 @@ router.get(
   isNotUser,
   validate(getListAptQuerySchema, 'query'),
   asyncHandler(aptController.getListApt),
+);
+router.get(
+  '/:id',
+  authenticate,
+  isNotUser,
+  validate(getAptDetailParamSchema, 'params'),
+  asyncHandler(aptController.getAptDetail),
+);
+
+router.get(
+  '/public/:id',
+  validate(getAptDetailParamSchema, 'params'),
+  asyncHandler(aptController.getAptDetailPublic),
 );
 
 export default router;
