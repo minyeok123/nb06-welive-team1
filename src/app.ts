@@ -6,6 +6,7 @@ import authRouter from './modules/auth/auth.router';
 import cookieParser from 'cookie-parser';
 import path from 'path';
 import complaintRouter from './modules/complaint/complaint.router';
+import pollRouter from './modules/poll/poll.router';
 import userRouter from './modules/user/user.router';
 import aptRouter from './modules/apartment/apt.router';
 
@@ -17,6 +18,7 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 app.use('/api/auth', authRouter);
 app.use('/api/complaints', complaintRouter);
+app.use('/api/polls', pollRouter);
 app.use('/api/users', userRouter);
 app.use('/api/apartments', aptRouter);
 
