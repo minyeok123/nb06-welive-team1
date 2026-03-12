@@ -9,7 +9,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
   const accessToken = req.cookies.accessToken;
 
   if (!accessToken) {
-    throw new CustomError(401, '잘못된 접근입니다.');
+    throw new CustomError(401, '작업 권한이 없습니다.');
   }
 
   try {
@@ -24,6 +24,6 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
     req.user = withoutPasswordUser;
     next();
   } catch (error) {
-    throw new CustomError(401, '잘못된 접근입니다.');
+    throw new CustomError(401, '작업 권한이 없습니다.');
   }
 };

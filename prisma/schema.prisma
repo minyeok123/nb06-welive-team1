@@ -282,6 +282,7 @@ model residentRoster {
   is_residence  Boolean     @default(true) @map("is_residence")
   createdAt     DateTime    @default(now()) @map("created_at")
   updatedAt     DateTime    @updatedAt @map("updated_at")
+  deletedAt     DateTime?   @map("deleted_at")
 
   // Relations
   apartment Apartment @relation(fields: [aptId], references: [id])
