@@ -1,11 +1,18 @@
 import { Request, Response } from 'express';
 import { PollRepo } from './poll.repo';
 import { PollService } from './poll.service';
-import { createPollSchema } from './poll.validate';
+import { createPollSchema, listPollsSchema } from './poll.validate';
 
 // 투표 API 요청 핸들러
 export class PollController {
   constructor(private pollService: PollService) {}
+
+  // 투표 목록 조회 요청 처리
+  listPolls = async (req: Request, res: Response) => {
+    const query = req.validatedQuery as ReturnType<typeof listPollsSchema.parse>;
+    const result = await this.pollService.listPolls(query, req.user);
+    return res.status(200).json(result);
+  };
 
   // 투표 등록 요청 처리
   createPoll = async (req: Request, res: Response) => {
