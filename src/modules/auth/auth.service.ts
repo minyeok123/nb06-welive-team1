@@ -229,7 +229,7 @@ export class AuthService {
     return;
   };
 
-  updateResidentStatus = async (residentRegisterId: string, status: string) => {
+  updateResidentStatus = async (residentRegisterId: string, status: string, adminId: string) => {
     const register = await this.repo.findRegisterById(residentRegisterId);
     if (!register) {
       throw new CustomError(404, '존재하지 않는 주민 회원가입 요청입니다');
@@ -260,23 +260,35 @@ export class AuthService {
         dong: register.dong,
         ho: register.ho,
       });
+      const roster = await this.repo.createRoster({
+        apartment: { connect: { id: register.aptId } },
+        admin: { connect: { id: adminId } },
+        user: { connect: { id: user.id } },
+        dong: register.dong,
+        ho: register.ho,
+        name: user.name,
+        phoneNumber: user.phoneNumber,
+        is_houseHold: IsHouseHold.MEMBER,
+        is_registered: true,
+        is_residence: true,
+      });
     } else {
       await this.repo.registerReject(residentRegisterId);
     }
     return;
   };
 
-  updateAdminsStatusBatch = async (adminRegisterIds: string[], status: string) => {
-    for (const id of adminRegisterIds) {
-      await this.updateAdminStatus(id, status);
-    }
-    return;
-  };
+  // updateAdminsStatusBatch = async (adminRegisterIds: string[], status: string) => {
+  //   for (const id of adminRegisterIds) {
+  //     await this.updateAdminStatus(id, status);
+  //   }
+  //   return;
+  // };
 
-  updateResidentsStatusBatch = async (residentRegisterIds: string[], status: string) => {
-    for (const id of residentRegisterIds) {
-      await this.updateResidentStatus(id, status);
-    }
-    return;
-  };
+  // updateResidentsStatusBatch = async (residentRegisterIds: string[], status: string) => {
+  //   for (const id of residentRegisterIds) {
+  //     await this.updateResidentStatus(id, status);
+  //   }
+  //   return;
+  // };
 }

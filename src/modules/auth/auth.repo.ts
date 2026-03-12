@@ -142,6 +142,10 @@ export class AuthRepo {
     return await prisma.resident.create({ data });
   };
 
+  createRoster = async (data: Prisma.residentRosterCreateInput) => {
+    return await prisma.residentRoster.create({ data });
+  };
+
   createBoard = async (data: Prisma.BoardCreateInput) => {
     return await prisma.board.create({ data });
   };

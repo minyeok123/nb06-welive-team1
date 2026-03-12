@@ -1,0 +1,30 @@
+import { Request, Response, NextFunction } from 'express';
+import { ResidentService } from './resident.service';
+import { ResidentRepo } from './resident.repo';
+import { GetResidentRosterListQuery } from '@/types/resident.types';
+
+export class ResidentController {
+  constructor(private residentService: ResidentService) {}
+
+  getResidentList = async (req: Request, res: Response, next: NextFunction) => {
+    const adminId = req.user.id;
+    const { page, limit, building, unitNumber, residenceStatus, isRegistered, keyword } =
+      req.validatedQuery as GetResidentRosterListQuery;
+
+    const rosterList = await this.residentService.getResidentRosterList(
+      adminId,
+      page,
+      limit,
+      building,
+      unitNumber,
+      residenceStatus,
+      isRegistered,
+      keyword,
+    );
+    res.status(200).json(rosterList);
+  };
+}
+
+const residentRepo = new ResidentRepo();
+const residentService = new ResidentService(residentRepo);
+export const residentController = new ResidentController(residentService);
