@@ -23,3 +23,7 @@ export const getListAptQuerySchema = z.object({
     z.coerce.number().int().max(100).positive().default(10),
   ),
 });
+
+export const getAptDetailParamSchema = z.object({
+  id: z.uuid(),
+});

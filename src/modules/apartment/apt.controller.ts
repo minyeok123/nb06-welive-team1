@@ -37,6 +37,18 @@ export class AptController {
     );
     res.status(200).json(aptList);
   };
+
+  getAptDetail = async (req: Request, res: Response, next: NextFunction) => {
+    const { id } = req.params as { id: string };
+    const aptDetail = await this.aptService.getAptDetail(id);
+    res.status(200).json(aptDetail);
+  };
+
+  getAptDetailPublic = async (req: Request, res: Response, next: NextFunction) => {
+    const { id } = req.params as { id: string };
+    const aptDetail = await this.aptService.getAptDetailPublic(id);
+    res.status(200).json(aptDetail);
+  };
 }
 
 const aptRepo = new AptRepo();
