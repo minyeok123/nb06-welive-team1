@@ -34,6 +34,13 @@ export class PollController {
     return res.status(200).json(result);
   };
 
+  // 투표 삭제 요청 처리
+  deletePoll = async (req: Request, res: Response) => {
+    const params = pollIdParamSchema.parse(req.params);
+    const result = await this.pollService.deletePoll(params.pollId, req.user);
+    return res.status(200).json(result);
+  };
+
   // 투표 등록 요청 처리
   createPoll = async (req: Request, res: Response) => {
     const input = createPollSchema.parse(req.body);

@@ -39,6 +39,15 @@ router.patch(
   asyncHandler(pollController.updatePoll),
 );
 
+// 투표 삭제 (관리자만, 시작 전에만)
+router.delete(
+  '/:pollId',
+  authenticate,
+  isNotUser,
+  validate(pollIdParamSchema, 'params'),
+  asyncHandler(pollController.deletePoll),
+);
+
 // 투표 등록 (관리자만)
 router.post(
   '/',

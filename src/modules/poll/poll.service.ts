@@ -222,6 +222,43 @@ export class PollService {
     return { message: '정상적으로 수정 처리되었습니다' };
   };
 
+  // 투표 삭제 (관리자만, 시작 전에만)
+  deletePoll = async (
+    pollId: string,
+    user: { id: string; aptId: string | null; role: string },
+  ) => {
+    if (!user?.id) {
+      throw new CustomError(403, '접근 권한이 없습니다');
+    }
+
+    const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
+    if (!isAdmin) {
+      throw new CustomError(403, '관리자만 투표를 삭제할 수 있습니다');
+    }
+
+    if (!user.aptId) {
+      throw new CustomError(403, '아파트에 소속된 관리자만 삭제할 수 있습니다');
+    }
+
+    const vote = await this.repo.findPollById(pollId);
+    if (!vote) {
+      throw new CustomError(404, '투표를 찾을 수 없습니다');
+    }
+
+    if (vote.board?.aptId !== user.aptId) {
+      throw new CustomError(403, '접근 권한이 없습니다');
+    }
+
+    // 투표가 이미 시작된 경우 삭제 불가
+    if (new Date() >= vote.startDate) {
+      throw new CustomError(403, '이미 시작된 투표는 삭제할 수 없습니다');
+    }
+
+    await this.repo.softDeletePoll(pollId);
+
+    return { message: '정상적으로 삭제 처리되었습니다' };
+  };
+
   private mapPollDetail = (v: Awaited<ReturnType<PollRepo['findPollById']>>) => {
     if (!v) throw new CustomError(404, '투표를 찾을 수 없습니다');
     const buildingPermission =

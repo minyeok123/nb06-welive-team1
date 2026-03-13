@@ -138,6 +138,14 @@ export class PollRepo {
     });
   };
 
+  // 투표 소프트 삭제 (deletedAt 설정)
+  softDeletePoll = async (pollId: string) => {
+    await prisma.vote.update({
+      where: { id: pollId },
+      data: { deletedAt: new Date() },
+    });
+  };
+
   // 입주민 동 정보 조회 (투표권자 필터용)
   findResidentByUserId = async (userId: string) => {
     return prisma.resident.findFirst({
