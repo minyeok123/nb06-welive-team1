@@ -98,6 +98,46 @@ export class PollRepo {
     });
   };
 
+  // 투표 수정 (본문 + 선택지)
+  updatePoll = async (params: {
+    pollId: string;
+    title?: string;
+    content?: string;
+    status?: Status;
+    targetDong?: string[];
+    startDate?: Date;
+    endDate?: Date;
+    options?: { title: string }[];
+  }) => {
+    return prisma.$transaction(async (tx) => {
+      const { options, ...voteData } = params;
+      const updateData: Record<string, unknown> = {};
+      if (voteData.title !== undefined) updateData.title = voteData.title;
+      if (voteData.content !== undefined) updateData.content = voteData.content;
+      if (voteData.status !== undefined) updateData.status = voteData.status;
+      if (voteData.targetDong !== undefined) updateData.targetDong = voteData.targetDong;
+      if (voteData.startDate !== undefined) updateData.startDate = voteData.startDate;
+      if (voteData.endDate !== undefined) updateData.endDate = voteData.endDate;
+
+      if (Object.keys(updateData).length > 0) {
+        await tx.vote.update({
+          where: { id: params.pollId },
+          data: updateData,
+        });
+      }
+
+      if (options && options.length > 0) {
+        await tx.voteOption.deleteMany({ where: { voteId: params.pollId } });
+        await tx.voteOption.createMany({
+          data: options.map((opt) => ({
+            voteId: params.pollId,
+            option: opt.title,
+          })),
+        });
+      }
+    });
+  };
+
   // 입주민 동 정보 조회 (투표권자 필터용)
   findResidentByUserId = async (userId: string) => {
     return prisma.resident.findFirst({
