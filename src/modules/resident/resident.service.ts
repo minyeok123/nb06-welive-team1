@@ -72,4 +72,12 @@ export class ResidentService {
     }
     return personalRosterDto(roster);
   };
+
+  deleteRoster = async (id: string) => {
+    const roster = await this.residentRepo.deleteRoster(id);
+    if (!roster) {
+      throw new CustomError(400, '입주민 정보 삭제 실패');
+    }
+    return;
+  };
 }
