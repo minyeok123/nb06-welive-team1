@@ -1,6 +1,10 @@
 import { IsPublic, Status } from '@prisma/client';
 import { CustomError } from '@libs/error';
-import { ComplaintDetailWithRelations, ComplaintRepo, ComplaintWithRelations } from './complaint.repo';
+import {
+  ComplaintDetailWithRelations,
+  ComplaintRepo,
+  ComplaintWithRelations,
+} from './complaint.repo';
 import {
   CreateComplaintInput,
   ListComplaintsQuery,
@@ -42,7 +46,10 @@ export class ComplaintService {
     return { message: '정상적으로 등록 처리되었습니다' };
   };
 
-  listComplaints = async (query: ListComplaintsQuery, user: { id: string; aptId: string | null; role: string }) => {
+  listComplaints = async (
+    query: ListComplaintsQuery,
+    user: { id: string; aptId: string | null; role: string },
+  ) => {
     if (!user?.id) {
       throw new CustomError(403, '접근 권한이 없습니다');
     }
@@ -59,8 +66,7 @@ export class ComplaintService {
     }
 
     // RESOLVED는 DONE으로 매핑
-    const statusFilter =
-      query.status === 'RESOLVED' ? 'DONE' : query.status;
+    const statusFilter = query.status === 'RESOLVED' ? 'DONE' : query.status;
 
     const where: any = {
       deletedAt: null,
@@ -138,7 +144,10 @@ export class ComplaintService {
     return { complaints, totalCount };
   };
 
-  getComplaint = async (complaintId: string, user: { id: string; aptId: string | null; role: string }) => {
+  getComplaint = async (
+    complaintId: string,
+    user: { id: string; aptId: string | null; role: string },
+  ) => {
     if (!user?.id) {
       throw new CustomError(403, '접근 권한이 없습니다');
     }
