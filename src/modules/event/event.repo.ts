@@ -147,4 +147,44 @@ export class EventRepo {
       };
     });
   };
+
+  // 공지(NOTICE) 일정(startDate, endDate) 수정
+  updateNoticeEvent = async (
+    noticeId: string,
+    startDate: Date,
+    endDate: Date,
+  ) => {
+    await prisma.notice.update({
+      where: { id: noticeId },
+      data: { startDate, endDate },
+    });
+  };
+
+  // 투표(POLL) 일정(startDate, endDate) 수정
+  updatePollEvent = async (
+    pollId: string,
+    startDate: Date,
+    endDate: Date,
+  ) => {
+    await prisma.vote.update({
+      where: { id: pollId },
+      data: { startDate, endDate },
+    });
+  };
+
+  // 공지 존재 여부 및 아파트 소속 확인
+  findNoticeById = async (noticeId: string) => {
+    return prisma.notice.findFirst({
+      where: { id: noticeId, deletedAt: null },
+      include: { board: { select: { aptId: true } } },
+    });
+  };
+
+  // 투표 존재 여부 및 아파트 소속 확인
+  findPollById = async (pollId: string) => {
+    return prisma.vote.findFirst({
+      where: { id: pollId, deletedAt: null },
+      include: { board: { select: { aptId: true } } },
+    });
+  };
 }

@@ -2,7 +2,8 @@ import express from 'express';
 import asyncHandler from '@/middlewares/asyncHandler';
 import { validate } from '@/middlewares/validate';
 import { authenticate } from '@/middlewares/authenticate';
-import { listEventsQuerySchema } from './event.validate';
+import { isNotUser } from '@/middlewares/authorize';
+import { listEventsQuerySchema, putEventQuerySchema } from './event.validate';
 import { eventController } from './event.controller';
 
 const router = express.Router();
@@ -13,6 +14,15 @@ router.get(
   authenticate,
   validate(listEventsQuerySchema, 'query'),
   asyncHandler(eventController.listEvents),
+);
+
+// 이벤트 생성/수정 (관리자만, NOTICE 또는 POLL 일정)
+router.put(
+  '/',
+  authenticate,
+  isNotUser,
+  validate(putEventQuerySchema, 'query'),
+  asyncHandler(eventController.putEvent),
 );
 
 export default router;
