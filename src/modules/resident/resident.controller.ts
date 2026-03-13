@@ -75,6 +75,22 @@ export class ResidentController {
     const roster = await this.residentService.createRosterFromUser(userId, adminId, aptId!);
     res.status(201).json(roster);
   };
+
+  getFileTemplate = async (req: Request, res: Response, next: NextFunction) => {
+    const csvHeader = '동,호수,이름,연락처,세대주여부\n';
+    const csvRows = '101,101,홍길동,\t01098765432,HOUSEHOLDER\n105,208,김민준,\t01012345678,MEMBER';
+    const csvContent = csvHeader + csvRows;
+    // 한글 파일명을 안전하게 인코딩
+    const fileName = encodeURIComponent('입주민명부_템플릿.csv');
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="resident_template.csv"; filename*=UTF-8''${fileName}`,
+    );
+
+    // 한글 깨짐 방지를 위한 BOM 추가
+    res.status(200).send('\uFEFF' + csvContent);
+  };
 }
 
 const residentRepo = new ResidentRepo();
