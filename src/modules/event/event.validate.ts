@@ -27,3 +27,8 @@ export const putEventQuerySchema = z.object({
 });
 
 export type PutEventQuery = z.infer<typeof putEventQuerySchema>;
+
+// 이벤트 삭제 경로 파라미터 스키마
+export const eventIdParamSchema = z.object({
+  eventId: z.string().uuid(),
+});

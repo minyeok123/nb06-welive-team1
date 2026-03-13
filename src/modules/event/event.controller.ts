@@ -1,7 +1,11 @@
 import { Request, Response } from 'express';
 import { EventRepo } from './event.repo';
 import { EventService } from './event.service';
-import { listEventsQuerySchema, putEventQuerySchema } from './event.validate';
+import {
+  eventIdParamSchema,
+  listEventsQuerySchema,
+  putEventQuerySchema,
+} from './event.validate';
 
 // 이벤트 API 요청 핸들러
 export class EventController {
@@ -19,6 +23,13 @@ export class EventController {
     const query = req.validatedQuery as ReturnType<typeof putEventQuerySchema.parse>;
     await this.eventService.putEvent(query, req.user);
     return res.status(204).send();
+  };
+
+  // 이벤트 삭제 요청 처리
+  deleteEvent = async (req: Request, res: Response) => {
+    const params = eventIdParamSchema.parse(req.params);
+    const result = await this.eventService.deleteEvent(params.eventId, req.user);
+    return res.status(200).json(result);
   };
 }
 

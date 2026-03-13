@@ -69,4 +69,59 @@ export class EventService {
       await this.repo.updatePollEvent(query.boardId, startDate, endDate);
     }
   };
+
+  // 이벤트 삭제 (관리자만, eventId는 noticeId 또는 pollId)
+  deleteEvent = async (
+    eventId: string,
+    user: { id: string; aptId: string | null; role: string },
+  ) => {
+    if (!user?.id) {
+      throw new CustomError(403, '접근 권한이 없습니다');
+    }
+
+    const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
+    if (!isAdmin) {
+      throw new CustomError(403, '관리자만 이벤트를 삭제할 수 있습니다');
+    }
+
+    if (!user.aptId) {
+      throw new CustomError(403, '아파트에 소속된 관리자만 삭제할 수 있습니다');
+    }
+
+    const notice = await this.repo.findNoticeById(eventId);
+    if (notice) {
+      if (notice.board?.aptId !== user.aptId) {
+        throw new CustomError(403, '접근 권한이 없습니다');
+      }
+      const startDate = notice.startDate ?? notice.createdAt;
+      const endDate = notice.endDate ?? startDate;
+      await this.repo.softDeleteNotice(eventId);
+      return {
+        id: eventId,
+        startDate: new Date(startDate).toISOString(),
+        endDate: new Date(endDate).toISOString(),
+        boardType: 'NOTICE' as const,
+        noticeId: eventId,
+        pollId: null as string | null,
+      };
+    }
+
+    const vote = await this.repo.findPollById(eventId);
+    if (vote) {
+      if (vote.board?.aptId !== user.aptId) {
+        throw new CustomError(403, '접근 권한이 없습니다');
+      }
+      await this.repo.softDeletePoll(eventId);
+      return {
+        id: eventId,
+        startDate: vote.startDate.toISOString(),
+        endDate: vote.endDate.toISOString(),
+        boardType: 'POLL' as const,
+        noticeId: null as string | null,
+        pollId: eventId,
+      };
+    }
+
+    throw new CustomError(404, '이벤트를 찾을 수 없습니다');
+  };
 }
