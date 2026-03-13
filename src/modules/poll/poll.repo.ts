@@ -1,5 +1,13 @@
 import { prisma } from '@libs/prisma';
-import { Status } from '@prisma/client';
+import { Prisma, Status } from '@prisma/client';
+
+// 투표 목록용 타입
+export type VoteForList = Prisma.VoteGetPayload<{
+  include: {
+    author: { select: { id: true; name: true } };
+    board: { select: { aptId: true } };
+  };
+}>;
 
 // 투표 DB 접근 레이어
 export class PollRepo {
@@ -49,6 +57,36 @@ export class PollRepo {
       });
 
       return { board, vote };
+    });
+  };
+
+  // 투표 목록 조회 (필터, 페이징)
+  findPolls = async (params: {
+    where: Prisma.VoteWhereInput;
+    skip: number;
+    take: number;
+  }): Promise<{ items: VoteForList[]; totalCount: number }> => {
+    const [items, totalCount] = await prisma.$transaction([
+      prisma.vote.findMany({
+        where: params.where,
+        skip: params.skip,
+        take: params.take,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          author: { select: { id: true, name: true } },
+          board: { select: { aptId: true } },
+        },
+      }),
+      prisma.vote.count({ where: params.where }),
+    ]);
+    return { items: items as VoteForList[], totalCount };
+  };
+
+  // 입주민 동 정보 조회 (투표권자 필터용)
+  findResidentByUserId = async (userId: string) => {
+    return prisma.resident.findFirst({
+      where: { userId, deletedAt: null },
+      select: { dong: true },
     });
   };
 }

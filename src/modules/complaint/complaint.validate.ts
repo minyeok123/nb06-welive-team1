@@ -1,7 +1,14 @@
 import { z } from 'zod';
 
-const pageSchema = z.coerce.number().int().min(1).default(1);
-const limitSchema = z.coerce.number().int().min(1).max(100).default(20);
+const emptyToUndefined = (v: unknown) => (v === '' ? undefined : v);
+const pageSchema = z.preprocess(
+  emptyToUndefined,
+  z.coerce.number().int().min(1).default(1),
+);
+const limitSchema = z.preprocess(
+  emptyToUndefined,
+  z.coerce.number().int().min(1).max(100).default(20),
+);
 const booleanSchema = z.preprocess((value) => {
   if (value === 'true' || value === true) return true;
   if (value === 'false' || value === false) return false;
@@ -23,11 +30,11 @@ export type CreateComplaintInput = z.infer<typeof createComplaintSchema>;
 export const listComplaintsSchema = z.object({
   page: pageSchema.optional(), // 페이지 번호
   limit: limitSchema.optional(), // 페이지 크기
-  status: z.enum(['PENDING', 'IN_PROGRESS', 'DONE', 'RESOLVED', 'REJECTED']).optional(), // 처리 상태
+  status: z.preprocess(emptyToUndefined, z.enum(['PENDING', 'IN_PROGRESS', 'DONE', 'RESOLVED', 'REJECTED']).optional()), // 처리 상태
   isPublic: booleanSchema.optional(), // 공개 여부
-  dong: z.coerce.number().int().optional(), // 동
-  ho: z.coerce.number().int().optional(), // 호
-  keyword: z.string().trim().min(1).optional(), // 제목/내용 검색어
+  dong: z.preprocess(emptyToUndefined, z.coerce.number().int().optional()), // 동
+  ho: z.preprocess(emptyToUndefined, z.coerce.number().int().optional()), // 호
+  keyword: z.preprocess(emptyToUndefined, z.string().trim().min(1).optional()), // 제목/내용 검색어
 });
 
 export type ListComplaintsQuery = z.infer<typeof listComplaintsSchema>;
