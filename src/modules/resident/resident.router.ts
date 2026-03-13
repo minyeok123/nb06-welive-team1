@@ -62,4 +62,11 @@ router.post(
   asyncHandler(residentController.createRosterFromUser),
 );
 
+router.get(
+  '/file/template',
+  authenticate,
+  adminAuthorize,
+  asyncHandler(residentController.getFileTemplate),
+);
+
 export default router;
