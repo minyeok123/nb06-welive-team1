@@ -277,7 +277,7 @@ model residentRoster {
   dong          Int
   ho            Int
   name          String
-  phoneNumber   String      @map("phone_number")
+  phoneNumber   String      @unique @map("phone_number")
   is_houseHold  IsHouseHold @default(MEMBER) @map("is_house_hold")
   is_registered Boolean     @default(false) @map("is_registered")
   is_residence  Boolean     @default(true) @map("is_residence")

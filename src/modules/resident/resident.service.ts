@@ -51,6 +51,11 @@ export class ResidentService {
   };
 
   createRoster = async ({ data }: { data: CreateRosterBody }) => {
+    const findRoster = await this.residentRepo.findRosterByContact(data.contact);
+    if (findRoster) {
+      throw new CustomError(400, '이미 존재하는 입주민입니다');
+    }
+
     const roster = await this.residentRepo.createRoster({ data });
     if (!roster) {
       throw new CustomError(400, '입주민 등록 실패');
@@ -96,6 +101,12 @@ export class ResidentService {
     if (!register) {
       throw new CustomError(400, '입주민 등록 실패');
     }
+
+    const findRoster = await this.residentRepo.findRosterByContact(register.phoneNumber!);
+    if (findRoster) {
+      throw new CustomError(400, '이미 존재하는 입주민입니다');
+    }
+
     const roster = await this.residentRepo.createRosterFromUser({
       data: {
         dong: register.dong!,
@@ -111,5 +122,48 @@ export class ResidentService {
       throw new CustomError(400, '입주민 등록 실패');
     }
     return personalRosterDto(roster);
+  };
+
+  getFileRosterList = async (
+    adminId: string,
+    page: number,
+    limit: number,
+    dong?: number,
+    ho?: number,
+    is_residence?: boolean,
+    is_registered?: boolean,
+    keyword?: string,
+  ) => {
+    let whereCondition: Prisma.residentRosterWhereInput = {
+      adminId,
+      deletedAt: null,
+    };
+
+    if (dong) {
+      whereCondition.dong = dong;
+    }
+    if (ho) {
+      whereCondition.ho = ho;
+    }
+    if (is_residence !== undefined) {
+      whereCondition.is_residence = is_residence;
+    }
+    if (is_registered !== undefined) {
+      whereCondition.is_registered = is_registered;
+    }
+    if (keyword) {
+      whereCondition.OR = [{ name: { contains: keyword } }, { phoneNumber: { contains: keyword } }];
+    }
+    const result = await this.residentRepo.getRosterList(whereCondition, page, limit);
+    if (result.totalCount === 0) {
+      throw new CustomError(400, '입주민 목록 조회 실패');
+    }
+
+    const csvHeader = '동,호수,이름,연락처,세대주여부\n';
+    const csvRows = result.rosters
+      .map((r) => `${r.dong},${r.ho},${r.name},\t${r.phoneNumber},${r.is_houseHold}`)
+      .join('\n');
+
+    return csvHeader + csvRows;
   };
 }
