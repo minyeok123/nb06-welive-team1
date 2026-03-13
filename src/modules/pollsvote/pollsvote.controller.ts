@@ -12,6 +12,12 @@ export class PollsvoteController {
     const result = await this.pollsvoteService.voteOption(params.optionId, req.user);
     return res.status(200).json(result);
   };
+
+  cancelVote = async (req: Request, res: Response) => {
+    const params = optionIdParamSchema.parse(req.params);
+    const result = await this.pollsvoteService.cancelVote(params.optionId, req.user);
+    return res.status(200).json(result);
+  };
 }
 
 const pollsvoteRepo = new PollsvoteRepo();

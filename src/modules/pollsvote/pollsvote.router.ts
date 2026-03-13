@@ -15,4 +15,12 @@ router.post(
   asyncHandler(pollsvoteController.voteOption),
 );
 
+// 투표 취소 (입주민만, DELETE /api/options/:optionId/vote)
+router.delete(
+  '/:optionId/vote',
+  authenticate,
+  validate(optionIdParamSchema, 'params'),
+  asyncHandler(pollsvoteController.cancelVote),
+);
+
 export default router;
