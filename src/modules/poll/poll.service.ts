@@ -8,7 +8,10 @@ export class PollService {
   constructor(private repo: PollRepo) {}
 
   // 투표 등록 (관리자만 가능)
-  createPoll = async (input: CreatePollInput, user: { id: string; aptId: string | null; role: string }) => {
+  createPoll = async (
+    input: CreatePollInput,
+    user: { id: string; aptId: string | null; role: string },
+  ) => {
     if (!user?.id) {
       throw new CustomError(403, '접근 권한이 없습니다');
     }
@@ -25,8 +28,7 @@ export class PollService {
     }
 
     // 투표권자 범위: buildingPermission 0 = 전체, 그 외 = 특정 동
-    const targetDong =
-      input.buildingPermission === 0 ? [] : [String(input.buildingPermission)];
+    const targetDong = input.buildingPermission === 0 ? [] : [String(input.buildingPermission)];
 
     const status = (input.status ?? 'IN_PROGRESS') as Status;
 
@@ -72,10 +74,7 @@ export class PollService {
         return { polls: [], totalCount: 0 };
       }
       const dongStr = String(resident.dong);
-      where.OR = [
-        { targetDong: { isEmpty: true } },
-        { targetDong: { has: dongStr } },
-      ];
+      where.OR = [{ targetDong: { isEmpty: true } }, { targetDong: { has: dongStr } }];
     }
 
     // 상태 필터 (CLOSED → DONE)
@@ -146,8 +145,7 @@ export class PollService {
         throw new CustomError(403, '접근 권한이 없습니다');
       }
       const dongStr = String(resident.dong);
-      const isEligible =
-        vote.targetDong.length === 0 || vote.targetDong.includes(dongStr);
+      const isEligible = vote.targetDong.length === 0 || vote.targetDong.includes(dongStr);
       if (!isEligible) {
         throw new CustomError(403, '접근 권한이 없습니다');
       }
@@ -223,10 +221,7 @@ export class PollService {
   };
 
   // 투표 삭제 (관리자만, 시작 전에만)
-  deletePoll = async (
-    pollId: string,
-    user: { id: string; aptId: string | null; role: string },
-  ) => {
+  deletePoll = async (pollId: string, user: { id: string; aptId: string | null; role: string }) => {
     if (!user?.id) {
       throw new CustomError(403, '접근 권한이 없습니다');
     }
@@ -261,8 +256,7 @@ export class PollService {
 
   private mapPollDetail = (v: Awaited<ReturnType<PollRepo['findPollById']>>) => {
     if (!v) throw new CustomError(404, '투표를 찾을 수 없습니다');
-    const buildingPermission =
-      v.targetDong.length === 0 ? 0 : parseInt(v.targetDong[0], 10) || 0;
+    const buildingPermission = v.targetDong.length === 0 ? 0 : parseInt(v.targetDong[0], 10) || 0;
     const status = v.status === 'DONE' ? 'CLOSED' : v.status;
     const boardName = v.board?.boardType === 'VOTE' ? '주민투표' : '투표';
     const options = (v.options ?? []).map((opt) => ({
@@ -288,8 +282,7 @@ export class PollService {
   };
 
   private mapPollListItem = (v: VoteForList) => {
-    const buildingPermission =
-      v.targetDong.length === 0 ? 0 : parseInt(v.targetDong[0], 10) || 0;
+    const buildingPermission = v.targetDong.length === 0 ? 0 : parseInt(v.targetDong[0], 10) || 0;
     const status = v.status === 'DONE' ? 'CLOSED' : v.status;
     return {
       pollId: v.id,

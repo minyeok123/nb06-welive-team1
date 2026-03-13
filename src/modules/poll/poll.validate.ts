@@ -29,10 +29,7 @@ export type CreatePollInput = z.infer<typeof createPollSchema>;
 
 // 투표 목록 조회 쿼리 스키마
 const emptyToUndefined = (v: unknown) => (v === '' ? undefined : v);
-const pageSchema = z.preprocess(
-  emptyToUndefined,
-  z.coerce.number().int().min(1).default(1),
-);
+const pageSchema = z.preprocess(emptyToUndefined, z.coerce.number().int().min(1).default(1));
 const limitSchema = z.preprocess(
   emptyToUndefined,
   z.coerce.number().int().min(1).max(100).default(11),
