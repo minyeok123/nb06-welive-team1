@@ -8,6 +8,7 @@ import {
   getResidentListQuerySchema,
   createRosterBodySchema,
   getRosterDetailParamsSchema,
+  patchRosterBodySchema,
 } from './resident.validate';
 
 const router = Router();
@@ -32,6 +33,14 @@ router.get(
   adminAuthorize,
   validate(getRosterDetailParamsSchema, 'params'),
   asyncHandler(residentController.getRosterDetail),
+);
+router.patch(
+  '/:id',
+  authenticate,
+  adminAuthorize,
+  validate(getRosterDetailParamsSchema, 'params'),
+  validate(patchRosterBodySchema, 'body'),
+  asyncHandler(residentController.patchRoster),
 );
 
 export default router;
