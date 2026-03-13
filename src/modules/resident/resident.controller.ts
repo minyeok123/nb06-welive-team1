@@ -23,6 +23,21 @@ export class ResidentController {
     );
     res.status(200).json(rosterList);
   };
+
+  createRoster = async (req: Request, res: Response, next: NextFunction) => {
+    const { id: adminId, aptId } = req.user;
+    const { building, unitNumber, contact, name, isHouseholder } = req.body;
+    const roster = await this.residentService.createRoster(
+      building,
+      unitNumber,
+      contact,
+      name,
+      isHouseholder,
+      adminId,
+      aptId!,
+    );
+    res.status(201).json(roster);
+  };
 }
 
 const residentRepo = new ResidentRepo();

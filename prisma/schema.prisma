@@ -319,7 +319,7 @@ enum RegisterStatus {
 }
 
 enum IsHouseHold {
-  HOUSEHOLD
+  HOUSEHOLDER
   MEMBER
 }
 
