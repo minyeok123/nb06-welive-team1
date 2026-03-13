@@ -1,7 +1,7 @@
 import { Prisma } from '@prisma/client';
 import { ResidentRepo } from './resident.repo';
 import { CustomError } from '@/libs/error';
-import { residentListDto, createRosterDto } from './dto/response.dto';
+import { residentListDto, personalRosterDto } from './dto/response.dto';
 
 export class ResidentService {
   constructor(private residentRepo: ResidentRepo) {}
@@ -66,6 +66,17 @@ export class ResidentService {
       adminId,
       aptId,
     );
-    return createRosterDto(roster);
+    if (!roster) {
+      throw new CustomError(400, '입주민 등록 실패');
+    }
+    return personalRosterDto(roster);
+  };
+
+  getRosterDetail = async (id: string) => {
+    const roster = await this.residentRepo.getRosterDetail(id);
+    if (!roster) {
+      throw new CustomError(400, '입주민 상세 조회 실패');
+    }
+    return personalRosterDto(roster);
   };
 }

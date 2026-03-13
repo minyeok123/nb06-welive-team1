@@ -88,4 +88,29 @@ export class ResidentRepo {
       },
     });
   };
+
+  getRosterDetail = async (id: string) => {
+    return await prisma.residentRoster.findUnique({
+      where: {
+        id,
+      },
+      select: {
+        id: true,
+        userId: true,
+        dong: true,
+        ho: true,
+        name: true,
+        phoneNumber: true,
+        is_houseHold: true,
+        is_registered: true,
+        is_residence: true,
+        user: {
+          select: {
+            email: true,
+            register_status: true,
+          },
+        },
+      },
+    });
+  };
 }

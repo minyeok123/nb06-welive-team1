@@ -45,3 +45,7 @@ export const createRosterBodySchema = z.object({
     .max(5, '이름은 1자 이상 5자 이하여야 합니다.'),
   isHouseholder: z.enum(['HOUSEHOLDER', 'MEMBER']),
 });
+
+export const getRosterDetailParamsSchema = z.object({
+  id: z.uuid('ID 형식이 올바르지 않습니다'),
+});

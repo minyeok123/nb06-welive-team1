@@ -4,7 +4,11 @@ import asyncHandler from '../../middlewares/asyncHandler';
 import { authenticate } from '@/middlewares/authenticate';
 import { adminAuthorize } from '@/middlewares/authorize';
 import { validate } from '../../middlewares/validate';
-import { getResidentListQuerySchema, createRosterBodySchema } from './resident.validate';
+import {
+  getResidentListQuerySchema,
+  createRosterBodySchema,
+  getRosterDetailParamsSchema,
+} from './resident.validate';
 
 const router = Router();
 
@@ -21,6 +25,13 @@ router.post(
   adminAuthorize,
   validate(createRosterBodySchema, 'body'),
   asyncHandler(residentController.createRoster),
+);
+router.get(
+  '/:id',
+  authenticate,
+  adminAuthorize,
+  validate(getRosterDetailParamsSchema, 'params'),
+  asyncHandler(residentController.getRosterDetail),
 );
 
 export default router;
