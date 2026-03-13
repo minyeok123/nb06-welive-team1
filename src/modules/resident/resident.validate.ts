@@ -46,8 +46,12 @@ export const createRosterBodySchema = z.object({
   isHouseholder: z.enum(['HOUSEHOLDER', 'MEMBER']),
 });
 
-export const getRosterDetailParamsSchema = z.object({
+export const RosterIdParamsSchema = z.object({
   id: z.uuid('ID 형식이 올바르지 않습니다'),
 });
 
 export const patchRosterBodySchema = createRosterBodySchema.partial();
+
+export const createRosterFromUserParamsSchema = z.object({
+  userId: z.uuid('ID 형식이 올바르지 않습니다'),
+});

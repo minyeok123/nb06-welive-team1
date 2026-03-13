@@ -1,4 +1,23 @@
-export type ResidentRosterBody = {
+export interface Roster {
+  id: string;
+  aptId: string;
+  adminId: string;
+  userId: string;
+  dong: number;
+  ho: number;
+  name: string;
+  phoneNumber: string;
+  is_houseHold: 'HOUSEHOLDER' | 'MEMBER';
+  is_registered: boolean;
+  is_residence: boolean;
+}
+
+export type CreateRosterFromUser = Pick<
+  Roster,
+  'dong' | 'ho' | 'name' | 'phoneNumber' | 'adminId' | 'aptId' | 'is_registered'
+>;
+
+export type RosterBody = {
   building: number;
   unitNumber: number;
   contact: string;
@@ -6,11 +25,11 @@ export type ResidentRosterBody = {
   isHouseholder: 'HOUSEHOLDER' | 'MEMBER';
 };
 
-export type CreateResidentRosterBody = ResidentRosterBody & { adminId: string; aptId: string };
+export type CreateRosterBody = RosterBody & { adminId: string; aptId: string };
 
-export type PatchResidentRosterBody = Partial<ResidentRosterBody> & { id: string };
+export type PatchRosterBody = Partial<RosterBody> & { id: string };
 
-export interface GetResidentRosterListQuery {
+export interface GetRosterListQuery {
   page: number;
   limit: number;
   building?: number;
