@@ -41,4 +41,51 @@ export class ResidentRepo {
       return { totalCount, rosters };
     });
   };
+
+  createRoster = async (
+    building: number,
+    unitNumber: number,
+    contact: string,
+    name: string,
+    isHouseholder: 'HOUSEHOLDER' | 'MEMBER',
+    adminId: string,
+    aptId: string,
+  ) => {
+    return await prisma.residentRoster.create({
+      data: {
+        dong: building,
+        ho: unitNumber,
+        phoneNumber: contact,
+        name: name,
+        is_houseHold: isHouseholder,
+        apartment: {
+          connect: {
+            id: aptId,
+          },
+        },
+        admin: {
+          connect: {
+            id: adminId,
+          },
+        },
+      },
+      select: {
+        id: true,
+        userId: true,
+        dong: true,
+        ho: true,
+        phoneNumber: true,
+        name: true,
+        is_houseHold: true,
+        is_registered: true,
+        is_residence: true,
+        user: {
+          select: {
+            email: true,
+            register_status: true,
+          },
+        },
+      },
+    });
+  };
 }

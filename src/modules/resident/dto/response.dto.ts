@@ -34,3 +34,19 @@ export const residentListDto = (rosters: ResidentRosterInput[]) => {
     };
   });
 };
+
+export const createRosterDto = (roster: ResidentRosterInput) => {
+  return {
+    id: roster.id,
+    userId: roster.userId ?? {},
+    building: String(roster.dong),
+    unitNumber: String(roster.ho),
+    contact: roster.phoneNumber,
+    name: roster.name,
+    email: roster.user?.email ?? {},
+    residenceStatus: roster.is_residence ? 'RESIDENCE' : 'NO_RESIDENCE',
+    isHouseholder: roster.is_houseHold,
+    isRegistered: roster.is_registered,
+    approvalStatus: roster.user?.register_status ?? (roster.is_registered ? 'APPROVED' : 'PENDING'),
+  };
+};

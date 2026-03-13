@@ -1,7 +1,7 @@
 import { Prisma } from '@prisma/client';
 import { ResidentRepo } from './resident.repo';
 import { CustomError } from '@/libs/error';
-import { residentListDto } from './dto/response.dto';
+import { residentListDto, createRosterDto } from './dto/response.dto';
 
 export class ResidentService {
   constructor(private residentRepo: ResidentRepo) {}
@@ -46,5 +46,26 @@ export class ResidentService {
       count: result.rosters.length,
       totalCount: result.totalCount,
     };
+  };
+
+  createRoster = async (
+    building: number,
+    unitNumber: number,
+    contact: string,
+    name: string,
+    isHouseholder: 'HOUSEHOLDER' | 'MEMBER',
+    adminId: string,
+    aptId: string,
+  ) => {
+    const roster = await this.residentRepo.createRoster(
+      building,
+      unitNumber,
+      contact,
+      name,
+      isHouseholder,
+      adminId,
+      aptId,
+    );
+    return createRosterDto(roster);
   };
 }
