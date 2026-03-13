@@ -47,4 +47,11 @@ export class PollsvoteRepo {
       },
     });
   };
+
+  // 투표 참여 삭제 (투표 취소)
+  deleteVoteParticipation = async (residentId: string, voteId: string) => {
+    return prisma.voteParticipation.delete({
+      where: { residentId_voteId: { residentId, voteId } },
+    });
+  };
 }

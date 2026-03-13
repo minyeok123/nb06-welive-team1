@@ -72,4 +72,59 @@ export class PollsvoteService {
       })),
     };
   };
+
+  // 투표 취소 (입주민만, 본인이 투표한 선택지만 취소 가능)
+  cancelVote = async (
+    optionId: string,
+    user: { id: string; aptId: string | null; role: string },
+  ) => {
+    if (!user?.id) throw new CustomError(403, '접근 권한이 없습니다');
+
+    const resident = await this.repo.findResidentByUserIdForVote(user.id);
+    if (!resident) throw new CustomError(403, '입주민만 투표를 취소할 수 있습니다');
+
+    const voteOption = await this.repo.findVoteOptionById(optionId);
+    if (!voteOption) throw new CustomError(404, '선택지를 찾을 수 없습니다');
+
+    const vote = voteOption.vote;
+    if (!vote || vote.deletedAt) throw new CustomError(404, '투표를 찾을 수 없습니다');
+    if (vote.board?.aptId !== resident.aptId) throw new CustomError(403, '접근 권한이 없습니다');
+
+    const now = new Date();
+    if (now < vote.startDate) throw new CustomError(403, '아직 투표 기간이 시작되지 않았습니다');
+    if (now > vote.endDate) throw new CustomError(403, '투표 기간이 종료되었습니다');
+    if (vote.status === 'DONE') throw new CustomError(403, '종료된 투표입니다');
+
+    const participation = await this.repo.findParticipationByResidentAndVote(
+      resident.id,
+      vote.id,
+    );
+    if (!participation) throw new CustomError(404, '투표한 기록이 없습니다');
+    if (participation.voteOptionId !== optionId) {
+      throw new CustomError(403, '해당 선택지에 투표한 기록이 없습니다');
+    }
+
+    await this.repo.deleteVoteParticipation(resident.id, vote.id);
+
+    const voteAfter = await this.repo.findPollById(vote.id);
+    const options = (voteAfter?.options ?? []).map((opt) => ({
+      id: opt.id,
+      title: opt.option,
+      votes: opt._count?.participations ?? 0,
+    }));
+    const updatedOption = options.find((o) => o.id === optionId) ?? {
+      id: optionId,
+      title: voteOption.option,
+      votes: 0,
+    };
+
+    return {
+      message: '투표가 취소되었습니다',
+      updatedOption: {
+        id: updatedOption.id,
+        title: updatedOption.title,
+        votes: updatedOption.votes,
+      },
+    };
+  };
 }
