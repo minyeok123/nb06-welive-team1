@@ -3,7 +3,7 @@ import asyncHandler from '../../middlewares/asyncHandler';
 import { validate } from '../../middlewares/validate';
 import { authenticate } from '../../middlewares/authenticate';
 import { isNotUser } from '../../middlewares/authorize';
-import { createPollSchema, listPollsSchema } from './poll.validate';
+import { createPollSchema, listPollsSchema, pollIdParamSchema } from './poll.validate';
 import { pollController } from './poll.controller';
 
 const router = express.Router();
@@ -14,6 +14,14 @@ router.get(
   authenticate,
   validate(listPollsSchema, 'query'),
   asyncHandler(pollController.listPolls),
+);
+
+// 투표 상세 조회 (관리자·입주민)
+router.get(
+  '/:pollId',
+  authenticate,
+  validate(pollIdParamSchema, 'params'),
+  asyncHandler(pollController.getPoll),
 );
 
 // 투표 등록 (관리자만)

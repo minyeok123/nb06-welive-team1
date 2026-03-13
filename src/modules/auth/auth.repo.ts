@@ -65,6 +65,32 @@ export class AuthRepo {
   createRegister = async (data: Prisma.RegisterCreateInput) => {
     return prisma.register.create({ data });
   };
+
+  // 입주민 명부에서 개인정보 일치 여부 조회 (이름, 연락처, 동, 호)
+  findResidentRosterMatch = async (params: {
+    aptId: string;
+    dong: number;
+    ho: number;
+    name: string;
+    phoneNumber: string;
+  }) => {
+    const candidates = await prisma.residentRoster.findMany({
+      where: {
+        aptId: params.aptId,
+        dong: params.dong,
+        ho: params.ho,
+        name: params.name,
+        userId: null,
+        deletedAt: null,
+      },
+    });
+    const normalizedInput = params.phoneNumber.replace(/\D/g, '');
+    return candidates.find(
+      (r) =>
+        r.phoneNumber === params.phoneNumber ||
+        r.phoneNumber.replace(/\D/g, '') === normalizedInput,
+    );
+  };
   findUserByUsername = async (username: string) => {
     return await prisma.user.findUnique({
       where: { username },
@@ -144,6 +170,13 @@ export class AuthRepo {
 
   createRoster = async (data: Prisma.residentRosterCreateInput) => {
     return await prisma.residentRoster.create({ data });
+  };
+
+  updateRosterWithUser = async (rosterId: string, userId: string) => {
+    return await prisma.residentRoster.update({
+      where: { id: rosterId },
+      data: { userId, is_registered: true },
+    });
   };
 
   createBoard = async (data: Prisma.BoardCreateInput) => {

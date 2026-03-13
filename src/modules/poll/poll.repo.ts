@@ -82,6 +82,22 @@ export class PollRepo {
     return { items: items as VoteForList[], totalCount };
   };
 
+  // 투표 상세 조회 (선택지 + 투표 수 포함)
+  findPollById = async (pollId: string) => {
+    return prisma.vote.findFirst({
+      where: { id: pollId, deletedAt: null },
+      include: {
+        author: { select: { id: true, name: true } },
+        board: { select: { aptId: true, boardType: true } },
+        options: {
+          include: {
+            _count: { select: { participations: true } },
+          },
+        },
+      },
+    });
+  };
+
   // 입주민 동 정보 조회 (투표권자 필터용)
   findResidentByUserId = async (userId: string) => {
     return prisma.resident.findFirst({

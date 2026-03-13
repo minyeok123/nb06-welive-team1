@@ -28,10 +28,23 @@ export class AuthService {
       throw new CustomError(400, '존재하지 않는 아파트입니다');
     }
 
+    // 입주민: 명부 정보와 일치하면 자동 승인
+    let rosterMatch: Awaited<ReturnType<AuthRepo['findResidentRosterMatch']>> | undefined;
+    if (input.role === 'USER' && input.apartmentDong != null && input.apartmentHo != null) {
+      rosterMatch = await this.repo.findResidentRosterMatch({
+        aptId: apartment.id,
+        dong: input.apartmentDong,
+        ho: input.apartmentHo,
+        name: input.name,
+        phoneNumber: input.contact,
+      });
+    }
+
+    const registerStatus = rosterMatch ? RegisterStatus.APPROVED : RegisterStatus.PENDING;
     const hashedPassword = await bcrypt.hash(input.password, 10); // 비밀번호 해시(서명) 저장
 
     const register = await this.repo.createRegister({
-      register_status: RegisterStatus.PENDING,
+      register_status: registerStatus,
       aptId: apartment.id,
       username: input.username,
       phoneNumber: input.contact,
@@ -42,6 +55,28 @@ export class AuthService {
       dong: input.role === 'USER' ? input.apartmentDong : undefined,
       ho: input.role === 'USER' ? input.apartmentHo : undefined,
     });
+
+    // 자동 승인 시 User, Resident 생성 및 명부 연결
+    if (rosterMatch && registerStatus === RegisterStatus.APPROVED) {
+      const user = await this.repo.createUser({
+        username: register.username,
+        phoneNumber: register.phoneNumber,
+        name: register.name,
+        email: register.email,
+        password: register.password,
+        role: register.requestedRole,
+        register_status: RegisterStatus.APPROVED,
+        register: { connect: { id: register.id } },
+        apartment: { connect: { id: apartment.id } },
+      });
+      await this.repo.createResident({
+        user: { connect: { id: user.id } },
+        apartment: { connect: { id: apartment.id } },
+        dong: input.apartmentDong!,
+        ho: input.apartmentHo!,
+      });
+      await this.repo.updateRosterWithUser(rosterMatch.id, user.id);
+    }
 
     return {
       id: register.id,
