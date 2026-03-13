@@ -11,3 +11,19 @@ export const listEventsQuerySchema = z.object({
 });
 
 export type ListEventsQuery = z.infer<typeof listEventsQuerySchema>;
+
+// 이벤트 생성/수정 쿼리 스키마 (boardType, boardId, startDate, endDate)
+export const putEventQuerySchema = z.object({
+  boardType: z.preprocess(
+    emptyToUndefined,
+    z.enum(['NOTICE', 'POLL']),
+  ),
+  boardId: z.preprocess(emptyToUndefined, z.string().uuid()),
+  startDate: z.preprocess(emptyToUndefined, z.coerce.date()),
+  endDate: z.preprocess(emptyToUndefined, z.coerce.date()),
+}).refine((data) => data.startDate <= data.endDate, {
+  message: '시작일은 종료일보다 이전이어야 합니다',
+  path: ['endDate'],
+});
+
+export type PutEventQuery = z.infer<typeof putEventQuerySchema>;
