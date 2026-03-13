@@ -42,5 +42,12 @@ router.patch(
   validate(patchRosterBodySchema, 'body'),
   asyncHandler(residentController.patchRoster),
 );
+router.delete(
+  '/:id',
+  authenticate,
+  adminAuthorize,
+  validate(getRosterDetailParamsSchema, 'params'),
+  asyncHandler(residentController.deleteRoster),
+);
 
 export default router;

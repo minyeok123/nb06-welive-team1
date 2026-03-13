@@ -138,4 +138,12 @@ export class ResidentRepo {
       },
     });
   };
+
+  deleteRoster = async (id: string) => {
+    return await prisma.residentRoster.delete({
+      where: {
+        id,
+      },
+    });
+  };
 }
