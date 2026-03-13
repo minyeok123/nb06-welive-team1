@@ -29,10 +29,7 @@ export type CreatePollInput = z.infer<typeof createPollSchema>;
 
 // 투표 목록 조회 쿼리 스키마
 const emptyToUndefined = (v: unknown) => (v === '' ? undefined : v);
-const pageSchema = z.preprocess(
-  emptyToUndefined,
-  z.coerce.number().int().min(1).default(1),
-);
+const pageSchema = z.preprocess(emptyToUndefined, z.coerce.number().int().min(1).default(1));
 const limitSchema = z.preprocess(
   emptyToUndefined,
   z.coerce.number().int().min(1).max(100).default(11),
@@ -47,3 +44,41 @@ export const listPollsSchema = z.object({
 });
 
 export type ListPollsQuery = z.infer<typeof listPollsSchema>;
+
+// 투표 수정 요청 본문 스키마
+export const updatePollSchema = z
+  .object({
+    title: z.string().trim().min(1).max(200).optional(),
+    content: z.string().trim().min(1).max(5000).optional(),
+    buildingPermission: z.number().int().min(0).optional(),
+    startDate: z.string().datetime().optional(),
+    endDate: z.string().datetime().optional(),
+    status: z.enum(['PENDING', 'IN_PROGRESS', 'DONE']).optional(),
+    options: z
+      .array(
+        z.object({
+          title: z.string().trim().min(1).max(20),
+        }),
+      )
+      .min(2)
+      .max(20)
+      .optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.startDate && data.endDate) {
+        return new Date(data.endDate) > new Date(data.startDate);
+      }
+      return true;
+    },
+    { message: '종료 시간은 시작 시간보다 이후여야 합니다', path: ['endDate'] },
+  );
+
+export type UpdatePollInput = z.infer<typeof updatePollSchema>;
+
+// 투표 상세 조회 경로 파라미터 스키마
+export const pollIdParamSchema = z.object({
+  pollId: z.string().uuid(),
+});
+
+export type PollIdParam = z.infer<typeof pollIdParamSchema>;

@@ -31,3 +31,27 @@ export const getResidentListQuerySchema = z.object({
   }, z.boolean().optional()),
   keyword: z.preprocess((v) => (v === '' ? undefined : v), z.string().optional()),
 });
+
+export const createRosterBodySchema = z.object({
+  building: z.coerce.number().int().positive(),
+  unitNumber: z.coerce.number().int().positive(),
+  contact: z
+    .string()
+    .trim()
+    .regex(/^\d{9,11}$/, '연락처 형식이 올바르지 않습니다'),
+  name: z
+    .string()
+    .min(1, '이름은 1자 이상 5자 이하여야 합니다.')
+    .max(5, '이름은 1자 이상 5자 이하여야 합니다.'),
+  isHouseholder: z.enum(['HOUSEHOLDER', 'MEMBER']),
+});
+
+export const RosterIdParamsSchema = z.object({
+  id: z.uuid('ID 형식이 올바르지 않습니다'),
+});
+
+export const patchRosterBodySchema = createRosterBodySchema.partial();
+
+export const createRosterFromUserParamsSchema = z.object({
+  userId: z.uuid('ID 형식이 올바르지 않습니다'),
+});

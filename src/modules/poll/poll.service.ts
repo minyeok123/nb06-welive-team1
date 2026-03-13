@@ -1,14 +1,17 @@
 import { Status } from '@prisma/client';
 import { CustomError } from '@libs/error';
 import { PollRepo, VoteForList } from './poll.repo';
-import { CreatePollInput, ListPollsQuery } from './poll.validate';
+import { CreatePollInput, ListPollsQuery, UpdatePollInput } from './poll.validate';
 
 // 투표 비즈니스 로직
 export class PollService {
   constructor(private repo: PollRepo) {}
 
   // 투표 등록 (관리자만 가능)
-  createPoll = async (input: CreatePollInput, user: { id: string; aptId: string | null; role: string }) => {
+  createPoll = async (
+    input: CreatePollInput,
+    user: { id: string; aptId: string | null; role: string },
+  ) => {
     if (!user?.id) {
       throw new CustomError(403, '접근 권한이 없습니다');
     }
@@ -25,8 +28,7 @@ export class PollService {
     }
 
     // 투표권자 범위: buildingPermission 0 = 전체, 그 외 = 특정 동
-    const targetDong =
-      input.buildingPermission === 0 ? [] : [String(input.buildingPermission)];
+    const targetDong = input.buildingPermission === 0 ? [] : [String(input.buildingPermission)];
 
     const status = (input.status ?? 'IN_PROGRESS') as Status;
 
@@ -72,10 +74,7 @@ export class PollService {
         return { polls: [], totalCount: 0 };
       }
       const dongStr = String(resident.dong);
-      where.OR = [
-        { targetDong: { isEmpty: true } },
-        { targetDong: { has: dongStr } },
-      ];
+      where.OR = [{ targetDong: { isEmpty: true } }, { targetDong: { has: dongStr } }];
     }
 
     // 상태 필터 (CLOSED → DONE)
@@ -118,9 +117,172 @@ export class PollService {
     return { polls, totalCount };
   };
 
+  // 투표 상세 조회 (관리자·입주민)
+  getPoll = async (pollId: string, user: { id: string; aptId: string | null; role: string }) => {
+    if (!user?.id) {
+      throw new CustomError(403, '접근 권한이 없습니다');
+    }
+
+    const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
+    if (!isAdmin && !user.aptId) {
+      throw new CustomError(403, '접근 권한이 없습니다');
+    }
+
+    const vote = await this.repo.findPollById(pollId);
+    if (!vote) {
+      throw new CustomError(404, '투표를 찾을 수 없습니다');
+    }
+
+    // 동일 아파트 확인
+    if (user.aptId && vote.board?.aptId !== user.aptId) {
+      throw new CustomError(403, '접근 권한이 없습니다');
+    }
+
+    // 입주민: 자신이 투표권자인 투표만 조회 가능
+    if (!isAdmin && user.aptId) {
+      const resident = await this.repo.findResidentByUserId(user.id);
+      if (!resident) {
+        throw new CustomError(403, '접근 권한이 없습니다');
+      }
+      const dongStr = String(resident.dong);
+      const isEligible = vote.targetDong.length === 0 || vote.targetDong.includes(dongStr);
+      if (!isEligible) {
+        throw new CustomError(403, '접근 권한이 없습니다');
+      }
+    }
+
+    return this.mapPollDetail(vote);
+  };
+
+  // 투표 수정 (관리자만, 시작 전에만)
+  updatePoll = async (
+    pollId: string,
+    input: UpdatePollInput,
+    user: { id: string; aptId: string | null; role: string },
+  ) => {
+    if (!user?.id) {
+      throw new CustomError(403, '접근 권한이 없습니다');
+    }
+
+    const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
+    if (!isAdmin) {
+      throw new CustomError(403, '관리자만 투표를 수정할 수 있습니다');
+    }
+
+    if (!user.aptId) {
+      throw new CustomError(403, '아파트에 소속된 관리자만 수정할 수 있습니다');
+    }
+
+    const vote = await this.repo.findPollById(pollId);
+    if (!vote) {
+      throw new CustomError(404, '투표를 찾을 수 없습니다');
+    }
+
+    if (vote.board?.aptId !== user.aptId) {
+      throw new CustomError(403, '접근 권한이 없습니다');
+    }
+
+    // 투표가 이미 시작된 경우 수정 불가
+    if (new Date() >= vote.startDate) {
+      throw new CustomError(403, '이미 시작된 투표는 수정할 수 없습니다');
+    }
+
+    const hasUpdates =
+      input.title !== undefined ||
+      input.content !== undefined ||
+      input.buildingPermission !== undefined ||
+      input.startDate !== undefined ||
+      input.endDate !== undefined ||
+      input.status !== undefined ||
+      (input.options !== undefined && input.options.length > 0);
+    if (!hasUpdates) {
+      throw new CustomError(400, '수정할 내용이 없습니다');
+    }
+
+    const targetDong =
+      input.buildingPermission !== undefined
+        ? input.buildingPermission === 0
+          ? []
+          : [String(input.buildingPermission)]
+        : undefined;
+
+    await this.repo.updatePoll({
+      pollId,
+      title: input.title,
+      content: input.content,
+      status: input.status as Status | undefined,
+      targetDong,
+      startDate: input.startDate ? new Date(input.startDate) : undefined,
+      endDate: input.endDate ? new Date(input.endDate) : undefined,
+      options: input.options,
+    });
+
+    return { message: '정상적으로 수정 처리되었습니다' };
+  };
+
+  // 투표 삭제 (관리자만, 시작 전에만)
+  deletePoll = async (pollId: string, user: { id: string; aptId: string | null; role: string }) => {
+    if (!user?.id) {
+      throw new CustomError(403, '접근 권한이 없습니다');
+    }
+
+    const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
+    if (!isAdmin) {
+      throw new CustomError(403, '관리자만 투표를 삭제할 수 있습니다');
+    }
+
+    if (!user.aptId) {
+      throw new CustomError(403, '아파트에 소속된 관리자만 삭제할 수 있습니다');
+    }
+
+    const vote = await this.repo.findPollById(pollId);
+    if (!vote) {
+      throw new CustomError(404, '투표를 찾을 수 없습니다');
+    }
+
+    if (vote.board?.aptId !== user.aptId) {
+      throw new CustomError(403, '접근 권한이 없습니다');
+    }
+
+    // 투표가 이미 시작된 경우 삭제 불가
+    if (new Date() >= vote.startDate) {
+      throw new CustomError(403, '이미 시작된 투표는 삭제할 수 없습니다');
+    }
+
+    await this.repo.softDeletePoll(pollId);
+
+    return { message: '정상적으로 삭제 처리되었습니다' };
+  };
+
+  private mapPollDetail = (v: Awaited<ReturnType<PollRepo['findPollById']>>) => {
+    if (!v) throw new CustomError(404, '투표를 찾을 수 없습니다');
+    const buildingPermission = v.targetDong.length === 0 ? 0 : parseInt(v.targetDong[0], 10) || 0;
+    const status = v.status === 'DONE' ? 'CLOSED' : v.status;
+    const boardName = v.board?.boardType === 'VOTE' ? '주민투표' : '투표';
+    const options = (v.options ?? []).map((opt) => ({
+      id: opt.id,
+      title: opt.option,
+      voteCount: opt._count?.participations ?? 0,
+    }));
+    return {
+      pollId: v.id,
+      userId: v.authorId,
+      title: v.title,
+      writerName: v.author?.name ?? '',
+      buildingPermission,
+      createdAt: v.createdAt,
+      updatedAt: v.updatedAt,
+      startDate: v.startDate,
+      endDate: v.endDate,
+      status,
+      content: v.content,
+      boardName,
+      options,
+    };
+  };
+
   private mapPollListItem = (v: VoteForList) => {
-    const buildingPermission =
-      v.targetDong.length === 0 ? 0 : parseInt(v.targetDong[0], 10) || 0;
+    const buildingPermission = v.targetDong.length === 0 ? 0 : parseInt(v.targetDong[0], 10) || 0;
     const status = v.status === 'DONE' ? 'CLOSED' : v.status;
     return {
       pollId: v.id,

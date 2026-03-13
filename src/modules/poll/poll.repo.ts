@@ -82,6 +82,70 @@ export class PollRepo {
     return { items: items as VoteForList[], totalCount };
   };
 
+  // 투표 상세 조회 (선택지 + 투표 수 포함)
+  findPollById = async (pollId: string) => {
+    return prisma.vote.findFirst({
+      where: { id: pollId, deletedAt: null },
+      include: {
+        author: { select: { id: true, name: true } },
+        board: { select: { aptId: true, boardType: true } },
+        options: {
+          include: {
+            _count: { select: { participations: true } },
+          },
+        },
+      },
+    });
+  };
+
+  // 투표 수정 (본문 + 선택지)
+  updatePoll = async (params: {
+    pollId: string;
+    title?: string;
+    content?: string;
+    status?: Status;
+    targetDong?: string[];
+    startDate?: Date;
+    endDate?: Date;
+    options?: { title: string }[];
+  }) => {
+    return prisma.$transaction(async (tx) => {
+      const { options, ...voteData } = params;
+      const updateData: Record<string, unknown> = {};
+      if (voteData.title !== undefined) updateData.title = voteData.title;
+      if (voteData.content !== undefined) updateData.content = voteData.content;
+      if (voteData.status !== undefined) updateData.status = voteData.status;
+      if (voteData.targetDong !== undefined) updateData.targetDong = voteData.targetDong;
+      if (voteData.startDate !== undefined) updateData.startDate = voteData.startDate;
+      if (voteData.endDate !== undefined) updateData.endDate = voteData.endDate;
+
+      if (Object.keys(updateData).length > 0) {
+        await tx.vote.update({
+          where: { id: params.pollId },
+          data: updateData,
+        });
+      }
+
+      if (options && options.length > 0) {
+        await tx.voteOption.deleteMany({ where: { voteId: params.pollId } });
+        await tx.voteOption.createMany({
+          data: options.map((opt) => ({
+            voteId: params.pollId,
+            option: opt.title,
+          })),
+        });
+      }
+    });
+  };
+
+  // 투표 소프트 삭제 (deletedAt 설정)
+  softDeletePoll = async (pollId: string) => {
+    await prisma.vote.update({
+      where: { id: pollId },
+      data: { deletedAt: new Date() },
+    });
+  };
+
   // 입주민 동 정보 조회 (투표권자 필터용)
   findResidentByUserId = async (userId: string) => {
     return prisma.resident.findFirst({

@@ -1,6 +1,6 @@
 import { RegisterStatus, IsHouseHold } from '@prisma/client';
 
-export type ResidentRosterInput = {
+export type RosterInput = {
   id: string;
   userId: string | null;
   dong: number;
@@ -16,16 +16,16 @@ export type ResidentRosterInput = {
   } | null;
 };
 
-export const residentListDto = (rosters: ResidentRosterInput[]) => {
+export const rosterListDto = (rosters: RosterInput[]) => {
   return rosters.map((roster) => {
     return {
       id: roster.id,
-      userId: roster.userId ?? null,
+      userId: roster.userId ?? {},
       building: String(roster.dong),
       unitNumber: String(roster.ho),
       contact: roster.phoneNumber,
       name: roster.name,
-      email: roster.user?.email ?? null,
+      email: roster.user?.email ?? {},
       residenceStatus: roster.is_residence ? 'RESIDENCE' : 'NO_RESIDENCE',
       isHouseholder: roster.is_houseHold,
       isRegistered: roster.is_registered,
@@ -33,4 +33,20 @@ export const residentListDto = (rosters: ResidentRosterInput[]) => {
         roster.user?.register_status ?? (roster.is_registered ? 'APPROVED' : 'PENDING'),
     };
   });
+};
+
+export const personalRosterDto = (roster: RosterInput) => {
+  return {
+    id: roster.id,
+    userId: roster.userId ?? {},
+    building: String(roster.dong),
+    unitNumber: String(roster.ho),
+    contact: roster.phoneNumber,
+    name: roster.name,
+    email: roster.user?.email ?? {},
+    residenceStatus: roster.is_residence ? 'RESIDENCE' : 'NO_RESIDENCE',
+    isHouseholder: roster.is_houseHold,
+    isRegistered: roster.is_registered,
+    approvalStatus: roster.user?.register_status ?? (roster.is_registered ? 'APPROVED' : 'PENDING'),
+  };
 };

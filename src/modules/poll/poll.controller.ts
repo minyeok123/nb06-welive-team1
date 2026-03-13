@@ -1,16 +1,43 @@
 import { Request, Response } from 'express';
 import { PollRepo } from './poll.repo';
 import { PollService } from './poll.service';
-import { createPollSchema, listPollsSchema } from './poll.validate';
+import {
+  createPollSchema,
+  listPollsSchema,
+  pollIdParamSchema,
+  updatePollSchema,
+} from './poll.validate';
 
 // 투표 API 요청 핸들러
 export class PollController {
   constructor(private pollService: PollService) {}
 
+  // 투표 상세 조회 요청 처리
+  getPoll = async (req: Request, res: Response) => {
+    const params = pollIdParamSchema.parse(req.params);
+    const result = await this.pollService.getPoll(params.pollId, req.user);
+    return res.status(200).json(result);
+  };
+
   // 투표 목록 조회 요청 처리
   listPolls = async (req: Request, res: Response) => {
     const query = req.validatedQuery as ReturnType<typeof listPollsSchema.parse>;
     const result = await this.pollService.listPolls(query, req.user);
+    return res.status(200).json(result);
+  };
+
+  // 투표 수정 요청 처리
+  updatePoll = async (req: Request, res: Response) => {
+    const params = pollIdParamSchema.parse(req.params);
+    const input = updatePollSchema.parse(req.body);
+    const result = await this.pollService.updatePoll(params.pollId, input, req.user);
+    return res.status(200).json(result);
+  };
+
+  // 투표 삭제 요청 처리
+  deletePoll = async (req: Request, res: Response) => {
+    const params = pollIdParamSchema.parse(req.params);
+    const result = await this.pollService.deletePoll(params.pollId, req.user);
     return res.status(200).json(result);
   };
 
