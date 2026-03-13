@@ -1,7 +1,7 @@
 import { Status } from '@prisma/client';
 import { CustomError } from '@libs/error';
 import { PollRepo, VoteForList } from './poll.repo';
-import { CreatePollInput, ListPollsQuery } from './poll.validate';
+import { CreatePollInput, ListPollsQuery, UpdatePollInput } from './poll.validate';
 
 // 투표 비즈니스 로직
 export class PollService {
@@ -154,6 +154,72 @@ export class PollService {
     }
 
     return this.mapPollDetail(vote);
+  };
+
+  // 투표 수정 (관리자만, 시작 전에만)
+  updatePoll = async (
+    pollId: string,
+    input: UpdatePollInput,
+    user: { id: string; aptId: string | null; role: string },
+  ) => {
+    if (!user?.id) {
+      throw new CustomError(403, '접근 권한이 없습니다');
+    }
+
+    const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
+    if (!isAdmin) {
+      throw new CustomError(403, '관리자만 투표를 수정할 수 있습니다');
+    }
+
+    if (!user.aptId) {
+      throw new CustomError(403, '아파트에 소속된 관리자만 수정할 수 있습니다');
+    }
+
+    const vote = await this.repo.findPollById(pollId);
+    if (!vote) {
+      throw new CustomError(404, '투표를 찾을 수 없습니다');
+    }
+
+    if (vote.board?.aptId !== user.aptId) {
+      throw new CustomError(403, '접근 권한이 없습니다');
+    }
+
+    // 투표가 이미 시작된 경우 수정 불가
+    if (new Date() >= vote.startDate) {
+      throw new CustomError(403, '이미 시작된 투표는 수정할 수 없습니다');
+    }
+
+    const hasUpdates =
+      input.title !== undefined ||
+      input.content !== undefined ||
+      input.buildingPermission !== undefined ||
+      input.startDate !== undefined ||
+      input.endDate !== undefined ||
+      input.status !== undefined ||
+      (input.options !== undefined && input.options.length > 0);
+    if (!hasUpdates) {
+      throw new CustomError(400, '수정할 내용이 없습니다');
+    }
+
+    const targetDong =
+      input.buildingPermission !== undefined
+        ? input.buildingPermission === 0
+          ? []
+          : [String(input.buildingPermission)]
+        : undefined;
+
+    await this.repo.updatePoll({
+      pollId,
+      title: input.title,
+      content: input.content,
+      status: input.status as Status | undefined,
+      targetDong,
+      startDate: input.startDate ? new Date(input.startDate) : undefined,
+      endDate: input.endDate ? new Date(input.endDate) : undefined,
+      options: input.options,
+    });
+
+    return { message: '정상적으로 수정 처리되었습니다' };
   };
 
   private mapPollDetail = (v: Awaited<ReturnType<PollRepo['findPollById']>>) => {
