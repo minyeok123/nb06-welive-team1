@@ -53,7 +53,11 @@ export class ComplaintController {
     // 민원 상태 변경 요청 처리
     const params = complaintIdParamSchema.parse(req.params); // 경로 파라미터 검증
     const input = updateComplaintStatusSchema.parse(req.body); // 본문 유효성 검사
-    const result = await this.complaintService.updateComplaintStatus(params.complaintId, input, req.user);
+    const result = await this.complaintService.updateComplaintStatus(
+      params.complaintId,
+      input,
+      req.user,
+    );
     return res.status(200).json(result);
   };
 }
