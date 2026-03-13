@@ -43,6 +43,14 @@ export class ResidentRepo {
     });
   };
 
+  findRosterByContact = async (phoneNumber: string) => {
+    return await prisma.residentRoster.findUnique({
+      where: {
+        phoneNumber,
+      },
+    });
+  };
+
   createRoster = async ({ data }: { data: CreateRosterBody }) => {
     return await prisma.residentRoster.create({
       data: {

@@ -91,6 +91,31 @@ export class ResidentController {
     // 한글 깨짐 방지를 위한 BOM 추가
     res.status(200).send('\uFEFF' + csvContent);
   };
+  getFileRosterList = async (req: Request, res: Response, next: NextFunction) => {
+    const adminId = req.user.id;
+    const { page, limit, building, unitNumber, residenceStatus, isRegistered, keyword } =
+      req.validatedQuery as GetRosterListQuery;
+
+    const csvContent = await this.residentService.getFileRosterList(
+      adminId,
+      page,
+      limit,
+      building,
+      unitNumber,
+      residenceStatus,
+      isRegistered,
+      keyword,
+    );
+
+    const fileName = encodeURIComponent('입주민명부_목록.csv');
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="resident_list.csv"; filename*=UTF-8''${fileName}`,
+    );
+
+    res.status(200).send('\uFEFF' + csvContent);
+  };
 }
 
 const residentRepo = new ResidentRepo();
