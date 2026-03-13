@@ -38,6 +38,12 @@ export class ResidentController {
     );
     res.status(201).json(roster);
   };
+
+  getRosterDetail = async (req: Request, res: Response, next: NextFunction) => {
+    const { id } = req.params as { id: string };
+    const roster = await this.residentService.getRosterDetail(id);
+    res.status(200).json(roster);
+  };
 }
 
 const residentRepo = new ResidentRepo();

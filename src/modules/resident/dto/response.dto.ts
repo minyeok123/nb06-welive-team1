@@ -35,7 +35,7 @@ export const residentListDto = (rosters: ResidentRosterInput[]) => {
   });
 };
 
-export const createRosterDto = (roster: ResidentRosterInput) => {
+export const personalRosterDto = (roster: ResidentRosterInput) => {
   return {
     id: roster.id,
     userId: roster.userId ?? {},
