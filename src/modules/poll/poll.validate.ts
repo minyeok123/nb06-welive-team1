@@ -28,15 +28,22 @@ export const createPollSchema = z
 export type CreatePollInput = z.infer<typeof createPollSchema>;
 
 // 투표 목록 조회 쿼리 스키마
-const pageSchema = z.coerce.number().int().min(1).default(1);
-const limitSchema = z.coerce.number().int().min(1).max(100).default(11);
+const emptyToUndefined = (v: unknown) => (v === '' ? undefined : v);
+const pageSchema = z.preprocess(
+  emptyToUndefined,
+  z.coerce.number().int().min(1).default(1),
+);
+const limitSchema = z.preprocess(
+  emptyToUndefined,
+  z.coerce.number().int().min(1).max(100).default(11),
+);
 
 export const listPollsSchema = z.object({
   page: pageSchema.optional(), // 페이지 번호 (기본값: 1)
   limit: limitSchema.optional(), // 한 페이지당 항목 수 (기본값: 11)
-  buildingPermission: z.coerce.number().int().min(0).optional(), // 투표권자 필터 (0: 전체)
-  status: z.enum(['PENDING', 'IN_PROGRESS', 'CLOSED']).optional(), // 투표 상태 (CLOSED = DONE)
-  keyword: z.string().trim().min(1).optional(), // 검색어 (투표 제목, 내용)
+  buildingPermission: z.preprocess(emptyToUndefined, z.coerce.number().int().min(0).optional()), // 투표권자 필터 (0: 전체)
+  status: z.preprocess(emptyToUndefined, z.enum(['PENDING', 'IN_PROGRESS', 'CLOSED']).optional()), // 투표 상태 (CLOSED = DONE)
+  keyword: z.preprocess(emptyToUndefined, z.string().trim().min(1).optional()), // 검색어 (투표 제목, 내용)
 });
 
 export type ListPollsQuery = z.infer<typeof listPollsSchema>;
