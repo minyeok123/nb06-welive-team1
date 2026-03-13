@@ -49,3 +49,5 @@ export const createRosterBodySchema = z.object({
 export const getRosterDetailParamsSchema = z.object({
   id: z.uuid('ID 형식이 올바르지 않습니다'),
 });
+
+export const patchRosterBodySchema = createRosterBodySchema.partial();

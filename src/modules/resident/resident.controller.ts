@@ -27,21 +27,39 @@ export class ResidentController {
   createRoster = async (req: Request, res: Response, next: NextFunction) => {
     const { id: adminId, aptId } = req.user;
     const { building, unitNumber, contact, name, isHouseholder } = req.body;
-    const roster = await this.residentService.createRoster(
-      building,
-      unitNumber,
-      contact,
-      name,
-      isHouseholder,
-      adminId,
-      aptId!,
-    );
+    const roster = await this.residentService.createRoster({
+      data: {
+        building,
+        unitNumber,
+        contact,
+        name,
+        isHouseholder,
+        adminId,
+        aptId: aptId!,
+      },
+    });
     res.status(201).json(roster);
   };
 
   getRosterDetail = async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params as { id: string };
     const roster = await this.residentService.getRosterDetail(id);
+    res.status(200).json(roster);
+  };
+
+  patchRoster = async (req: Request, res: Response, next: NextFunction) => {
+    const { id } = req.params as { id: string };
+    const { building, unitNumber, contact, name, isHouseholder } = req.body;
+    const roster = await this.residentService.patchRoster({
+      data: {
+        id,
+        building,
+        unitNumber,
+        contact,
+        name,
+        isHouseholder,
+      },
+    });
     res.status(200).json(roster);
   };
 }

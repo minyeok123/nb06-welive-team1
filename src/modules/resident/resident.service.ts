@@ -2,6 +2,7 @@ import { Prisma } from '@prisma/client';
 import { ResidentRepo } from './resident.repo';
 import { CustomError } from '@/libs/error';
 import { residentListDto, personalRosterDto } from './dto/response.dto';
+import { CreateResidentRosterBody, PatchResidentRosterBody } from '@/types/resident.types';
 
 export class ResidentService {
   constructor(private residentRepo: ResidentRepo) {}
@@ -48,24 +49,8 @@ export class ResidentService {
     };
   };
 
-  createRoster = async (
-    building: number,
-    unitNumber: number,
-    contact: string,
-    name: string,
-    isHouseholder: 'HOUSEHOLDER' | 'MEMBER',
-    adminId: string,
-    aptId: string,
-  ) => {
-    const roster = await this.residentRepo.createRoster(
-      building,
-      unitNumber,
-      contact,
-      name,
-      isHouseholder,
-      adminId,
-      aptId,
-    );
+  createRoster = async ({ data }: { data: CreateResidentRosterBody }) => {
+    const roster = await this.residentRepo.createRoster({ data });
     if (!roster) {
       throw new CustomError(400, '입주민 등록 실패');
     }
@@ -76,6 +61,14 @@ export class ResidentService {
     const roster = await this.residentRepo.getRosterDetail(id);
     if (!roster) {
       throw new CustomError(400, '입주민 상세 조회 실패');
+    }
+    return personalRosterDto(roster);
+  };
+
+  patchRoster = async ({ data }: { data: PatchResidentRosterBody }) => {
+    const roster = await this.residentRepo.patchRoster({ data });
+    if (!roster) {
+      throw new CustomError(400, '입주민 정보 수정 실패');
     }
     return personalRosterDto(roster);
   };

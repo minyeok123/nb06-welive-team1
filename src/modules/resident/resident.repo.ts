@@ -1,5 +1,6 @@
 import { prisma } from '@libs/prisma';
 import { Prisma } from '@prisma/client';
+import { CreateResidentRosterBody, PatchResidentRosterBody } from '@/types/resident.types';
 
 export class ResidentRepo {
   constructor() {}
@@ -42,30 +43,22 @@ export class ResidentRepo {
     });
   };
 
-  createRoster = async (
-    building: number,
-    unitNumber: number,
-    contact: string,
-    name: string,
-    isHouseholder: 'HOUSEHOLDER' | 'MEMBER',
-    adminId: string,
-    aptId: string,
-  ) => {
+  createRoster = async ({ data }: { data: CreateResidentRosterBody }) => {
     return await prisma.residentRoster.create({
       data: {
-        dong: building,
-        ho: unitNumber,
-        phoneNumber: contact,
-        name: name,
-        is_houseHold: isHouseholder,
+        dong: data.building,
+        ho: data.unitNumber,
+        phoneNumber: data.contact,
+        name: data.name,
+        is_houseHold: data.isHouseholder,
         apartment: {
           connect: {
-            id: aptId,
+            id: data.aptId,
           },
         },
         admin: {
           connect: {
-            id: adminId,
+            id: data.adminId,
           },
         },
       },
@@ -101,6 +94,38 @@ export class ResidentRepo {
         ho: true,
         name: true,
         phoneNumber: true,
+        is_houseHold: true,
+        is_registered: true,
+        is_residence: true,
+        user: {
+          select: {
+            email: true,
+            register_status: true,
+          },
+        },
+      },
+    });
+  };
+
+  patchRoster = async ({ data }: { data: PatchResidentRosterBody }) => {
+    return await prisma.residentRoster.update({
+      where: {
+        id: data.id,
+      },
+      data: {
+        dong: data.building,
+        ho: data.unitNumber,
+        phoneNumber: data.contact,
+        name: data.name,
+        is_houseHold: data.isHouseholder,
+      },
+      select: {
+        id: true,
+        userId: true,
+        dong: true,
+        ho: true,
+        phoneNumber: true,
+        name: true,
         is_houseHold: true,
         is_registered: true,
         is_residence: true,
