@@ -14,6 +14,8 @@ import residentRouter from './modules/resident/resident.router';
 import noticeRouter from './modules/notice/notice.router';
 import commentRouter from './modules/comment/comment.router';
 import eventRouter from './modules/event/event.router';
+import noticeRouter from './modules/notice/notice.router';
+import commentRouter from './modules/comment/comment.router';
 
 const app = express();
 
@@ -31,6 +33,8 @@ app.use('/api/residents', residentRouter);
 app.use('/api/notices', noticeRouter);
 app.use('/api/comments', commentRouter);
 app.use('/api/event', eventRouter);
+app.use('/api/notices', noticeRouter);
+app.use('/api/comments', commentRouter);
 
 app.use(defaultNotFoundHandler);
 app.use(globalErrorHandler);
