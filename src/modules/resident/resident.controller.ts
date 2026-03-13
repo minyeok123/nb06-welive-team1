@@ -66,7 +66,7 @@ export class ResidentController {
   deleteRoster = async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params as { id: string };
     const roster = await this.residentService.deleteRoster(id);
-    res.status(204).json({ message: '입주민 정보 삭제 성공' });
+    res.status(200).json({ message: '입주민 정보 삭제 성공' });
   };
 }
 
