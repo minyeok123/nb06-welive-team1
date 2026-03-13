@@ -118,6 +118,72 @@ export class PollService {
     return { polls, totalCount };
   };
 
+  // 투표 상세 조회 (관리자·입주민)
+  getPoll = async (pollId: string, user: { id: string; aptId: string | null; role: string }) => {
+    if (!user?.id) {
+      throw new CustomError(403, '접근 권한이 없습니다');
+    }
+
+    const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
+    if (!isAdmin && !user.aptId) {
+      throw new CustomError(403, '접근 권한이 없습니다');
+    }
+
+    const vote = await this.repo.findPollById(pollId);
+    if (!vote) {
+      throw new CustomError(404, '투표를 찾을 수 없습니다');
+    }
+
+    // 동일 아파트 확인
+    if (user.aptId && vote.board?.aptId !== user.aptId) {
+      throw new CustomError(403, '접근 권한이 없습니다');
+    }
+
+    // 입주민: 자신이 투표권자인 투표만 조회 가능
+    if (!isAdmin && user.aptId) {
+      const resident = await this.repo.findResidentByUserId(user.id);
+      if (!resident) {
+        throw new CustomError(403, '접근 권한이 없습니다');
+      }
+      const dongStr = String(resident.dong);
+      const isEligible =
+        vote.targetDong.length === 0 || vote.targetDong.includes(dongStr);
+      if (!isEligible) {
+        throw new CustomError(403, '접근 권한이 없습니다');
+      }
+    }
+
+    return this.mapPollDetail(vote);
+  };
+
+  private mapPollDetail = (v: Awaited<ReturnType<PollRepo['findPollById']>>) => {
+    if (!v) throw new CustomError(404, '투표를 찾을 수 없습니다');
+    const buildingPermission =
+      v.targetDong.length === 0 ? 0 : parseInt(v.targetDong[0], 10) || 0;
+    const status = v.status === 'DONE' ? 'CLOSED' : v.status;
+    const boardName = v.board?.boardType === 'VOTE' ? '주민투표' : '투표';
+    const options = (v.options ?? []).map((opt) => ({
+      id: opt.id,
+      title: opt.option,
+      voteCount: opt._count?.participations ?? 0,
+    }));
+    return {
+      pollId: v.id,
+      userId: v.authorId,
+      title: v.title,
+      writerName: v.author?.name ?? '',
+      buildingPermission,
+      createdAt: v.createdAt,
+      updatedAt: v.updatedAt,
+      startDate: v.startDate,
+      endDate: v.endDate,
+      status,
+      content: v.content,
+      boardName,
+      options,
+    };
+  };
+
   private mapPollListItem = (v: VoteForList) => {
     const buildingPermission =
       v.targetDong.length === 0 ? 0 : parseInt(v.targetDong[0], 10) || 0;

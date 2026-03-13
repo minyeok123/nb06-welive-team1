@@ -47,3 +47,10 @@ export const listPollsSchema = z.object({
 });
 
 export type ListPollsQuery = z.infer<typeof listPollsSchema>;
+
+// 투표 상세 조회 경로 파라미터 스키마
+export const pollIdParamSchema = z.object({
+  pollId: z.string().uuid(),
+});
+
+export type PollIdParam = z.infer<typeof pollIdParamSchema>;
