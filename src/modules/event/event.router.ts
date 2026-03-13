@@ -3,7 +3,11 @@ import asyncHandler from '@/middlewares/asyncHandler';
 import { validate } from '@/middlewares/validate';
 import { authenticate } from '@/middlewares/authenticate';
 import { isNotUser } from '@/middlewares/authorize';
-import { listEventsQuerySchema, putEventQuerySchema } from './event.validate';
+import {
+  eventIdParamSchema,
+  listEventsQuerySchema,
+  putEventQuerySchema,
+} from './event.validate';
 import { eventController } from './event.controller';
 
 const router = express.Router();
@@ -23,6 +27,15 @@ router.put(
   isNotUser,
   validate(putEventQuerySchema, 'query'),
   asyncHandler(eventController.putEvent),
+);
+
+// 이벤트 삭제 (관리자만, eventId는 noticeId 또는 pollId)
+router.delete(
+  '/:eventId',
+  authenticate,
+  isNotUser,
+  validate(eventIdParamSchema, 'params'),
+  asyncHandler(eventController.deleteEvent),
 );
 
 export default router;

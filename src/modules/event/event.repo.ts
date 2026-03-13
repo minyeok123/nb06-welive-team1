@@ -187,4 +187,20 @@ export class EventRepo {
       include: { board: { select: { aptId: true } } },
     });
   };
+
+  // 공지(NOTICE) 소프트 삭제
+  softDeleteNotice = async (noticeId: string) => {
+    await prisma.notice.update({
+      where: { id: noticeId },
+      data: { deletedAt: new Date() },
+    });
+  };
+
+  // 투표(POLL) 소프트 삭제
+  softDeletePoll = async (pollId: string) => {
+    await prisma.vote.update({
+      where: { id: pollId },
+      data: { deletedAt: new Date() },
+    });
+  };
 }
