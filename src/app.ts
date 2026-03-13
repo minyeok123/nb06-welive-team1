@@ -11,6 +11,8 @@ import pollsvoteRouter from './modules/pollsvote/pollsvote.router';
 import userRouter from './modules/user/user.router';
 import aptRouter from './modules/apartment/apt.router';
 import residentRouter from './modules/resident/resident.router';
+import noticeRouter from './modules/notice/notice.router';
+import commentRouter from './modules/comment/comment.router';
 import eventRouter from './modules/event/event.router';
 
 const app = express();
@@ -26,6 +28,8 @@ app.use('/api/options', pollsvoteRouter);
 app.use('/api/users', userRouter);
 app.use('/api/apartments', aptRouter);
 app.use('/api/residents', residentRouter);
+app.use('/api/notices', noticeRouter);
+app.use('/api/comments', commentRouter);
 app.use('/api/event', eventRouter);
 
 app.use(defaultNotFoundHandler);
