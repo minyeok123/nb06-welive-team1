@@ -10,6 +10,8 @@ import pollRouter from './modules/poll/poll.router';
 import userRouter from './modules/user/user.router';
 import aptRouter from './modules/apartment/apt.router';
 import residentRouter from './modules/resident/resident.router';
+import noticeRouter from './modules/notice/notice.router';
+import commentRouter from './modules/comment/comment.router';
 
 const app = express();
 
@@ -23,6 +25,8 @@ app.use('/api/polls', pollRouter);
 app.use('/api/users', userRouter);
 app.use('/api/apartments', aptRouter);
 app.use('/api/residents', residentRouter);
+app.use('/api/notices', noticeRouter);
+app.use('/api/comments', commentRouter);
 
 app.use(defaultNotFoundHandler);
 app.use(globalErrorHandler);
