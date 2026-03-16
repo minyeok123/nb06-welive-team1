@@ -205,4 +205,20 @@ export class AuthRepo {
   updateApartment = async (id: string, data: Prisma.ApartmentUpdateInput) => {
     return await prisma.apartment.update({ where: { id }, data });
   };
+  softDeleteApartmentAndUsers = async (aptId: string) => {
+    const now = new Date();
+    return await prisma.$transaction(async (tx) => {
+      const apartment = await tx.apartment.update({
+        where: { id: aptId },
+        data: { deletedAt: now },
+      });
+
+      const users = await tx.user.updateMany({
+        where: { aptId, deletedAt: null },
+        data: { deletedAt: now },
+      });
+
+      return { apartment, deletedUserCount: users.count };
+    });
+  };
 }

@@ -378,4 +378,30 @@ export class AuthService {
 
     return;
   };
+
+  deleteApartment = async (adminId: string) => {
+    const admin = await this.repo.findUserById(adminId);
+    if (!admin || admin.role !== 'ADMIN') {
+      throw new CustomError(404, '존재하지 않는 관리자입니다');
+    }
+    if (admin.deletedAt !== null) {
+      throw new CustomError(400, '이미 삭제된 관리자입니다');
+    }
+    if (!admin.aptId) {
+      throw new CustomError(400, '아파트 정보가 없습니다');
+    }
+
+    const apt = await this.repo.findApartmentById(admin.aptId);
+    if (apt?.deletedAt) {
+      throw new CustomError(400, '이미 삭제된 아파트입니다');
+    }
+
+    const result = await this.repo.softDeleteApartmentAndUsers(admin.aptId);
+
+    if (!result) {
+      throw new CustomError(401, '관리자 정보(아파트 정보 포함) 삭제 중 오류가 발생했습니다');
+    }
+
+    return;
+  };
 }
