@@ -67,15 +67,9 @@ export class NoticeRepo {
             select: {
               id: true,
               boardType: true,
-<<<<<<< HEAD
             },
           },
           _count: { select: { noticeComment: true } },
-=======
-              _count: { select: { comments: true } },
-            },
-          },
->>>>>>> d23110f (feat: Notice, Comment 모듈 구현 (스키마 변경 반영))
         },
         orderBy: [{ is_pinned: 'desc' }, { createdAt: 'desc' }],
         skip: (params.page - 1) * params.limit,
@@ -97,7 +91,6 @@ export class NoticeRepo {
             id: true,
             aptId: true,
             boardType: true,
-<<<<<<< HEAD
           },
         },
         noticeComment: {
@@ -107,16 +100,6 @@ export class NoticeRepo {
           },
           orderBy: { createdAt: 'asc' } as const,
         },
-=======
-            comments: {
-              include: {
-                user: { select: { id: true, name: true } },
-              },
-              orderBy: { createdAt: 'asc' } as const,
-            },
-          },
-        },
->>>>>>> d23110f (feat: Notice, Comment 모듈 구현 (스키마 변경 반영))
       },
     });
   };
@@ -128,10 +111,7 @@ export class NoticeRepo {
     });
   };
 
-  updateNotice = async (
-    id: string,
-    data: Prisma.NoticeUpdateInput,
-  ) => {
+  updateNotice = async (id: string, data: Prisma.NoticeUpdateInput) => {
     return prisma.notice.update({
       where: { id },
       data,

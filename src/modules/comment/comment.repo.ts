@@ -1,7 +1,6 @@
 import { prisma } from '@libs/prisma';
 
 export class CommentRepo {
-<<<<<<< HEAD
   findComplaintById = async (id: string) => {
     return await prisma.complaint.findUnique({
       where: { id, deletedAt: null },
@@ -41,33 +40,10 @@ export class CommentRepo {
         createdAt: true,
         updatedAt: true,
         user: { select: { name: true } },
-=======
-  findBoardById = async (id: string) => {
-    return prisma.board.findUnique({
-      where: { id },
-    });
-  };
-
-  createComment = async (params: {
-    userId: string;
-    boardId: string;
-    content: string;
-  }) => {
-    return prisma.comment.create({
-      data: {
-        userId: params.userId,
-        boardId: params.boardId,
-        content: params.content,
-      },
-      include: {
-        user: { select: { id: true, name: true } },
-        board: { select: { id: true, boardType: true } },
->>>>>>> d23110f (feat: Notice, Comment 모듈 구현 (스키마 변경 반영))
       },
     });
   };
 
-<<<<<<< HEAD
   findComplaintCommentById = async (id: string) => {
     return await prisma.complaintComment.findUnique({
       where: { id, deletedAt: null },
@@ -79,19 +55,10 @@ export class CommentRepo {
         createdAt: true,
         updatedAt: true,
         user: { select: { name: true } },
-=======
-  findCommentById = async (id: string) => {
-    return prisma.comment.findUnique({
-      where: { id },
-      include: {
-        user: { select: { id: true, name: true } },
-        board: { select: { id: true, aptId: true, boardType: true } },
->>>>>>> d23110f (feat: Notice, Comment 모듈 구현 (스키마 변경 반영))
       },
     });
   };
 
-<<<<<<< HEAD
   updateComplaintComment = async (id: string, content: string) => {
     return await prisma.complaintComment.update({
       where: { id, deletedAt: null },
@@ -104,20 +71,10 @@ export class CommentRepo {
         createdAt: true,
         updatedAt: true,
         user: { select: { name: true } },
-=======
-  updateComment = async (id: string, content: string) => {
-    return prisma.comment.update({
-      where: { id },
-      data: { content },
-      include: {
-        user: { select: { id: true, name: true } },
-        board: { select: { id: true, boardType: true } },
->>>>>>> d23110f (feat: Notice, Comment 모듈 구현 (스키마 변경 반영))
       },
     });
   };
 
-<<<<<<< HEAD
   deleteComplaintComment = async (id: string) => {
     return await prisma.complaintComment.update({
       where: { id, deletedAt: null },
@@ -166,11 +123,6 @@ export class CommentRepo {
     return await prisma.noticeComment.update({
       where: { id, deletedAt: null },
       data: { deletedAt: new Date() },
-=======
-  deleteComment = async (id: string) => {
-    return prisma.comment.delete({
-      where: { id },
->>>>>>> d23110f (feat: Notice, Comment 모듈 구현 (스키마 변경 반영))
     });
   };
 }
