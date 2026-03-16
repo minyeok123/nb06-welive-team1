@@ -90,6 +90,13 @@ export class ResidentRepo {
     });
   };
 
+  createRosters = async (data: Prisma.residentRosterCreateManyInput[]) => {
+    return await prisma.residentRoster.createMany({
+      data,
+      skipDuplicates: true, // 유니크 값인 연락처가 중복될 경우 건너뜀
+    });
+  };
+
   getRosterDetail = async (id: string) => {
     return await prisma.residentRoster.findUnique({
       where: {

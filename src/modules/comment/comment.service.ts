@@ -11,10 +11,7 @@ const INPUT_TO_BOARD_TYPE: Record<string, string> = {
 export class CommentService {
   constructor(private repo: CommentRepo) {}
 
-  createComment = async (
-    input: CreateCommentInput,
-    user: { id: string; aptId: string | null },
-  ) => {
+  createComment = async (input: CreateCommentInput, user: { id: string; aptId: string | null }) => {
     if (!user?.id || !user?.aptId) {
       throw new CustomError(403, '접근 권한이 없습니다');
     }
@@ -54,11 +51,7 @@ export class CommentService {
     };
   };
 
-  updateComment = async (
-    commentId: string,
-    input: UpdateCommentInput,
-    user: { id: string },
-  ) => {
+  updateComment = async (commentId: string, input: UpdateCommentInput, user: { id: string }) => {
     if (!user?.id) {
       throw new CustomError(403, '접근 권한이 없습니다');
     }
