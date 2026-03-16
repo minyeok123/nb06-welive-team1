@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import { IsHouseHold, RegisterStatus } from '@prisma/client';
+import { IsHouseHold, RegisterStatus, Prisma } from '@prisma/client';
 import { AuthRepo } from './auth.repo';
 import { CustomError } from '@libs/error';
 import { AdminSignupInput, SignupInput, SuperAdminSignupInput } from './auth.validate';
@@ -326,4 +326,56 @@ export class AuthService {
   //   }
   //   return;
   // };
+
+  updateAdmin = async (
+    adminId: string,
+    adminData: Prisma.UserUpdateInput,
+    aptData: Prisma.ApartmentUpdateInput,
+  ) => {
+    const admin = await this.repo.findUserById(adminId);
+    if (!admin || admin.role !== 'ADMIN') {
+      throw new CustomError(404, '존재하지 않는 관리자입니다');
+    }
+
+    //(실제로 값이 들어온 게 있는지 확인)
+    const hasAdminData = Object.values(adminData).some((val) => val !== undefined);
+    const hasAptData = Object.values(aptData).some((val) => val !== undefined);
+
+    //  유니크 필드 중복 여부 체크 (adminData 업데이트가 있을 경우)
+    if (hasAdminData) {
+      if (adminData.email && adminData.email !== admin.email) {
+        const emailExists = await this.repo.findUserByEmail(adminData.email as string);
+        if (emailExists) throw new CustomError(400, '이미 사용 중인 이메일입니다.');
+      }
+      if (adminData.phoneNumber && adminData.phoneNumber !== admin.phoneNumber) {
+        const phoneExists = await this.repo.findUserByPhoneNumber(adminData.phoneNumber as string);
+        if (phoneExists) throw new CustomError(400, '이미 사용 중인 연락처입니다.');
+      }
+    }
+
+    // 3. 아파트 유니크 필드 중복 여부 체크 (aptData 업데이트가 있고, 아파트 연동이 되어있는 경우)
+    if (hasAptData && admin.aptId) {
+      const currentApt = await this.repo.findApartmentById(admin.aptId);
+
+      if (aptData.aptAddress && aptData.aptAddress !== currentApt?.aptAddress) {
+        const addressExists = await this.repo.findApartmentByAddress(aptData.aptAddress as string);
+        if (addressExists) throw new CustomError(400, '이미 등록된 아파트 주소입니다.');
+      }
+      if (aptData.officeNumber && aptData.officeNumber !== currentApt?.officeNumber) {
+        const officeExists = await this.repo.findApartmentByOfficeNumber(
+          aptData.officeNumber as string,
+        );
+        if (officeExists) throw new CustomError(400, '이미 존재하는 관리 번호입니다.');
+      }
+    }
+
+    if (hasAdminData) {
+      await this.repo.updateAdmin(admin.id, adminData);
+    }
+    if (hasAptData && admin.aptId) {
+      await this.repo.updateApartment(admin.aptId, aptData);
+    }
+
+    return;
+  };
 }

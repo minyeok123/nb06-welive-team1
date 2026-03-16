@@ -81,6 +81,30 @@ export class AuthController {
   //   await this.authService.updateResidentsStatusBatch(ids, status);
   //   return res.status(200).json({ message: '주민 가입 상태 일괄 변경이 완료되었습니다' });
   // };
+
+  updateAdmin = async (req: Request, res: Response, next: NextFunction) => {
+    const adminId = req.params.adminId as string;
+    const {
+      contact: phoneNumber,
+      name,
+      email,
+      description,
+      apartmentName: aptName,
+      apartmentAddress: aptAddress,
+      apartmentManagementNumber: officeNumber,
+    } = req.body;
+    await this.authService.updateAdmin(
+      adminId,
+      { phoneNumber, name, email },
+      {
+        description,
+        aptName,
+        aptAddress,
+        officeNumber,
+      },
+    );
+    return res.status(200).json({ message: '작업이 성공적으로 완료되었습니다' });
+  };
 }
 
 const authRepo = new AuthRepo();

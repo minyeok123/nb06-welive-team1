@@ -10,6 +10,7 @@ import {
   updateRegisterStatusSchema,
   updateAdminsStatusBatchSchema,
   updateResidentsStatusBatchSchema,
+  adminUpdateSchema,
 } from './auth.validate';
 import { authenticate } from '@/middlewares/authenticate';
 import { superAdminAuthorize, adminAuthorize } from '@/middlewares/authorize';
@@ -51,5 +52,13 @@ router.patch(
   authenticate,
   adminAuthorize,
   asyncHandler(authController.updateResidentStatus),
+);
+router.patch(
+  '/admins/:adminId',
+  validate(adminIdSchema, 'params'),
+  validate(adminUpdateSchema, 'body'),
+  authenticate,
+  superAdminAuthorize,
+  asyncHandler(authController.updateAdmin),
 );
 export default router;

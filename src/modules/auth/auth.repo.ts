@@ -26,6 +26,18 @@ export class AuthRepo {
     });
   };
 
+  findUserByEmail = async (email: string) => {
+    return prisma.user.findFirst({ where: { email } });
+  };
+
+  findUserByPhoneNumber = async (phoneNumber: string) => {
+    return prisma.user.findFirst({ where: { phoneNumber } });
+  };
+
+  findApartmentById = async (id: string) => {
+    return prisma.apartment.findUnique({ where: { id } });
+  };
+
   findAnyApartment = async () => {
     return prisma.apartment.findFirst();
   };
@@ -184,5 +196,13 @@ export class AuthRepo {
   };
   createManyBoard = async (data: Prisma.BoardCreateManyInput[]) => {
     return await prisma.board.createMany({ data });
+  };
+
+  updateAdmin = async (id: string, data: Prisma.UserUpdateInput) => {
+    return await prisma.user.update({ where: { id }, data });
+  };
+
+  updateApartment = async (id: string, data: Prisma.ApartmentUpdateInput) => {
+    return await prisma.apartment.update({ where: { id }, data });
   };
 }
