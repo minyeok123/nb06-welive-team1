@@ -70,7 +70,11 @@ export class NoticeService {
         createdAt: n.createdAt.toISOString(),
         updatedAt: n.updatedAt.toISOString(),
         viewsCount: n.viewsCount,
+<<<<<<< HEAD
         commentsCount: n._count.noticeComment,
+=======
+        commentsCount: n.board._count.comments,
+>>>>>>> d23110f (feat: Notice, Comment 모듈 구현 (스키마 변경 반영))
         isPinned: n.is_pinned,
       })),
       totalCount,
@@ -103,11 +107,19 @@ export class NoticeService {
       createdAt: notice.createdAt.toISOString(),
       updatedAt: notice.updatedAt.toISOString(),
       viewsCount: notice.viewsCount + 1,
+<<<<<<< HEAD
       commentsCount: notice.noticeComment.length,
       isPinned: notice.is_pinned,
       content: notice.content,
       boardName: 'NOTICE',
       comments: notice.noticeComment.map((c) => ({
+=======
+      commentsCount: notice.board.comments.length,
+      isPinned: notice.is_pinned,
+      content: notice.content,
+      boardName: 'NOTICE',
+      comments: notice.board.comments.map((c) => ({
+>>>>>>> d23110f (feat: Notice, Comment 모듈 구현 (스키마 변경 반영))
         id: c.id,
         userId: c.userId,
         content: c.content,
@@ -158,7 +170,11 @@ export class NoticeService {
       createdAt: updated!.createdAt.toISOString(),
       updatedAt: updated!.updatedAt.toISOString(),
       viewsCount: updated!.viewsCount,
+<<<<<<< HEAD
       commentsCount: updated!.noticeComment.length,
+=======
+      commentsCount: updated!.board.comments.length,
+>>>>>>> d23110f (feat: Notice, Comment 모듈 구현 (스키마 변경 반영))
       isPinned: updated!.is_pinned,
     };
   };

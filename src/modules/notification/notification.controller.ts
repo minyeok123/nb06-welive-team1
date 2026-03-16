@@ -1,0 +1,67 @@
+import { Request, Response } from 'express';
+import { NotificationRepo } from './notification.repo';
+import { NotificationService } from './notification.service';
+import {
+  notificationIdSchema,
+  getNotificationsQuerySchema,
+} from './notification.validate';
+
+export class NotificationController {
+  constructor(private notificationService: NotificationService) {}
+
+  getNotifications = async (req: Request, res: Response) => {
+    const query = getNotificationsQuerySchema.parse(req.query);
+    const result = await this.notificationService.getNotifications(req.user!.id, query);
+    return res.status(200).json(result);
+  };
+
+  sse = async (req: Request, res: Response) => {
+    const userId = req.user!.id;
+
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no');
+    res.flushHeaders();
+
+    const sendNotifications = async () => {
+      try {
+        const notifications = await this.notificationService.getUnreadNotifications(userId);
+        res.write(
+          `data: ${JSON.stringify({ type: 'alarm', data: notifications })}\n\n`,
+        );
+      } catch (err) {
+        res.write(`data: ${JSON.stringify({ type: 'error', message: '알림 조회 실패' })}\n\n`);
+      }
+    };
+
+    await sendNotifications();
+
+    const intervalId = setInterval(async () => {
+      if (res.writableEnded) {
+        clearInterval(intervalId);
+        return;
+      }
+      await sendNotifications();
+    }, 30000);
+
+    req.on('close', () => {
+      clearInterval(intervalId);
+    });
+  };
+
+  markAsRead = async (req: Request, res: Response) => {
+    const { notificationId } = notificationIdSchema.parse(req.params);
+    const result = await this.notificationService.markAsRead(notificationId, req.user!.id);
+    return res.status(200).json(result);
+  };
+
+  markAllAsRead = async (req: Request, res: Response) => {
+    const result = await this.notificationService.markAllAsRead(req.user!.id);
+    return res.status(200).json(result);
+  };
+}
+
+const notificationRepo = new NotificationRepo();
+const notificationService = new NotificationService(notificationRepo);
+export const notificationController = new NotificationController(notificationService);
