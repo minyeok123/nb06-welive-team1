@@ -1,15 +1,22 @@
 import { Request, Response } from 'express';
 import { NotificationRepo } from './notification.repo';
 import { NotificationService } from './notification.service';
+import {
+  notificationIdSchema,
+  getNotificationsQuerySchema,
+} from './notification.validate';
 
 export class NotificationController {
   constructor(private notificationService: NotificationService) {}
 
+  getNotifications = async (req: Request, res: Response) => {
+    const query = getNotificationsQuerySchema.parse(req.query);
+    const result = await this.notificationService.getNotifications(req.user!.id, query);
+    return res.status(200).json(result);
+  };
+
   sse = async (req: Request, res: Response) => {
-    const userId = req.user?.id;
-    if (!userId) {
-      return res.status(401).json({ message: '인증이 필요합니다' });
-    }
+    const userId = req.user!.id;
 
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
@@ -44,13 +51,13 @@ export class NotificationController {
   };
 
   markAsRead = async (req: Request, res: Response) => {
-    const { notificationid } = req.params;
-    const userId = req.user?.id;
-    if (!userId) {
-      return res.status(401).json({ message: '인증이 필요합니다' });
-    }
+    const { notificationId } = notificationIdSchema.parse(req.params);
+    const result = await this.notificationService.markAsRead(notificationId, req.user!.id);
+    return res.status(200).json(result);
+  };
 
-    const result = await this.notificationService.markAsRead(notificationid, userId);
+  markAllAsRead = async (req: Request, res: Response) => {
+    const result = await this.notificationService.markAllAsRead(req.user!.id);
     return res.status(200).json(result);
   };
 }

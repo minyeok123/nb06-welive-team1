@@ -11,6 +11,30 @@ export class NotificationRepo {
     });
   };
 
+  findManyByUserId = async (params: {
+    userId: string;
+    isRead?: boolean;
+    page: number;
+    limit: number;
+  }) => {
+    const where = {
+      userId: params.userId,
+      ...(params.isRead !== undefined && { is_read: params.isRead }),
+    };
+
+    const [notifications, totalCount] = await Promise.all([
+      prisma.notification.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (params.page - 1) * params.limit,
+        take: params.limit,
+      }),
+      prisma.notification.count({ where }),
+    ]);
+
+    return { notifications, totalCount };
+  };
+
   findById = async (id: string) => {
     return prisma.notification.findUnique({
       where: { id },
@@ -22,5 +46,13 @@ export class NotificationRepo {
       where: { id },
       data: { is_read: true },
     });
+  };
+
+  markAllAsRead = async (userId: string) => {
+    const result = await prisma.notification.updateMany({
+      where: { userId, is_read: false },
+      data: { is_read: true },
+    });
+    return { count: result.count };
   };
 }

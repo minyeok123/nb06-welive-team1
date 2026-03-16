@@ -16,6 +16,7 @@ import commentRouter from './modules/comment/comment.router';
 import eventRouter from './modules/event/event.router';
 import noticeRouter from './modules/notice/notice.router';
 import commentRouter from './modules/comment/comment.router';
+import notificationRouter from './modules/notification/notification.router';
 
 const app = express();
 
@@ -35,6 +36,7 @@ app.use('/api/comments', commentRouter);
 app.use('/api/event', eventRouter);
 app.use('/api/notices', noticeRouter);
 app.use('/api/comments', commentRouter);
+app.use('/api/notifications', notificationRouter);
 
 app.use(defaultNotFoundHandler);
 app.use(globalErrorHandler);
