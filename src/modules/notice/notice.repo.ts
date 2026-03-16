@@ -111,10 +111,7 @@ export class NoticeRepo {
     });
   };
 
-  updateNotice = async (
-    id: string,
-    data: Prisma.NoticeUpdateInput,
-  ) => {
+  updateNotice = async (id: string, data: Prisma.NoticeUpdateInput) => {
     return prisma.notice.update({
       where: { id },
       data,
