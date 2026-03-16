@@ -67,9 +67,9 @@ export class NoticeRepo {
             select: {
               id: true,
               boardType: true,
-              _count: { select: { comments: true } },
             },
           },
+          _count: { select: { noticeComment: true } },
         },
         orderBy: [{ is_pinned: 'desc' }, { createdAt: 'desc' }],
         skip: (params.page - 1) * params.limit,
@@ -91,13 +91,14 @@ export class NoticeRepo {
             id: true,
             aptId: true,
             boardType: true,
-            comments: {
-              include: {
-                user: { select: { id: true, name: true } },
-              },
-              orderBy: { createdAt: 'asc' } as const,
-            },
           },
+        },
+        noticeComment: {
+          where: { deletedAt: null },
+          include: {
+            user: { select: { id: true, name: true } },
+          },
+          orderBy: { createdAt: 'asc' } as const,
         },
       },
     });

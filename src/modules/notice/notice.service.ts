@@ -70,7 +70,7 @@ export class NoticeService {
         createdAt: n.createdAt.toISOString(),
         updatedAt: n.updatedAt.toISOString(),
         viewsCount: n.viewsCount,
-        commentsCount: n.board._count.comments,
+        commentsCount: n._count.noticeComment,
         isPinned: n.is_pinned,
       })),
       totalCount,
@@ -103,11 +103,11 @@ export class NoticeService {
       createdAt: notice.createdAt.toISOString(),
       updatedAt: notice.updatedAt.toISOString(),
       viewsCount: notice.viewsCount + 1,
-      commentsCount: notice.board.comments.length,
+      commentsCount: notice.noticeComment.length,
       isPinned: notice.is_pinned,
       content: notice.content,
       boardName: 'NOTICE',
-      comments: notice.board.comments.map((c) => ({
+      comments: notice.noticeComment.map((c) => ({
         id: c.id,
         userId: c.userId,
         content: c.content,
@@ -158,7 +158,7 @@ export class NoticeService {
       createdAt: updated!.createdAt.toISOString(),
       updatedAt: updated!.updatedAt.toISOString(),
       viewsCount: updated!.viewsCount,
-      commentsCount: updated!.board.comments.length,
+      commentsCount: updated!.noticeComment.length,
       isPinned: updated!.is_pinned,
     };
   };
