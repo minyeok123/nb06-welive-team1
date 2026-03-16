@@ -13,7 +13,7 @@ import {
   adminUpdateSchema,
 } from './auth.validate';
 import { authenticate } from '@/middlewares/authenticate';
-import { superAdminAuthorize, adminAuthorize } from '@/middlewares/authorize';
+import { superAdminAuthorize, adminAuthorize, isNotUser } from '@/middlewares/authorize';
 
 const router = express.Router();
 
@@ -68,4 +68,5 @@ router.delete(
   superAdminAuthorize,
   asyncHandler(authController.deleteApartment),
 );
+router.post('/cleanup', authenticate, isNotUser, asyncHandler(authController.cleanup));
 export default router;
