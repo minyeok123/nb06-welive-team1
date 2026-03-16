@@ -105,6 +105,12 @@ export class AuthController {
     );
     return res.status(200).json({ message: '작업이 성공적으로 완료되었습니다' });
   };
+
+  deleteApartment = async (req: Request, res: Response, next: NextFunction) => {
+    const adminId = req.params.adminId as string;
+    await this.authService.deleteApartment(adminId);
+    return res.status(200).json({ message: '작업이 성공적으로 완료되었습니다' });
+  };
 }
 
 const authRepo = new AuthRepo();

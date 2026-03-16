@@ -61,4 +61,11 @@ router.patch(
   superAdminAuthorize,
   asyncHandler(authController.updateAdmin),
 );
+router.delete(
+  '/admins/:adminId',
+  validate(adminIdSchema, 'params'),
+  authenticate,
+  superAdminAuthorize,
+  asyncHandler(authController.deleteApartment),
+);
 export default router;
