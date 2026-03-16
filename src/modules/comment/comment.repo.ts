@@ -1,54 +1,128 @@
 import { prisma } from '@libs/prisma';
 
 export class CommentRepo {
-  findBoardById = async (id: string) => {
-    return prisma.board.findUnique({
-      where: { id },
+  findComplaintById = async (id: string) => {
+    return await prisma.complaint.findUnique({
+      where: { id, deletedAt: null },
+      select: {
+        id: true,
+        board: {
+          select: { id: true, aptId: true, boardType: true },
+        },
+      },
     });
   };
 
-  createComment = async (params: {
+  findNoticeById = async (id: string) => {
+    return await prisma.notice.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        board: {
+          select: { id: true, aptId: true, boardType: true },
+        },
+      },
+    });
+  };
+
+  createComplaintComment = async (data: {
     userId: string;
-    boardId: string;
+    complaintId: string;
     content: string;
   }) => {
-    return prisma.comment.create({
-      data: {
-        userId: params.userId,
-        boardId: params.boardId,
-        content: params.content,
-      },
-      include: {
-        user: { select: { id: true, name: true } },
-        board: { select: { id: true, boardType: true } },
-      },
-    });
-  };
-
-  findCommentById = async (id: string) => {
-    return prisma.comment.findUnique({
-      where: { id },
-      include: {
-        user: { select: { id: true, name: true } },
-        board: { select: { id: true, aptId: true, boardType: true } },
+    return await prisma.complaintComment.create({
+      data,
+      select: {
+        id: true,
+        userId: true,
+        complaintId: true,
+        content: true,
+        createdAt: true,
+        updatedAt: true,
+        user: { select: { name: true } },
       },
     });
   };
 
-  updateComment = async (id: string, content: string) => {
-    return prisma.comment.update({
-      where: { id },
+  findComplaintCommentById = async (id: string) => {
+    return await prisma.complaintComment.findUnique({
+      where: { id, deletedAt: null },
+      select: {
+        id: true,
+        userId: true,
+        complaintId: true,
+        content: true,
+        createdAt: true,
+        updatedAt: true,
+        user: { select: { name: true } },
+      },
+    });
+  };
+
+  updateComplaintComment = async (id: string, content: string) => {
+    return await prisma.complaintComment.update({
+      where: { id, deletedAt: null },
       data: { content },
-      include: {
-        user: { select: { id: true, name: true } },
-        board: { select: { id: true, boardType: true } },
+      select: {
+        id: true,
+        userId: true,
+        complaintId: true,
+        content: true,
+        createdAt: true,
+        updatedAt: true,
+        user: { select: { name: true } },
       },
     });
   };
 
-  deleteComment = async (id: string) => {
-    return prisma.comment.delete({
-      where: { id },
+  deleteComplaintComment = async (id: string) => {
+    return await prisma.complaintComment.update({
+      where: { id, deletedAt: null },
+      data: { deletedAt: new Date() },
+    });
+  };
+
+  createNoticeComment = async (params: { userId: string; noticeId: string; content: string }) => {
+    return await prisma.noticeComment.create({
+      data: params,
+      select: {
+        id: true,
+        userId: true,
+        noticeId: true,
+        content: true,
+        createdAt: true,
+        updatedAt: true,
+        user: { select: { name: true } },
+      },
+    });
+  };
+
+  findNoticeCommentById = async (id: string) => {
+    return await prisma.noticeComment.findUnique({
+      where: { id, deletedAt: null },
+    });
+  };
+
+  updateNoticeComment = async (id: string, content: string) => {
+    return await prisma.noticeComment.update({
+      where: { id, deletedAt: null },
+      data: { content },
+      select: {
+        id: true,
+        userId: true,
+        noticeId: true,
+        content: true,
+        createdAt: true,
+        updatedAt: true,
+        user: { select: { name: true } },
+      },
+    });
+  };
+
+  deleteNoticeComment = async (id: string) => {
+    return await prisma.noticeComment.update({
+      where: { id, deletedAt: null },
+      data: { deletedAt: new Date() },
     });
   };
 }

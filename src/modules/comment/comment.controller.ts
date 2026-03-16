@@ -1,25 +1,28 @@
 import { Request, Response } from 'express';
 import { CommentRepo } from './comment.repo';
 import { CommentService } from './comment.service';
-import {
-  createCommentSchema,
-  updateCommentSchema,
-  commentIdSchema,
-} from './comment.validate';
+import { commentIdSchema } from './comment.validate';
 
 export class CommentController {
   constructor(private commentService: CommentService) {}
 
   createComment = async (req: Request, res: Response) => {
-    const input = createCommentSchema.parse(req.body);
-    const result = await this.commentService.createComment(input, req.user);
+    const { boardType, boardId, content } = req.body;
+    const result = await this.commentService.createComment(
+      { boardType, boardId, content },
+      req.user,
+    );
     return res.status(201).json(result);
   };
 
   updateComment = async (req: Request, res: Response) => {
     const { commentId } = commentIdSchema.parse(req.params);
-    const input = updateCommentSchema.parse(req.body);
-    const result = await this.commentService.updateComment(commentId, input, req.user);
+    const { boardType, boardId, content } = req.body;
+    const result = await this.commentService.updateComment(
+      commentId,
+      { boardType, boardId, content },
+      req.user,
+    );
     return res.status(200).json(result);
   };
 

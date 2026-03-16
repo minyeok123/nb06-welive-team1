@@ -129,7 +129,7 @@ export class ComplaintService {
       updatedAt: item.updatedAt,
       isPublic: item.is_public === IsPublic.PUBLIC,
       viewsCount: 0,
-      commentsCount: item.board?._count.comments ?? 0,
+      commentsCount: item._count?.complaintComment ?? 0,
       status: item.status === 'DONE' ? 'RESOLVED' : item.status,
       dong: item.author?.resident?.dong?.toString(),
       ho: item.author?.resident?.ho?.toString(),
@@ -205,7 +205,7 @@ export class ComplaintService {
       updatedAt: updated.updatedAt,
       isPublic: updated.is_public === IsPublic.PUBLIC,
       viewsCount: 0,
-      commentsCount: updated.board?._count.comments ?? 0,
+      commentsCount: updated._count?.complaintComment ?? 0,
       status: updated.status === 'DONE' ? 'RESOLVED' : updated.status,
       dong: updated.author?.resident?.dong?.toString(),
       ho: updated.author?.resident?.ho?.toString(),
@@ -278,7 +278,7 @@ export class ComplaintService {
 
   private mapComplaintDetail = (detail: ComplaintDetailWithRelations) => {
     // 댓글 목록
-    const comments = detail.board?.comments ?? [];
+    const comments = detail.complaintComment ?? [];
 
     return {
       complaintId: detail.id,
