@@ -206,19 +206,59 @@ export class AuthRepo {
     return await prisma.apartment.update({ where: { id }, data });
   };
   softDeleteApartmentAndUsers = async (aptId: string) => {
-    const now = new Date();
     return await prisma.$transaction(async (tx) => {
       const apartment = await tx.apartment.update({
         where: { id: aptId },
-        data: { deletedAt: now },
+        data: { deletedAt: new Date() },
       });
 
       const users = await tx.user.updateMany({
         where: { aptId, deletedAt: null },
-        data: { deletedAt: now },
+        data: { deletedAt: new Date() },
       });
 
       return { apartment, deletedUserCount: users.count };
+    });
+  };
+
+  findRejectedAdmin = async () => {
+    return await prisma.register.findMany({
+      where: {
+        requestedRole: 'ADMIN',
+        register_status: 'REJECTED',
+        deletedAt: null,
+      },
+      select: { id: true, aptId: true },
+    });
+  };
+
+  cleanupAdminsAndApts = async (registerIds: string[], aptIds: string[]) => {
+    return await prisma.$transaction(async (tx) => {
+      const deletedRegisters = await tx.register.updateMany({
+        where: { id: { in: registerIds } },
+        data: { deletedAt: new Date() },
+      });
+
+      if (aptIds.length > 0) {
+        await tx.apartment.updateMany({
+          where: { id: { in: aptIds }, deletedAt: null },
+          data: { deletedAt: new Date() },
+        });
+      }
+
+      return { count: deletedRegisters.count };
+    });
+  };
+
+  cleanupUser = async (aptId: string) => {
+    return await prisma.register.updateMany({
+      where: {
+        aptId,
+        requestedRole: 'USER',
+        register_status: 'REJECTED',
+        deletedAt: null,
+      },
+      data: { deletedAt: new Date() },
     });
   };
 }

@@ -5,6 +5,7 @@ import { CustomError } from '@libs/error';
 import { AdminSignupInput, SignupInput, SuperAdminSignupInput } from './auth.validate';
 import { createTokens } from './utils/token';
 import { getImage } from '../user/utils/s3.handler';
+import { withoutPasswordUser } from '@/types/user.types';
 
 export class AuthService {
   constructor(private repo: AuthRepo) {}
@@ -353,7 +354,7 @@ export class AuthService {
       }
     }
 
-    // 3. 아파트 유니크 필드 중복 여부 체크 (aptData 업데이트가 있고, 아파트 연동이 되어있는 경우)
+    // 아파트 유니크 필드 중복 여부 체크 (aptData 업데이트가 있고, 아파트 연동이 되어있는 경우)
     if (hasAptData && admin.aptId) {
       const currentApt = await this.repo.findApartmentById(admin.aptId);
 
@@ -403,5 +404,29 @@ export class AuthService {
     }
 
     return;
+  };
+
+  cleanup = async (user: withoutPasswordUser) => {
+    if (user.role == 'SUPER_ADMIN') {
+      const rejectedRegisters = await this.repo.findRejectedAdmin();
+      if (rejectedRegisters.length === 0) {
+        throw new CustomError(400, '삭제할 관리자 데이터가 없습니다');
+      }
+
+      const registerIds = rejectedRegisters.map((r) => r.id);
+      const aptIds = rejectedRegisters.map((r) => r.aptId!);
+
+      const result = await this.repo.cleanupAdminsAndApts(registerIds, aptIds);
+      if (!result) {
+        throw new CustomError(401, '거절한 관리자/사용자 정보 일괄 삭제 중 오류가 발생했습니다');
+      }
+      return;
+    } else {
+      const result = await this.repo.cleanupUser(user.aptId!);
+      if (!result) {
+        throw new CustomError(401, '거절한 관리자/사용자 정보 일괄 삭제 중 오류가 발생했습니다');
+      }
+      return;
+    }
   };
 }
