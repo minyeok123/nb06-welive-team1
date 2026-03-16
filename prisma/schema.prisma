@@ -28,11 +28,11 @@ model User {
   deletedAt       DateTime?      @map("deleted_at")
 
   // Relations
-  apartment     Apartment?     @relation(fields: [aptId], references: [id])
-  resident      Resident?
-  comments      Comment[]
-  notifications Notification[]
-  register      Register?      @relation(fields: [registerId], references: [id])
+  apartment         Apartment?         @relation(fields: [aptId], references: [id])
+  resident          Resident?
+  complaintComments ComplaintComment[]
+  notification      Notification[]
+  register          Register?          @relation(fields: [registerId], references: [id])
 
   // residentRoster 테이블에서 참조하는 외래키들의 역방향 관계 (관계 이름으로 연결)
   userResidentRoster   residentRoster?  @relation("userResidentRosters")
@@ -40,6 +40,7 @@ model User {
   complaints           Complaint[]
   votes                Vote[]
   notices              Notice[]
+  noticeComment        NoticeComment[]
 
   @@map("users")
 }
@@ -129,8 +130,9 @@ model Complaint {
   deletedAt DateTime? @map("deleted_at")
 
   // Relations
-  board  Board @relation(fields: [boardId], references: [id])
-  author User  @relation(fields: [authorId], references: [id])
+  board            Board              @relation(fields: [boardId], references: [id])
+  author           User               @relation(fields: [authorId], references: [id])
+  complaintComment ComplaintComment[]
 
   @@index([status])
   @@map("complaints")
@@ -175,8 +177,9 @@ model Notice {
   deletedAt  DateTime?      @map("deleted_at")
 
   // Relations
-  board  Board @relation(fields: [boardId], references: [id])
-  author User  @relation(fields: [authorId], references: [id])
+  board         Board           @relation(fields: [boardId], references: [id])
+  author        User            @relation(fields: [authorId], references: [id])
+  noticeComment NoticeComment[]
 
   @@map("notices")
 }
@@ -194,26 +197,55 @@ model Board {
   vote          Vote[]
   notice        Notice[]
   apartment     Apartment      @relation(fields: [aptId], references: [id])
-  comments      Comment[]
   notifications Notification[]
 
   @@index([boardType, aptId])
   @@map("boards")
 }
 
-model Comment {
-  id        String   @id @default(uuid())
-  userId    String   @map("user_id")
-  boardId   String   @map("board_id")
-  content   String
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+// model Comment {
+//   id        String   @id @default(uuid())
+//   userId    String   @map("user_id")
+//   boardId   String   @map("board_id")
+//   content   String
+//   createdAt DateTime @default(now()) @map("created_at")
+//   updatedAt DateTime @updatedAt @map("updated_at")
 
+//   // Relations
+//   user  User  @relation(fields: [userId], references: [id])
+//   board Board @relation(fields: [boardId], references: [id])
+
+//   @@map("comments")
+// }
+
+model ComplaintComment {
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  complaintId String    @map("complaint_id")
+  content     String
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
   // Relations
-  user  User  @relation(fields: [userId], references: [id])
-  board Board @relation(fields: [boardId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
+  complaint   Complaint @relation(fields: [complaintId], references: [id])
 
-  @@map("comments")
+  @@map("complaint_comments")
+}
+
+model NoticeComment {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  noticeId  String    @map("notice_id")
+  content   String
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  // Relations
+  user      User      @relation(fields: [userId], references: [id])
+  notice    Notice    @relation(fields: [noticeId], references: [id])
+
+  @@map("notice_comments")
 }
 
 model VoteOption {

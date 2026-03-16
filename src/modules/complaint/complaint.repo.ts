@@ -16,13 +16,9 @@ export type ComplaintWithRelations = Prisma.ComplaintGetPayload<{
         };
       };
     };
-    board: {
+    _count: {
       select: {
-        _count: {
-          select: {
-            comments: true;
-          };
-        };
+        complaintComment: true;
       };
     };
   };
@@ -43,20 +39,16 @@ export type ComplaintDetailWithRelations = Prisma.ComplaintGetPayload<{
         };
       };
     };
-    board: {
+    complaintComment: {
       select: {
-        comments: {
+        id: true;
+        userId: true;
+        content: true;
+        createdAt: true;
+        updatedAt: true;
+        user: {
           select: {
-            id: true;
-            userId: true;
-            content: true;
-            createdAt: true;
-            updatedAt: true;
-            user: {
-              select: {
-                name: true;
-              };
-            };
+            name: true;
           };
         };
       };
@@ -163,13 +155,9 @@ export class ComplaintRepo {
             },
           },
           // 댓글 수만 필요
-          board: {
+          _count: {
             select: {
-              _count: {
-                select: {
-                  comments: true,
-                },
-              },
+              complaintComment: true,
             },
           },
         },
@@ -202,21 +190,17 @@ export class ComplaintRepo {
             },
           },
         },
-        board: {
+        complaintComment: {
+          orderBy: { createdAt: 'asc' },
           select: {
-            comments: {
-              orderBy: { createdAt: 'asc' },
+            id: true,
+            userId: true,
+            content: true,
+            createdAt: true,
+            updatedAt: true,
+            user: {
               select: {
-                id: true,
-                userId: true,
-                content: true,
-                createdAt: true,
-                updatedAt: true,
-                user: {
-                  select: {
-                    name: true,
-                  },
-                },
+                name: true,
               },
             },
           },
@@ -255,13 +239,9 @@ export class ComplaintRepo {
           },
         },
         // 댓글 수만 필요
-        board: {
+        _count: {
           select: {
-            _count: {
-              select: {
-                comments: true,
-              },
-            },
+            complaintComment: true,
           },
         },
       },
