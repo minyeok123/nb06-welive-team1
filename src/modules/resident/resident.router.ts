@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { residentController } from './resident.controller';
+import { uploadCsv } from './utils/uploads';
 import asyncHandler from '../../middlewares/asyncHandler';
 import { authenticate } from '@/middlewares/authenticate';
 import { adminAuthorize } from '@/middlewares/authorize';
@@ -27,6 +28,14 @@ router.post(
   adminAuthorize,
   validate(createRosterBodySchema, 'body'),
   asyncHandler(residentController.createRoster),
+);
+
+router.post(
+  '/from-file',
+  authenticate,
+  adminAuthorize,
+  uploadCsv.single('file'),
+  asyncHandler(residentController.createRostersFromCsv),
 );
 
 /** 

@@ -38,3 +38,11 @@ export interface GetRosterListQuery {
   isRegistered?: boolean;
   keyword?: string;
 }
+
+export type CsvRosterRecord = {
+  동: string;
+  호수: string;
+  이름: string;
+  연락처: string;
+  세대주여부: string;
+};

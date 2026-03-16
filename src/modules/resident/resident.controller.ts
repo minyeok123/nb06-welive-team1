@@ -41,6 +41,13 @@ export class ResidentController {
     res.status(201).json(roster);
   };
 
+  createRostersFromCsv = async (req: Request, res: Response, next: NextFunction) => {
+    const { id: adminId, aptId } = req.user;
+    const file = req.file;
+    const result = await this.residentService.createRostersFromCsv(adminId, aptId!, file?.buffer);
+    res.status(201).json(result);
+  };
+
   getRosterDetail = async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params as { id: string };
     const roster = await this.residentService.getRosterDetail(id);
@@ -91,6 +98,7 @@ export class ResidentController {
     // 한글 깨짐 방지를 위한 BOM 추가
     res.status(200).send('\uFEFF' + csvContent);
   };
+
   getFileRosterList = async (req: Request, res: Response, next: NextFunction) => {
     const adminId = req.user.id;
     const { page, limit, building, unitNumber, residenceStatus, isRegistered, keyword } =
