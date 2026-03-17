@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const getListAptForSignupQuerySchema = z.object({
   keyword: z.string().min(1).max(20).optional(),
   name: z.string().min(1).max(20).optional(),
-  adress: z.string().min(1).max(20).optional(),
+  address: z.string().min(1).max(20).optional(),
 });
 
 export const getListAptQuerySchema = z.object({
