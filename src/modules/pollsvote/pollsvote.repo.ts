@@ -11,9 +11,9 @@ export class PollsvoteRepo {
 
   findVoteOptionById = async (optionId: string) => {
     return prisma.voteOption.findFirst({
-      where: { id: optionId, vote: { deletedAt: null } },
+      where: { id: optionId, poll: { deletedAt: null } },
       include: {
-        vote: {
+        poll: {
           include: {
             board: { select: { aptId: true } },
             options: { include: { _count: { select: { participations: true } } } },
@@ -29,18 +29,14 @@ export class PollsvoteRepo {
     });
   };
 
-  createVoteParticipation = async (
-    residentId: string,
-    voteId: string,
-    voteOptionId: string,
-  ) => {
+  createVoteParticipation = async (residentId: string, voteId: string, voteOptionId: string) => {
     return prisma.voteParticipation.create({
       data: { residentId, voteId, voteOptionId },
     });
   };
 
   findPollById = async (pollId: string) => {
-    return prisma.vote.findFirst({
+    return prisma.poll.findFirst({
       where: { id: pollId, deletedAt: null },
       include: {
         options: { include: { _count: { select: { participations: true } } } },

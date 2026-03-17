@@ -2,7 +2,7 @@ import { prisma } from '@libs/prisma';
 import { Prisma, Status } from '@prisma/client';
 
 // 투표 목록용 타입
-export type VoteForList = Prisma.VoteGetPayload<{
+export type PollForList = Prisma.PollGetPayload<{
   include: {
     author: { select: { id: true; name: true } };
     board: { select: { aptId: true } };
@@ -19,7 +19,7 @@ export class PollRepo {
     title: string;
     content: string;
     status: Status;
-    targetDong: string[];
+    targetDong: number[]; // Int[] 타입에 맞춰 number[]로 수정
     startDate: Date;
     endDate: Date;
     options: { title: string }[];
@@ -34,8 +34,8 @@ export class PollRepo {
         },
       });
 
-      // 2. 투표 본문 생성
-      const vote = await tx.vote.create({
+      // 2. 투표 본문 생성 (vote -> poll)
+      const poll = await tx.poll.create({
         data: {
           boardId: board.id,
           authorId: params.authorId,
@@ -51,23 +51,23 @@ export class PollRepo {
       // 3. 투표 선택지 일괄 생성
       await tx.voteOption.createMany({
         data: params.options.map((opt) => ({
-          voteId: vote.id,
+          voteId: poll.id,
           option: opt.title,
         })),
       });
 
-      return { board, vote };
+      return { board, poll };
     });
   };
 
   // 투표 목록 조회 (필터, 페이징)
   findPolls = async (params: {
-    where: Prisma.VoteWhereInput;
+    where: Prisma.PollWhereInput;
     skip: number;
     take: number;
-  }): Promise<{ items: VoteForList[]; totalCount: number }> => {
+  }): Promise<{ items: PollForList[]; totalCount: number }> => {
     const [items, totalCount] = await prisma.$transaction([
-      prisma.vote.findMany({
+      prisma.poll.findMany({
         where: params.where,
         skip: params.skip,
         take: params.take,
@@ -77,14 +77,14 @@ export class PollRepo {
           board: { select: { aptId: true } },
         },
       }),
-      prisma.vote.count({ where: params.where }),
+      prisma.poll.count({ where: params.where }),
     ]);
-    return { items: items as VoteForList[], totalCount };
+    return { items: items as PollForList[], totalCount };
   };
 
   // 투표 상세 조회 (선택지 + 투표 수 포함)
   findPollById = async (pollId: string) => {
-    return prisma.vote.findFirst({
+    return prisma.poll.findFirst({
       where: { id: pollId, deletedAt: null },
       include: {
         author: { select: { id: true, name: true } },
@@ -104,23 +104,23 @@ export class PollRepo {
     title?: string;
     content?: string;
     status?: Status;
-    targetDong?: string[];
+    targetDong?: number[];
     startDate?: Date;
     endDate?: Date;
     options?: { title: string }[];
   }) => {
     return prisma.$transaction(async (tx) => {
-      const { options, ...voteData } = params;
+      const { options, ...pollData } = params;
       const updateData: Record<string, unknown> = {};
-      if (voteData.title !== undefined) updateData.title = voteData.title;
-      if (voteData.content !== undefined) updateData.content = voteData.content;
-      if (voteData.status !== undefined) updateData.status = voteData.status;
-      if (voteData.targetDong !== undefined) updateData.targetDong = voteData.targetDong;
-      if (voteData.startDate !== undefined) updateData.startDate = voteData.startDate;
-      if (voteData.endDate !== undefined) updateData.endDate = voteData.endDate;
+      if (pollData.title !== undefined) updateData.title = pollData.title;
+      if (pollData.content !== undefined) updateData.content = pollData.content;
+      if (pollData.status !== undefined) updateData.status = pollData.status;
+      if (pollData.targetDong !== undefined) updateData.targetDong = pollData.targetDong;
+      if (pollData.startDate !== undefined) updateData.startDate = pollData.startDate;
+      if (pollData.endDate !== undefined) updateData.endDate = pollData.endDate;
 
       if (Object.keys(updateData).length > 0) {
-        await tx.vote.update({
+        await tx.poll.update({
           where: { id: params.pollId },
           data: updateData,
         });
@@ -140,7 +140,7 @@ export class PollRepo {
 
   // 투표 소프트 삭제 (deletedAt 설정)
   softDeletePoll = async (pollId: string) => {
-    await prisma.vote.update({
+    await prisma.poll.update({
       where: { id: pollId },
       data: { deletedAt: new Date() },
     });

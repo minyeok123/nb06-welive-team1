@@ -113,7 +113,7 @@ export class EventRepo {
     monthStart: Date,
     monthEnd: Date,
   ): Promise<EventRow[]> => {
-    const votes = await prisma.vote.findMany({
+    const votes = await prisma.poll.findMany({
       where: {
         deletedAt: null,
         board: {
@@ -149,11 +149,7 @@ export class EventRepo {
   };
 
   // 공지(NOTICE) 일정(startDate, endDate) 수정
-  updateNoticeEvent = async (
-    noticeId: string,
-    startDate: Date,
-    endDate: Date,
-  ) => {
+  updateNoticeEvent = async (noticeId: string, startDate: Date, endDate: Date) => {
     await prisma.notice.update({
       where: { id: noticeId },
       data: { startDate, endDate },
@@ -161,12 +157,8 @@ export class EventRepo {
   };
 
   // 투표(POLL) 일정(startDate, endDate) 수정
-  updatePollEvent = async (
-    pollId: string,
-    startDate: Date,
-    endDate: Date,
-  ) => {
-    await prisma.vote.update({
+  updatePollEvent = async (pollId: string, startDate: Date, endDate: Date) => {
+    await prisma.poll.update({
       where: { id: pollId },
       data: { startDate, endDate },
     });
@@ -182,7 +174,7 @@ export class EventRepo {
 
   // 투표 존재 여부 및 아파트 소속 확인
   findPollById = async (pollId: string) => {
-    return prisma.vote.findFirst({
+    return prisma.poll.findFirst({
       where: { id: pollId, deletedAt: null },
       include: { board: { select: { aptId: true } } },
     });
@@ -198,7 +190,7 @@ export class EventRepo {
 
   // 투표(POLL) 소프트 삭제
   softDeletePoll = async (pollId: string) => {
-    await prisma.vote.update({
+    await prisma.poll.update({
       where: { id: pollId },
       data: { deletedAt: new Date() },
     });
