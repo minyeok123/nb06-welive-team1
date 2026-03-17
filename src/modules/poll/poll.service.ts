@@ -1,7 +1,15 @@
 import { Status } from '@prisma/client';
 import { CustomError } from '@libs/error';
-import { PollRepo, PollForList } from './poll.repo';
-import { CreatePollInput, ListPollsQuery, UpdatePollInput } from './poll.validate';
+import type { CreatePollDto, UpdatePollDto } from './dto/create.dto';
+import {
+  toPollCreateResponseDto,
+  toPollDetailResponseDto,
+  toPollListResponseDto,
+  toPollDeleteResponseDto,
+  toPollUpdateResponseDto,
+} from './dto/response.dto';
+import { PollRepo } from './poll.repo';
+import type { ListPollsQuery } from './poll.validate';
 
 // 투표 비즈니스 로직
 export class PollService {
@@ -9,7 +17,7 @@ export class PollService {
 
   // 투표 등록 (관리자만 가능)
   createPoll = async (
-    input: CreatePollInput,
+    input: CreatePollDto,
     user: { id: string; aptId: string | null; role: string },
   ) => {
     if (!user?.id) {
@@ -45,7 +53,7 @@ export class PollService {
       options: input.options,
     });
 
-    return { message: '정상적으로 등록 처리되었습니다' };
+    return toPollCreateResponseDto();
   };
 
   // 투표 목록 조회 (관리자·입주민)
@@ -113,7 +121,7 @@ export class PollService {
       take: limit,
     });
 
-    const polls = items.map((p) => this.mapPollListItem(p));
+    const polls = items.map((p) => toPollListResponseDto(p));
     return { polls, totalCount };
   };
 
@@ -151,13 +159,13 @@ export class PollService {
       }
     }
 
-    return this.mapPollDetail(poll);
+    return toPollDetailResponseDto(poll);
   };
 
   // 투표 수정 (관리자만, 시작 전에만)
   updatePoll = async (
     pollId: string,
-    input: UpdatePollInput,
+    input: UpdatePollDto,
     user: { id: string; aptId: string | null; role: string },
   ) => {
     if (!user?.id) {
@@ -217,7 +225,7 @@ export class PollService {
       options: input.options,
     });
 
-    return { message: '정상적으로 수정 처리되었습니다' };
+    return toPollUpdateResponseDto();
   };
 
   // 투표 삭제 (관리자만, 시작 전에만)
@@ -251,50 +259,6 @@ export class PollService {
 
     await this.repo.softDeletePoll(pollId);
 
-    return { message: '정상적으로 삭제 처리되었습니다' };
-  };
-
-  private mapPollDetail = (p: Awaited<ReturnType<PollRepo['findPollById']>>) => {
-    if (!p) throw new CustomError(404, '투표를 찾을 수 없습니다');
-    const buildingPermission = p.targetDong.length === 0 ? 0 : p.targetDong[0] || 0;
-    const status = p.status === 'DONE' ? 'CLOSED' : p.status;
-    const boardName = p.board?.boardType === 'VOTE' ? '주민투표' : '투표';
-    const options = (p.options ?? []).map((opt) => ({
-      id: opt.id,
-      title: opt.option,
-      voteCount: opt._count?.participations ?? 0,
-    }));
-    return {
-      pollId: p.id,
-      userId: p.authorId,
-      title: p.title,
-      writerName: p.author?.name ?? '',
-      buildingPermission,
-      createdAt: p.createdAt,
-      updatedAt: p.updatedAt,
-      startDate: p.startDate,
-      endDate: p.endDate,
-      status,
-      content: p.content,
-      boardName,
-      options,
-    };
-  };
-
-  private mapPollListItem = (p: PollForList) => {
-    const buildingPermission = p.targetDong.length === 0 ? 0 : p.targetDong[0] || 0;
-    const status = p.status === 'DONE' ? 'CLOSED' : p.status;
-    return {
-      pollId: p.id,
-      userId: p.authorId,
-      title: p.title,
-      writerName: p.author?.name ?? '',
-      buildingPermission,
-      createdAt: p.createdAt,
-      updatedAt: p.updatedAt,
-      startDate: p.startDate,
-      endDate: p.endDate,
-      status,
-    };
+    return toPollDeleteResponseDto();
   };
 }
