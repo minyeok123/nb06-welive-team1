@@ -7,9 +7,8 @@ export class UserController {
   constructor(private userService: UserService) {}
 
   changePassword = async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.user.id;
-    const { currentPassword, newPassword } = req.body;
-    const updatedUser = await this.userService.changePassword(userId, currentPassword, newPassword);
+    const data = req.body;
+    const updatedUser = await this.userService.changePassword(req.user.id, data);
     clearCookies(res);
     res
       .status(200)
@@ -17,15 +16,9 @@ export class UserController {
   };
 
   updateProfile = async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.user.id;
-    const { currentPassword, newPassword } = req.body;
+    const data = req.body;
     const file = req.file;
-    const updatedUser = await this.userService.updateProfile(
-      userId,
-      file,
-      currentPassword,
-      newPassword,
-    );
+    const updatedUser = await this.userService.updateProfile(req.user.id, file, data);
     clearCookies(res);
     res.status(200).json({
       message: `${updatedUser.name}님의 정보가 성공적으로 업데이트되었습니다. 다시 로그인해주세요.`,

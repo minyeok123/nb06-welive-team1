@@ -13,11 +13,6 @@ export class AptService {
   constructor(private aptRepo: AptRepo) {}
 
   getListAptForSignUp = async (data: { keyword?: string; name?: string; address?: string }) => {
-    // 최소한 하나의 검색 조건은 필수
-    if (!data.keyword && !data.name && !data.address) {
-      throw new CustomError(400, '검색어를 입력해주세요.');
-    }
-
     let whereCondition: Prisma.ApartmentWhereInput = {
       deletedAt: null,
       aptStatus: 'APPROVED',

@@ -7,19 +7,25 @@ import path from 'path';
 export class UserService {
   constructor(private userRepo: UserRepo) {}
 
-  changePassword = async (userId: string, currentPassword: string, newPassword: string) => {
+  changePassword = async (
+    userId: string,
+    data: { currentPassword: string; newPassword: string },
+  ) => {
     const user = await this.userRepo.findUserById(userId);
     if (!user) {
       throw new CustomError(404, '존재하지 않은 유저입니다');
     }
+    if (data.currentPassword === data.newPassword) {
+      throw new CustomError(400, '기존 비밀번호와 동일한 비밀번호를 입력할 수 없습니다.');
+    }
 
-    const verifyPassword = await bcrypt.compare(currentPassword, user.password);
+    const verifyPassword = await bcrypt.compare(data.currentPassword, user.password);
     if (!verifyPassword) {
       throw new CustomError(401, '비밀번호가 일치하지 않습니다');
     }
 
     const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    const hashedPassword = await bcrypt.hash(data.newPassword, salt);
     const updatedUser = await this.userRepo.updateUserPassword(userId, hashedPassword);
     return updatedUser;
   };
@@ -27,8 +33,7 @@ export class UserService {
   updateProfile = async (
     userId: string,
     file?: Express.Multer.File,
-    currentPassword?: string,
-    newPassword?: string,
+    input?: { currentPassword?: string; newPassword?: string },
   ) => {
     const user = await this.userRepo.findUserById(userId);
     if (!user) {
@@ -54,13 +59,20 @@ export class UserService {
       }
     }
 
-    if (currentPassword && newPassword) {
-      const verifyPassword = await bcrypt.compare(currentPassword, user.password);
+    //  input 객체 내부에 값이 하나라도 존재하는지 확인
+    const hasPasswordInput = Object.values(input || {}).some((val) => val !== undefined);
+
+    if (hasPasswordInput && input?.currentPassword && input?.newPassword) {
+      if (input.currentPassword === input.newPassword) {
+        throw new CustomError(400, '기존 비밀번호와 동일한 비밀번호를 입력할 수 없습니다.');
+      }
+      const verifyPassword = await bcrypt.compare(input.currentPassword, user.password);
       if (!verifyPassword) {
         throw new CustomError(401, '기존 비밀번호와 일치하지 않습니다');
       }
+
       const salt = await bcrypt.genSalt(10);
-      data.password = await bcrypt.hash(newPassword, salt);
+      data.password = await bcrypt.hash(input.newPassword, salt);
     }
 
     const updatedUser = await this.userRepo.updateUserProfile(userId, data);
