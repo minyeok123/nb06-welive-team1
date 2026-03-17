@@ -35,12 +35,12 @@ model User {
   register          Register?          @relation(fields: [registerId], references: [id])
 
   // residentRoster 테이블에서 참조하는 외래키들의 역방향 관계 (관계 이름으로 연결)
-  userResidentRoster   residentRoster?  @relation("userResidentRosters")
-  adminResidentRosters residentRoster[] @relation("adminResidentRosters")
-  complaints           Complaint[]
-  votes                Vote[]
-  notices              Notice[]
-  noticeComment        NoticeComment[]
+  userResidentRoster  residentRoster?  @relation("userResidentRosters")
+  adminResidentRoster residentRoster[] @relation("adminResidentRosters")
+  complaint           Complaint[]
+  poll                Poll[]
+  notice              Notice[]
+  noticeComment       NoticeComment[]
 
   @@map("users")
 }
@@ -89,10 +89,10 @@ model Apartment {
   deletedAt          DateTime?      @map("deleted_at")
 
   // Relations
-  users           User[]
-  boards          Board[]
-  residents       Resident[]
-  residentRosters residentRoster[]
+  users          User[]
+  boards         Board[]
+  residents      Resident[]
+  residentRoster residentRoster[]
 
   @@map("apartment")
 }
@@ -109,25 +109,26 @@ model Resident {
   deletedAt    DateTime?   @map("deleted_at")
 
   // Relations
-  user               User                @relation(fields: [userId], references: [id])
-  apartment          Apartment           @relation(fields: [aptId], references: [id])
-  voteParticipations VoteParticipation[]
+  user              User                @relation(fields: [userId], references: [id])
+  apartment         Apartment           @relation(fields: [aptId], references: [id])
+  voteParticipation VoteParticipation[]
 
   @@unique([aptId, userId])
   @@map("residents")
 }
 
 model Complaint {
-  id        String    @id @default(uuid())
-  boardId   String    @map("board_id")
-  authorId  String    @map("author_id")
-  title     String
-  content   String
-  status    Status
-  is_public IsPublic
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
-  deletedAt DateTime? @map("deleted_at")
+  id         String    @id @default(uuid())
+  boardId    String    @map("board_id")
+  authorId   String    @map("author_id")
+  title      String
+  content    String
+  status     Status
+  is_public  IsPublic
+  viewsCount Int       @default(0) @map("views_count")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  deletedAt  DateTime? @map("deleted_at")
 
   // Relations
   board            Board              @relation(fields: [boardId], references: [id])
@@ -138,27 +139,28 @@ model Complaint {
   @@map("complaints")
 }
 
-model Vote {
+model Poll {
   id         String    @id @default(uuid())
   boardId    String    @map("board_id")
   authorId   String    @map("author_id")
   title      String
   content    String
   status     Status
-  targetDong String[]  @map("target_dong")
+  targetDong Int[]     @map("target_dong")
   startDate  DateTime  @map("start_date")
   endDate    DateTime  @map("end_date")
+  viewsCount Int       @default(0) @map("views_count")
   createdAt  DateTime  @default(now()) @map("created_at")
   updatedAt  DateTime  @updatedAt @map("updated_at")
   deletedAt  DateTime? @map("deleted_at")
 
   // Relations
-  board          Board               @relation(fields: [boardId], references: [id])
-  author         User                @relation(fields: [authorId], references: [id])
-  options        VoteOption[]
-  participations VoteParticipation[]
+  board         Board               @relation(fields: [boardId], references: [id])
+  author        User                @relation(fields: [authorId], references: [id])
+  options       VoteOption[]
+  participation VoteParticipation[]
 
-  @@map("votes")
+  @@map("polls")
 }
 
 model Notice {
@@ -193,11 +195,11 @@ model Board {
   deletedAt DateTime? @map("deleted_at")
 
   // Relations
-  complaint     Complaint[]
-  vote          Vote[]
-  notice        Notice[]
-  apartment     Apartment      @relation(fields: [aptId], references: [id])
-  notifications Notification[]
+  complaint    Complaint[]
+  poll         Poll[]
+  notice       Notice[]
+  apartment    Apartment      @relation(fields: [aptId], references: [id])
+  notification Notification[]
 
   @@index([boardType, aptId])
   @@map("boards")
@@ -256,7 +258,7 @@ model VoteOption {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relations
-  vote           Vote                @relation(fields: [voteId], references: [id])
+  poll           Poll                @relation(fields: [voteId], references: [id])
   participations VoteParticipation[]
 
   @@unique([voteId, option])
@@ -273,7 +275,7 @@ model VoteParticipation {
 
   // Relations
   resident   Resident    @relation(fields: [residentId], references: [id])
-  vote       Vote        @relation(fields: [voteId], references: [id])
+  poll       Poll        @relation(fields: [voteId], references: [id])
   voteOption VoteOption? @relation(fields: [voteOptionId], references: [id])
 
   @@unique([residentId, voteId])

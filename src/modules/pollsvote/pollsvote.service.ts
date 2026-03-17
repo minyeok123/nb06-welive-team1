@@ -17,7 +17,7 @@ export class PollsvoteService {
     const voteOption = await this.repo.findVoteOptionById(optionId);
     if (!voteOption) throw new CustomError(404, '선택지를 찾을 수 없습니다');
 
-    const vote = voteOption.vote;
+    const vote = voteOption.poll;
     if (!vote || vote.deletedAt) throw new CustomError(404, '투표를 찾을 수 없습니다');
     if (vote.board?.aptId !== resident.aptId) throw new CustomError(403, '접근 권한이 없습니다');
 
@@ -26,7 +26,7 @@ export class PollsvoteService {
     if (now > vote.endDate) throw new CustomError(403, '투표 기간이 종료되었습니다');
     if (vote.status === 'DONE') throw new CustomError(403, '종료된 투표입니다');
 
-    const dongStr = String(resident.dong);
+    const dongStr = resident.dong;
     const isEligible = vote.targetDong.length === 0 || vote.targetDong.includes(dongStr);
     if (!isEligible) throw new CustomError(403, '투표 권한이 없습니다');
 
@@ -86,7 +86,7 @@ export class PollsvoteService {
     const voteOption = await this.repo.findVoteOptionById(optionId);
     if (!voteOption) throw new CustomError(404, '선택지를 찾을 수 없습니다');
 
-    const vote = voteOption.vote;
+    const vote = voteOption.poll;
     if (!vote || vote.deletedAt) throw new CustomError(404, '투표를 찾을 수 없습니다');
     if (vote.board?.aptId !== resident.aptId) throw new CustomError(403, '접근 권한이 없습니다');
 
@@ -95,10 +95,7 @@ export class PollsvoteService {
     if (now > vote.endDate) throw new CustomError(403, '투표 기간이 종료되었습니다');
     if (vote.status === 'DONE') throw new CustomError(403, '종료된 투표입니다');
 
-    const participation = await this.repo.findParticipationByResidentAndVote(
-      resident.id,
-      vote.id,
-    );
+    const participation = await this.repo.findParticipationByResidentAndVote(resident.id, vote.id);
     if (!participation) throw new CustomError(404, '투표한 기록이 없습니다');
     if (participation.voteOptionId !== optionId) {
       throw new CustomError(403, '해당 선택지에 투표한 기록이 없습니다');
