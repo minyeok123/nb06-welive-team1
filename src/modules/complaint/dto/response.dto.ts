@@ -7,8 +7,8 @@ export interface ComplaintListResponseDto {
   userId: string;
   title: string;
   writerName: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
   isPublic: boolean;
   viewsCount: number;
   commentsCount: number;
@@ -23,8 +23,8 @@ export interface ComplaintDetailResponseDto {
   userId: string;
   title: string;
   writerName: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
   isPublic: boolean;
   viewsCount: number;
   commentsCount: number;
@@ -37,8 +37,8 @@ export interface ComplaintDetailResponseDto {
     id: string;
     userId: string;
     content: string;
-    createdAt: Date;
-    updatedAt: Date;
+    createdAt: string;
+    updatedAt: string;
     writerName: string;
   }[];
 }
@@ -53,7 +53,7 @@ export interface ComplaintDeleteResponseDto {
   message: string;
 }
 
-/** 민원 목록 응답 DTO */
+/** 민원 목록 결과 DTO */
 export interface ComplaintListResultDto {
   complaints: ComplaintListResponseDto[];
   totalCount: number;
@@ -62,7 +62,7 @@ export interface ComplaintListResultDto {
 /**
  * 민원 목록 항목 → 응답 DTO 변환
  */
-export const toComplaintListResponseDto = (
+export const complaintListResponseDto = (
   item: ComplaintWithRelations,
   isPublicEnum: typeof IsPublic,
 ): ComplaintListResponseDto => ({
@@ -70,8 +70,8 @@ export const toComplaintListResponseDto = (
   userId: item.authorId,
   title: item.title,
   writerName: item.author?.name ?? '',
-  createdAt: item.createdAt,
-  updatedAt: item.updatedAt,
+  createdAt: item.createdAt.toISOString(),
+  updatedAt: item.updatedAt.toISOString(),
   isPublic: item.is_public === isPublicEnum.PUBLIC,
   viewsCount: 0,
   commentsCount: item._count?.complaintComment ?? 0,
@@ -83,7 +83,7 @@ export const toComplaintListResponseDto = (
 /**
  * 민원 상세 → 응답 DTO 변환
  */
-export const toComplaintDetailResponseDto = (
+export const complaintDetailResponseDto = (
   detail: ComplaintDetailWithRelations,
   isPublicEnum: typeof IsPublic,
 ): ComplaintDetailResponseDto => {
@@ -93,8 +93,8 @@ export const toComplaintDetailResponseDto = (
     userId: detail.authorId,
     title: detail.title,
     writerName: detail.author?.name ?? '',
-    createdAt: detail.createdAt,
-    updatedAt: detail.updatedAt,
+    createdAt: detail.createdAt.toISOString(),
+    updatedAt: detail.updatedAt.toISOString(),
     isPublic: detail.is_public === isPublicEnum.PUBLIC,
     viewsCount: 0,
     commentsCount: comments.length,
@@ -107,8 +107,8 @@ export const toComplaintDetailResponseDto = (
       id: comment.id,
       userId: comment.userId,
       content: comment.content,
-      createdAt: comment.createdAt,
-      updatedAt: comment.updatedAt,
+      createdAt: comment.createdAt.toISOString(),
+      updatedAt: comment.updatedAt.toISOString(),
       writerName: comment.user?.name ?? '',
     })),
   };
@@ -117,13 +117,13 @@ export const toComplaintDetailResponseDto = (
 /**
  * 민원 등록 성공 응답 DTO
  */
-export const toComplaintCreateResponseDto = (): ComplaintCreateResponseDto => ({
+export const complaintCreateResponseDto = (): ComplaintCreateResponseDto => ({
   message: '정상적으로 등록 처리되었습니다',
 });
 
 /**
  * 민원 삭제 성공 응답 DTO
  */
-export const toComplaintDeleteResponseDto = (): ComplaintDeleteResponseDto => ({
+export const complaintDeleteResponseDto = (): ComplaintDeleteResponseDto => ({
   message: '정상적으로 삭제 처리되었습니다',
 });

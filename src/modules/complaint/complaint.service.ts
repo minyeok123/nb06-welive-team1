@@ -4,11 +4,11 @@ import { ComplaintDetailWithRelations, ComplaintRepo, ComplaintWithRelations } f
 import type { CreateComplaintDto, UpdateComplaintDto, UpdateComplaintStatusDto } from './dto/create.dto';
 import { ListComplaintsQuery } from './complaint.validate';
 import {
-  toComplaintCreateResponseDto,
-  toComplaintDeleteResponseDto,
-  toComplaintDetailResponseDto,
-  toComplaintListResponseDto,
-} from './dto/response.dto';
+  complaintCreateResponseDto,
+  complaintDeleteResponseDto,
+  complaintDetailResponseDto,
+  complaintListResponseDto,
+} from './dto/Response.dto';
 
 export class ComplaintService {
   constructor(private repo: ComplaintRepo) {}
@@ -42,7 +42,7 @@ export class ComplaintService {
       message: `새 민원이 등록되었습니다: ${input.title}`,
     });
 
-    return toComplaintCreateResponseDto();
+    return complaintCreateResponseDto();
   };
 
   listComplaints = async (query: ListComplaintsQuery, user: { id: string; aptId: string | null; role: string }) => {
@@ -123,7 +123,7 @@ export class ComplaintService {
     });
 
     const complaints = (items as ComplaintWithRelations[]).map((item) =>
-      toComplaintListResponseDto(item, IsPublic),
+      complaintListResponseDto(item, IsPublic),
     );
 
     return { complaints, totalCount };
@@ -152,7 +152,7 @@ export class ComplaintService {
       throw new CustomError(403, '접근 권한이 없습니다');
     }
 
-    return toComplaintDetailResponseDto(complaint as ComplaintDetailWithRelations, IsPublic);
+    return complaintDetailResponseDto(complaint as ComplaintDetailWithRelations, IsPublic);
   };
 
   updateComplaint = async (
@@ -187,7 +187,7 @@ export class ComplaintService {
       isPublic: input.isPublic,
     });
 
-    return toComplaintListResponseDto(updated, IsPublic);
+    return complaintListResponseDto(updated, IsPublic);
   };
 
   deleteComplaint = async (complaintId: string, user: { id: string }) => {
@@ -213,7 +213,7 @@ export class ComplaintService {
 
     await this.repo.softDeleteComplaint(complaintId);
 
-    return toComplaintDeleteResponseDto();
+    return complaintDeleteResponseDto();
   };
 
   updateComplaintStatus = async (
@@ -251,6 +251,6 @@ export class ComplaintService {
       throw new CustomError(404, '민원을 찾을 수 없습니다');
     }
 
-    return toComplaintDetailResponseDto(updated, IsPublic);
+    return complaintDetailResponseDto(updated, IsPublic);
   };
 }
