@@ -1,6 +1,12 @@
 import { CustomError } from '@libs/error';
+import type { PutEventDto } from './dto/create.dto';
+import {
+  eventListResponseDto,
+  eventDeleteNoticeResponseDto,
+  eventDeletePollResponseDto,
+} from './dto/response.dto';
 import { EventRepo } from './event.repo';
-import { ListEventsQuery, PutEventQuery } from './event.validate';
+import type { ListEventsQuery } from './event.validate';
 
 // 이벤트 비즈니스 로직
 export class EventService {
@@ -17,20 +23,12 @@ export class EventService {
       monthEnd,
     );
 
-    // ISO 문자열로 변환하여 응답
-    return events.map((e) => ({
-      id: e.id,
-      start: e.start.toISOString(),
-      end: e.end.toISOString(),
-      title: e.title,
-      category: e.category,
-      type: e.type,
-    }));
+    return events.map((e) => eventListResponseDto(e));
   };
 
   // 게시글(NOTICE 또는 POLL) 일정 생성/수정 (관리자만)
   putEvent = async (
-    query: PutEventQuery,
+    query: PutEventDto,
     user: { id: string; aptId: string | null; role: string },
   ) => {
     if (!user?.id) {
@@ -96,14 +94,7 @@ export class EventService {
       const startDate = notice.startDate ?? notice.createdAt;
       const endDate = notice.endDate ?? startDate;
       await this.repo.softDeleteNotice(eventId);
-      return {
-        id: eventId,
-        startDate: new Date(startDate).toISOString(),
-        endDate: new Date(endDate).toISOString(),
-        boardType: 'NOTICE' as const,
-        noticeId: eventId,
-        pollId: null as string | null,
-      };
+      return eventDeleteNoticeResponseDto(eventId, startDate, endDate);
     }
 
     const vote = await this.repo.findPollById(eventId);
@@ -112,14 +103,7 @@ export class EventService {
         throw new CustomError(403, '접근 권한이 없습니다');
       }
       await this.repo.softDeletePoll(eventId);
-      return {
-        id: eventId,
-        startDate: vote.startDate.toISOString(),
-        endDate: vote.endDate.toISOString(),
-        boardType: 'POLL' as const,
-        noticeId: null as string | null,
-        pollId: eventId,
-      };
+      return eventDeletePollResponseDto(eventId, vote.startDate, vote.endDate);
     }
 
     throw new CustomError(404, '이벤트를 찾을 수 없습니다');
