@@ -28,10 +28,10 @@ export interface PollListResponseDto {
   title: string;
   writerName: string;
   buildingPermission: number;
-  createdAt: Date;
-  updatedAt: Date;
-  startDate: Date;
-  endDate: Date;
+  createdAt: string;
+  updatedAt: string;
+  startDate: string;
+  endDate: string;
   status: string;
 }
 
@@ -49,10 +49,10 @@ export interface PollDetailResponseDto {
   title: string;
   writerName: string;
   buildingPermission: number;
-  createdAt: Date;
-  updatedAt: Date;
-  startDate: Date;
-  endDate: Date;
+  createdAt: string;
+  updatedAt: string;
+  startDate: string;
+  endDate: string;
   status: string;
   content: string;
   boardName: string;
@@ -73,7 +73,7 @@ export interface PollListResultDto {
 /**
  * 투표 목록 항목 → 응답 DTO 변환
  */
-export const toPollListResponseDto = (v: PollForList): PollListResponseDto => {
+export const pollListResponseDto = (v: PollForList): PollListResponseDto => {
   const buildingPermission = v.targetDong.length === 0 ? 0 : v.targetDong[0] ?? 0;
   const status = v.status === 'DONE' ? 'CLOSED' : v.status;
   return {
@@ -82,10 +82,10 @@ export const toPollListResponseDto = (v: PollForList): PollListResponseDto => {
     title: v.title,
     writerName: v.author?.name ?? '',
     buildingPermission,
-    createdAt: v.createdAt,
-    updatedAt: v.updatedAt,
-    startDate: v.startDate,
-    endDate: v.endDate,
+    createdAt: v.createdAt.toISOString(),
+    updatedAt: v.updatedAt.toISOString(),
+    startDate: v.startDate.toISOString(),
+    endDate: v.endDate.toISOString(),
     status,
   };
 };
@@ -93,7 +93,7 @@ export const toPollListResponseDto = (v: PollForList): PollListResponseDto => {
 /**
  * 투표 상세 → 응답 DTO 변환
  */
-export const toPollDetailResponseDto = (v: PollDetailSource): PollDetailResponseDto => {
+export const pollDetailResponseDto = (v: PollDetailSource): PollDetailResponseDto => {
   const buildingPermission = v.targetDong.length === 0 ? 0 : v.targetDong[0] ?? 0;
   const status = v.status === 'DONE' ? 'CLOSED' : v.status;
   const boardName = v.board?.boardType === 'VOTE' ? '주민투표' : '투표';
@@ -108,10 +108,10 @@ export const toPollDetailResponseDto = (v: PollDetailSource): PollDetailResponse
     title: v.title,
     writerName: v.author?.name ?? '',
     buildingPermission,
-    createdAt: v.createdAt,
-    updatedAt: v.updatedAt,
-    startDate: v.startDate,
-    endDate: v.endDate,
+    createdAt: v.createdAt.toISOString(),
+    updatedAt: v.updatedAt.toISOString(),
+    startDate: v.startDate.toISOString(),
+    endDate: v.endDate.toISOString(),
     status,
     content: v.content,
     boardName,
@@ -122,20 +122,20 @@ export const toPollDetailResponseDto = (v: PollDetailSource): PollDetailResponse
 /**
  * 투표 등록 성공 응답 DTO
  */
-export const toPollCreateResponseDto = (): PollMessageResponseDto => ({
+export const pollCreateResponseDto = (): PollMessageResponseDto => ({
   message: '정상적으로 등록 처리되었습니다',
 });
 
 /**
  * 투표 수정 성공 응답 DTO
  */
-export const toPollUpdateResponseDto = (): PollMessageResponseDto => ({
+export const pollUpdateResponseDto = (): PollMessageResponseDto => ({
   message: '정상적으로 수정 처리되었습니다',
 });
 
 /**
  * 투표 삭제 성공 응답 DTO
  */
-export const toPollDeleteResponseDto = (): PollMessageResponseDto => ({
+export const pollDeleteResponseDto = (): PollMessageResponseDto => ({
   message: '정상적으로 삭제 처리되었습니다',
 });

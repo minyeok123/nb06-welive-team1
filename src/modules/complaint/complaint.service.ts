@@ -8,7 +8,7 @@ import {
   complaintDeleteResponseDto,
   complaintDetailResponseDto,
   complaintListResponseDto,
-} from './dto/Response.dto';
+} from './dto/response.dto';
 
 export class ComplaintService {
   constructor(private repo: ComplaintRepo) {}

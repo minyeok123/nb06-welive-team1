@@ -2,11 +2,11 @@ import { Status } from '@prisma/client';
 import { CustomError } from '@libs/error';
 import type { CreatePollDto, UpdatePollDto } from './dto/create.dto';
 import {
-  toPollCreateResponseDto,
-  toPollDetailResponseDto,
-  toPollListResponseDto,
-  toPollDeleteResponseDto,
-  toPollUpdateResponseDto,
+  pollCreateResponseDto,
+  pollDetailResponseDto,
+  pollListResponseDto,
+  pollDeleteResponseDto,
+  pollUpdateResponseDto,
 } from './dto/response.dto';
 import { PollRepo } from './poll.repo';
 import type { ListPollsQuery } from './poll.validate';
@@ -53,7 +53,7 @@ export class PollService {
       options: input.options,
     });
 
-    return toPollCreateResponseDto();
+    return pollCreateResponseDto();
   };
 
   // 투표 목록 조회 (관리자·입주민)
@@ -121,7 +121,7 @@ export class PollService {
       take: limit,
     });
 
-    const polls = items.map((p) => toPollListResponseDto(p));
+    const polls = items.map((p) => pollListResponseDto(p));
     return { polls, totalCount };
   };
 
@@ -159,7 +159,7 @@ export class PollService {
       }
     }
 
-    return toPollDetailResponseDto(poll);
+    return pollDetailResponseDto(poll);
   };
 
   // 투표 수정 (관리자만, 시작 전에만)
@@ -225,7 +225,7 @@ export class PollService {
       options: input.options,
     });
 
-    return toPollUpdateResponseDto();
+    return pollUpdateResponseDto();
   };
 
   // 투표 삭제 (관리자만, 시작 전에만)
@@ -259,6 +259,6 @@ export class PollService {
 
     await this.repo.softDeletePoll(pollId);
 
-    return toPollDeleteResponseDto();
+    return pollDeleteResponseDto();
   };
 }
