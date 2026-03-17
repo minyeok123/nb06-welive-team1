@@ -6,6 +6,7 @@ export class UserRepo {
     return await prisma.user.findUnique({
       where: {
         id,
+        deletedAt: null,
       },
     });
   };
@@ -14,6 +15,7 @@ export class UserRepo {
     return await prisma.user.update({
       where: {
         id,
+        deletedAt: null,
       },
       data: {
         password,
@@ -23,7 +25,7 @@ export class UserRepo {
 
   updateUserProfile = async (id: string, data: { password?: string; profileImg?: string }) => {
     return await prisma.user.update({
-      where: { id },
+      where: { id, deletedAt: null },
       data,
     });
   };
