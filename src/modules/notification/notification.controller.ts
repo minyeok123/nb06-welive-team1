@@ -6,6 +6,9 @@ import {
   getNotificationsQuerySchema,
 } from './notification.validate';
 
+/** API 명세: 30초마다 읽지 않은 알림 실시간 수신 */
+const SSE_POLL_INTERVAL_MS = 30000;
+
 export class NotificationController {
   constructor(private notificationService: NotificationService) {}
 
@@ -43,7 +46,7 @@ export class NotificationController {
         return;
       }
       await sendNotifications();
-    }, 30000);
+    }, SSE_POLL_INTERVAL_MS);
 
     req.on('close', () => {
       clearInterval(intervalId);
