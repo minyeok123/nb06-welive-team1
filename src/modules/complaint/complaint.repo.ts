@@ -57,37 +57,43 @@ export type ComplaintDetailWithRelations = Prisma.ComplaintGetPayload<{
 }>;
 
 export class ComplaintRepo {
-  createComplaintWithBoard = async (params: {
+  // 아파트별 민원 게시판 조회 (없으면 생성)
+  findOrCreateComplaintBoardForApartment = async (aptId: string) => {
+    const existing = await prisma.board.findFirst({
+      where: {
+        aptId,
+        boardType: 'COMPLAINT',
+        deletedAt: null,
+      },
+    });
+    if (existing) return existing;
+
+    return prisma.board.create({
+      data: {
+        boardType: 'COMPLAINT',
+        apartment: { connect: { id: aptId } },
+      },
+    });
+  };
+
+  // 민원 등록 (기존 Board 사용)
+  createComplaint = async (params: {
+    boardId: string;
     authorId: string;
-    aptId: string;
     title: string;
     content: string;
     status: Status;
     isPublic: boolean;
-    boardId?: string;
   }) => {
-    return prisma.$transaction(async (tx) => {
-      // 게시판 생성 후 민원과 연결(같은 트랜잭션)
-      const board = await tx.board.create({
-        data: {
-          id: params.boardId,
-          boardType: 'COMPLAINT',
-          apartment: { connect: { id: params.aptId } },
-        },
-      });
-
-      const complaint = await tx.complaint.create({
-        data: {
-          boardId: board.id,
-          authorId: params.authorId,
-          title: params.title,
-          content: params.content,
-          status: params.status,
-          is_public: params.isPublic ? IsPublic.PUBLIC : IsPublic.PRIVATE,
-        },
-      });
-
-      return { board, complaint };
+    return prisma.complaint.create({
+      data: {
+        boardId: params.boardId,
+        authorId: params.authorId,
+        title: params.title,
+        content: params.content,
+        status: params.status,
+        is_public: params.isPublic ? IsPublic.PUBLIC : IsPublic.PRIVATE,
+      },
     });
   };
 

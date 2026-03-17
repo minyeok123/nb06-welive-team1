@@ -19,15 +19,16 @@ export class ComplaintService {
       throw new CustomError(403, '접근 권한이 없습니다');
     }
 
-    // 민원 등록과 게시판 생성은 트랜잭션으로 처리
-    const { board, complaint } = await this.repo.createComplaintWithBoard({
+    // 아파트별 할당된 민원 게시판 조회 (없으면 최초 1회 생성)
+    const board = await this.repo.findOrCreateComplaintBoardForApartment(user.aptId);
+
+    const complaint = await this.repo.createComplaint({
+      boardId: board.id,
       authorId: user.id,
-      aptId: user.aptId,
       title: input.title,
       content: input.content,
       status: input.status ?? Status.PENDING,
       isPublic: input.isPublic,
-      boardId: input.boardId,
     });
 
     // 동일 아파트 관리자에게 알림 전송
