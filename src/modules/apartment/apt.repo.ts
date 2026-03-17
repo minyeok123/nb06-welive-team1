@@ -73,7 +73,7 @@ export class AptRepo {
 
   getAptDetail = async (id: string) => {
     const aptDetail = await prisma.apartment.findUnique({
-      where: { id },
+      where: { id, deletedAt: null },
       select: {
         id: true,
         aptName: true,
