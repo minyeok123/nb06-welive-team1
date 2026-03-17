@@ -1,6 +1,6 @@
 import express from 'express';
-import asyncHandler from '../../middlewares/asyncHandler';
-import { validate } from '../../middlewares/validate';
+import asyncHandler from '@/middlewares/asyncHandler';
+import { validate } from '@/middlewares/validate';
 import { authenticate } from '@/middlewares/authenticate';
 import { notificationController } from './notification.controller';
 import {

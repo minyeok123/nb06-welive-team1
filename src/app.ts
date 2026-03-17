@@ -1,6 +1,6 @@
 import express from 'express';
-import { defaultNotFoundHandler } from './middlewares/globaErrorHandler';
-import { globalErrorHandler } from './middlewares/globaErrorHandler';
+import { defaultNotFoundHandler } from './middlewares/globalErrorHandler';
+import { globalErrorHandler } from './middlewares/globalErrorHandler';
 import { PORT } from './libs/constants';
 import authRouter from './modules/auth/auth.router';
 import cookieParser from 'cookie-parser';
