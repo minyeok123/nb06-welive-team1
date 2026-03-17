@@ -1,18 +1,20 @@
 import { IsPublic, Status } from '@prisma/client';
 import { CustomError } from '@libs/error';
 import { ComplaintDetailWithRelations, ComplaintRepo, ComplaintWithRelations } from './complaint.repo';
+import type { CreateComplaintDto, UpdateComplaintDto, UpdateComplaintStatusDto } from './dto/create.dto';
+import { ListComplaintsQuery } from './complaint.validate';
 import {
-  CreateComplaintInput,
-  ListComplaintsQuery,
-  UpdateComplaintInput,
-  UpdateComplaintStatusInput,
-} from './complaint.validate';
+  toComplaintCreateResponseDto,
+  toComplaintDeleteResponseDto,
+  toComplaintDetailResponseDto,
+  toComplaintListResponseDto,
+} from './dto/response.dto';
 
 export class ComplaintService {
   constructor(private repo: ComplaintRepo) {}
 
   createComplaint = async (
-    input: CreateComplaintInput,
+    input: CreateComplaintDto,
     user: { id: string; aptId: string | null },
   ) => {
     if (!user?.id || !user?.aptId) {
@@ -40,7 +42,7 @@ export class ComplaintService {
       message: `새 민원이 등록되었습니다: ${input.title}`,
     });
 
-    return { message: '정상적으로 등록 처리되었습니다' };
+    return toComplaintCreateResponseDto();
   };
 
   listComplaints = async (query: ListComplaintsQuery, user: { id: string; aptId: string | null; role: string }) => {
@@ -120,21 +122,9 @@ export class ComplaintService {
       take: limit,
     });
 
-    // 응답 포맷 매핑
-    const complaints = (items as ComplaintWithRelations[]).map((item) => ({
-      complaintId: item.id,
-      userId: item.authorId,
-      title: item.title,
-      writerName: item.author?.name ?? '',
-      createdAt: item.createdAt,
-      updatedAt: item.updatedAt,
-      isPublic: item.is_public === IsPublic.PUBLIC,
-      viewsCount: 0,
-      commentsCount: item._count?.complaintComment ?? 0,
-      status: item.status === 'DONE' ? 'RESOLVED' : item.status,
-      dong: item.author?.resident?.dong?.toString(),
-      ho: item.author?.resident?.ho?.toString(),
-    }));
+    const complaints = (items as ComplaintWithRelations[]).map((item) =>
+      toComplaintListResponseDto(item, IsPublic),
+    );
 
     return { complaints, totalCount };
   };
@@ -162,12 +152,12 @@ export class ComplaintService {
       throw new CustomError(403, '접근 권한이 없습니다');
     }
 
-    return this.mapComplaintDetail(complaint as ComplaintDetailWithRelations);
+    return toComplaintDetailResponseDto(complaint as ComplaintDetailWithRelations, IsPublic);
   };
 
   updateComplaint = async (
     complaintId: string,
-    input: UpdateComplaintInput,
+    input: UpdateComplaintDto,
     user: { id: string; aptId: string | null },
   ) => {
     if (!user?.id) {
@@ -197,20 +187,7 @@ export class ComplaintService {
       isPublic: input.isPublic,
     });
 
-    return {
-      complaintId: updated.id,
-      userId: updated.authorId,
-      title: updated.title,
-      writerName: updated.author?.name ?? '',
-      createdAt: updated.createdAt,
-      updatedAt: updated.updatedAt,
-      isPublic: updated.is_public === IsPublic.PUBLIC,
-      viewsCount: 0,
-      commentsCount: updated._count?.complaintComment ?? 0,
-      status: updated.status === 'DONE' ? 'RESOLVED' : updated.status,
-      dong: updated.author?.resident?.dong?.toString(),
-      ho: updated.author?.resident?.ho?.toString(),
-    };
+    return toComplaintListResponseDto(updated, IsPublic);
   };
 
   deleteComplaint = async (complaintId: string, user: { id: string }) => {
@@ -236,12 +213,12 @@ export class ComplaintService {
 
     await this.repo.softDeleteComplaint(complaintId);
 
-    return { message: '정상적으로 삭제 처리되었습니다' };
+    return toComplaintDeleteResponseDto();
   };
 
   updateComplaintStatus = async (
     complaintId: string,
-    input: UpdateComplaintStatusInput,
+    input: UpdateComplaintStatusDto,
     user: { id: string; aptId: string | null; role: string },
   ) => {
     if (!user?.id) {
@@ -274,36 +251,6 @@ export class ComplaintService {
       throw new CustomError(404, '민원을 찾을 수 없습니다');
     }
 
-    return this.mapComplaintDetail(updated);
-  };
-
-  private mapComplaintDetail = (detail: ComplaintDetailWithRelations) => {
-    // 댓글 목록
-    const comments = detail.complaintComment ?? [];
-
-    return {
-      complaintId: detail.id,
-      userId: detail.authorId,
-      title: detail.title,
-      writerName: detail.author?.name ?? '',
-      createdAt: detail.createdAt,
-      updatedAt: detail.updatedAt,
-      isPublic: detail.is_public === IsPublic.PUBLIC,
-      viewsCount: 0,
-      commentsCount: comments.length,
-      status: detail.status === 'DONE' ? 'RESOLVED' : detail.status,
-      dong: detail.author?.resident?.dong?.toString(),
-      ho: detail.author?.resident?.ho?.toString(),
-      content: detail.content,
-      boardType: '민원',
-      comments: comments.map((comment) => ({
-        id: comment.id,
-        userId: comment.userId,
-        content: comment.content,
-        createdAt: comment.createdAt,
-        updatedAt: comment.updatedAt,
-        writerName: comment.user?.name ?? '',
-      })),
-    };
+    return toComplaintDetailResponseDto(updated, IsPublic);
   };
 }
