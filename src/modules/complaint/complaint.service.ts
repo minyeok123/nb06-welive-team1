@@ -15,10 +15,11 @@ import { ListComplaintsQuery } from './complaint.validate';
 export class ComplaintService {
   constructor(private repo: ComplaintRepo) {}
 
-  createComplaint = async (
-    input: CreateComplaintDto,
-    user: { id: string; aptId: string | null },
-  ) => {
+  createComplaint = async (params: {
+    input: CreateComplaintDto;
+    user: { id: string; aptId: string | null };
+  }) => {
+    const { input, user } = params;
     if (!user?.id || !user?.aptId) {
       throw new CustomError(403, '접근 권한이 없습니다');
     }
@@ -47,7 +48,11 @@ export class ComplaintService {
     return complaintCreateResponseDto();
   };
 
-  listComplaints = async (query: ListComplaintsQuery, user: { id: string; aptId: string | null; role: string }) => {
+  listComplaints = async (params: {
+    query: ListComplaintsQuery;
+    user: { id: string; aptId: string | null; role: string };
+  }) => {
+    const { query, user } = params;
     if (!user?.id) {
       throw new CustomError(403, '접근 권한이 없습니다');
     }
@@ -131,7 +136,11 @@ export class ComplaintService {
     return { complaints, totalCount };
   };
 
-  getComplaint = async (complaintId: string, user: { id: string; aptId: string | null; role: string }) => {
+  getComplaint = async (params: {
+    complaintId: string;
+    user: { id: string; aptId: string | null; role: string };
+  }) => {
+    const { complaintId, user } = params;
     if (!user?.id) {
       throw new CustomError(403, '접근 권한이 없습니다');
     }
@@ -157,11 +166,12 @@ export class ComplaintService {
     return complaintDetailResponseDto(complaint as ComplaintDetailWithRelations, IsPublic);
   };
 
-  updateComplaint = async (
-    complaintId: string,
-    input: UpdateComplaintDto,
-    user: { id: string; aptId: string | null },
-  ) => {
+  updateComplaint = async (params: {
+    complaintId: string;
+    input: UpdateComplaintDto;
+    user: { id: string; aptId: string | null };
+  }) => {
+    const { complaintId, input, user } = params;
     if (!user?.id) {
       throw new CustomError(403, '접근 권한이 없습니다');
     }
@@ -192,7 +202,8 @@ export class ComplaintService {
     return complaintListResponseDto(updated, IsPublic);
   };
 
-  deleteComplaint = async (complaintId: string, user: { id: string }) => {
+  deleteComplaint = async (params: { complaintId: string; user: { id: string } }) => {
+    const { complaintId, user } = params;
     if (!user?.id) {
       throw new CustomError(403, '접근 권한이 없습니다');
     }
@@ -218,11 +229,12 @@ export class ComplaintService {
     return complaintDeleteResponseDto();
   };
 
-  updateComplaintStatus = async (
-    complaintId: string,
-    input: UpdateComplaintStatusDto,
-    user: { id: string; aptId: string | null; role: string },
-  ) => {
+  updateComplaintStatus = async (params: {
+    complaintId: string;
+    input: UpdateComplaintStatusDto;
+    user: { id: string; aptId: string | null; role: string };
+  }) => {
+    const { complaintId, input, user } = params;
     if (!user?.id) {
       throw new CustomError(403, '접근 권한이 없습니다');
     }

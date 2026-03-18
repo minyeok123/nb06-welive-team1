@@ -13,7 +13,8 @@ export class EventService {
   constructor(private repo: EventRepo) {}
 
   // 연도·월 기준으로 아파트 이벤트(NOTICE, POLL) 목록 조회
-  listEvents = async (query: ListEventsQuery) => {
+  listEvents = async (params: { query: ListEventsQuery }) => {
+    const { query } = params;
     const monthStart = new Date(query.year, query.month - 1, 1); // 해당 월 1일 00:00
     const monthEnd = new Date(query.year, query.month, 0, 23, 59, 59, 999); // 해당 월 마지막 날 23:59:59
 
@@ -27,10 +28,11 @@ export class EventService {
   };
 
   // 게시글(NOTICE 또는 POLL) 일정 생성/수정 (관리자만)
-  putEvent = async (
-    query: PutEventDto,
-    user: { id: string; aptId: string | null; role: string },
-  ) => {
+  putEvent = async (params: {
+    input: PutEventDto;
+    user: { id: string; aptId: string | null; role: string };
+  }) => {
+    const { input: query, user } = params;
     if (!user?.id) {
       throw new CustomError(403, '접근 권한이 없습니다');
     }
@@ -69,10 +71,11 @@ export class EventService {
   };
 
   // 이벤트 삭제 (관리자만, eventId는 noticeId 또는 pollId)
-  deleteEvent = async (
-    eventId: string,
-    user: { id: string; aptId: string | null; role: string },
-  ) => {
+  deleteEvent = async (params: {
+    eventId: string;
+    user: { id: string; aptId: string | null; role: string };
+  }) => {
+    const { eventId, user } = params;
     if (!user?.id) {
       throw new CustomError(403, '접근 권한이 없습니다');
     }

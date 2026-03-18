@@ -15,21 +15,24 @@ export class EventController {
   /** 이벤트 목록 조회 - GET /api/events (아파트, 연, 월) */
   listEvents = async (req: Request, res: Response) => {
     const query = req.validatedQuery as ReturnType<typeof listEventsQuerySchema.parse>; // 쿼리 검증
-    const result = await this.eventService.listEvents(query);
+    const result = await this.eventService.listEvents({ query });
     return res.status(200).json(result);
   };
 
   /** 이벤트 생성/수정 - PUT /api/events (관리자만) */
   putEvent = async (req: Request, res: Response) => {
     const query = req.validatedQuery as PutEventDto; // 쿼리 검증
-    await this.eventService.putEvent(query, req.user);
+    await this.eventService.putEvent({ input: query, user: req.user });
     return res.status(204).send();
   };
 
   /** 이벤트 삭제 - DELETE /api/events/:eventId (관리자만) */
   deleteEvent = async (req: Request, res: Response) => {
     const params = eventIdParamSchema.parse(req.params); // 경로 파라미터 검증
-    const result = await this.eventService.deleteEvent(params.eventId, req.user);
+    const result = await this.eventService.deleteEvent({
+      eventId: params.eventId,
+      user: req.user,
+    });
     return res.status(200).json(result);
   };
 }

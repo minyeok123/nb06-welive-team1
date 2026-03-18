@@ -17,10 +17,11 @@ export class PollService {
   constructor(private repo: PollRepo) {}
 
   // 투표 등록 (관리자만 가능)
-  createPoll = async (
-    input: CreatePollDto,
-    user: { id: string; aptId: string | null; role: string },
-  ) => {
+  createPoll = async (params: {
+    input: CreatePollDto;
+    user: { id: string; aptId: string | null; role: string };
+  }) => {
+    const { input, user } = params;
     if (!user?.id) {
       throw new CustomError(403, '접근 권한이 없습니다');
     }
@@ -58,10 +59,11 @@ export class PollService {
   };
 
   // 투표 목록 조회 (관리자·입주민)
-  listPolls = async (
-    query: ListPollsQuery,
-    user: { id: string; aptId: string | null; role: string },
-  ) => {
+  listPolls = async (params: {
+    query: ListPollsQuery;
+    user: { id: string; aptId: string | null; role: string };
+  }) => {
+    const { query, user } = params;
     if (!user?.id) {
       throw new CustomError(403, '접근 권한이 없습니다');
     }
@@ -127,7 +129,11 @@ export class PollService {
   };
 
   // 투표 상세 조회 (관리자·입주민)
-  getPoll = async (pollId: string, user: { id: string; aptId: string | null; role: string }) => {
+  getPoll = async (params: {
+    pollId: string;
+    user: { id: string; aptId: string | null; role: string };
+  }) => {
+    const { pollId, user } = params;
     if (!user?.id) {
       throw new CustomError(403, '접근 권한이 없습니다');
     }
@@ -164,11 +170,12 @@ export class PollService {
   };
 
   // 투표 수정 (관리자만, 시작 전에만)
-  updatePoll = async (
-    pollId: string,
-    input: UpdatePollDto,
-    user: { id: string; aptId: string | null; role: string },
-  ) => {
+  updatePoll = async (params: {
+    pollId: string;
+    input: UpdatePollDto;
+    user: { id: string; aptId: string | null; role: string };
+  }) => {
+    const { pollId, input, user } = params;
     if (!user?.id) {
       throw new CustomError(403, '접근 권한이 없습니다');
     }
@@ -230,7 +237,11 @@ export class PollService {
   };
 
   // 투표 삭제 (관리자만, 시작 전에만)
-  deletePoll = async (pollId: string, user: { id: string; aptId: string | null; role: string }) => {
+  deletePoll = async (params: {
+    pollId: string;
+    user: { id: string; aptId: string | null; role: string };
+  }) => {
+    const { pollId, user } = params;
     if (!user?.id) {
       throw new CustomError(403, '접근 권한이 없습니다');
     }
