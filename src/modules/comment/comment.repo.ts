@@ -15,7 +15,7 @@ export class CommentRepo {
 
   findNoticeById = async (id: string) => {
     return await prisma.notice.findUnique({
-      where: { id },
+      where: { id, deletedAt: null },
       select: {
         id: true,
         board: {
