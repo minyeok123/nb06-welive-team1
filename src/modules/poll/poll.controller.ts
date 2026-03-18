@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import type { CreatePollDto, UpdatePollDto } from './dto/create.dto';
+import type { CreatePollDto, UpdatePollDto } from './dto/response.dto';
 import { PollRepo } from './poll.repo';
 import { PollService } from './poll.service';
 import {

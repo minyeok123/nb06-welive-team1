@@ -1,6 +1,6 @@
 import { CustomError } from '@libs/error';
-import type { PutEventDto } from './dto/create.dto';
 import {
+  type PutEventDto,
   eventListResponseDto,
   eventDeleteNoticeResponseDto,
   eventDeletePollResponseDto,

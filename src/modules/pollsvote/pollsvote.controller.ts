@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import type { OptionIdParamDto } from './dto/create.dto';
+import type { OptionIdParamDto } from './dto/response.dto';
 import { PollsvoteRepo } from './pollsvote.repo';
 import { PollsvoteService } from './pollsvote.service';
 import { optionIdParamSchema } from './pollsvote.validate';

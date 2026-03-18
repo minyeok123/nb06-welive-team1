@@ -1,5 +1,13 @@
 import type { EventRow } from '../event.repo';
 
+/** 이벤트 생성/수정 요청 DTO (쿼리 파라미터) */
+export interface PutEventDto {
+  boardType: 'NOTICE' | 'POLL';
+  boardId: string;
+  startDate: Date;
+  endDate: Date;
+}
+
 /** 이벤트 목록 항목 응답 DTO */
 export interface EventItemResponseDto {
   id: string;

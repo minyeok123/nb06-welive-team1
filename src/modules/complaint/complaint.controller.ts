@@ -5,7 +5,7 @@ import type {
   CreateComplaintDto,
   UpdateComplaintDto,
   UpdateComplaintStatusDto,
-} from './dto/create.dto';
+} from './dto/response.dto';
 import {
   complaintIdParamSchema,
   createComplaintSchema,

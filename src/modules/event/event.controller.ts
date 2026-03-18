@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import type { PutEventDto } from './dto/create.dto';
+import type { PutEventDto } from './dto/response.dto';
 import { EventRepo } from './event.repo';
 import { EventService } from './event.service';
 import {

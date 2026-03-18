@@ -1,5 +1,28 @@
 import type { PollForList } from '../poll.repo';
 
+/** 투표 등록 요청 DTO */
+export interface CreatePollDto {
+  boardId: string;
+  status?: 'PENDING' | 'IN_PROGRESS' | 'DONE';
+  title: string;
+  content: string;
+  buildingPermission: number;
+  startDate: string;
+  endDate: string;
+  options: { title: string }[];
+}
+
+/** 투표 수정 요청 DTO */
+export interface UpdatePollDto {
+  title?: string;
+  content?: string;
+  buildingPermission?: number;
+  startDate?: string;
+  endDate?: string;
+  status?: 'PENDING' | 'IN_PROGRESS' | 'DONE';
+  options?: { title: string }[];
+}
+
 /** 투표 상세 조회 소스 타입 (findPollById 반환값) */
 export type PollDetailSource = {
   id: string;
@@ -74,7 +97,7 @@ export interface PollListResultDto {
  * 투표 목록 항목 → 응답 DTO 변환
  */
 export const pollListResponseDto = (v: PollForList): PollListResponseDto => {
-  const buildingPermission = v.targetDong.length === 0 ? 0 : v.targetDong[0] ?? 0;
+  const buildingPermission = v.targetDong.length === 0 ? 0 : (v.targetDong[0] ?? 0);
   const status = v.status === 'DONE' ? 'CLOSED' : v.status;
   return {
     pollId: v.id,
@@ -94,7 +117,7 @@ export const pollListResponseDto = (v: PollForList): PollListResponseDto => {
  * 투표 상세 → 응답 DTO 변환
  */
 export const pollDetailResponseDto = (v: PollDetailSource): PollDetailResponseDto => {
-  const buildingPermission = v.targetDong.length === 0 ? 0 : v.targetDong[0] ?? 0;
+  const buildingPermission = v.targetDong.length === 0 ? 0 : (v.targetDong[0] ?? 0);
   const status = v.status === 'DONE' ? 'CLOSED' : v.status;
   const boardName = v.board?.boardType === 'VOTE' ? '주민투표' : '투표';
   const options = (v.options ?? []).map((opt) => ({

@@ -1,7 +1,8 @@
 import { Status } from '@prisma/client';
 import { CustomError } from '@libs/error';
-import type { CreatePollDto, UpdatePollDto } from './dto/create.dto';
 import {
+  type CreatePollDto,
+  type UpdatePollDto,
   pollCreateResponseDto,
   pollDetailResponseDto,
   pollListResponseDto,
