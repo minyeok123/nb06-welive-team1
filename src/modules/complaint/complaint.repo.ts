@@ -103,6 +103,7 @@ export class ComplaintRepo {
       where: {
         aptId,
         role: { in: ['ADMIN', 'SUPER_ADMIN'] },
+        deletedAt: null,
       },
       select: {
         id: true,
@@ -197,6 +198,7 @@ export class ComplaintRepo {
           },
         },
         complaintComment: {
+          where: { deletedAt: null },
           orderBy: { createdAt: 'asc' },
           select: {
             id: true,
@@ -223,7 +225,7 @@ export class ComplaintRepo {
   }): Promise<ComplaintWithRelations> => {
     // 민원 내용 수정
     return prisma.complaint.update({
-      where: { id: params.complaintId },
+      where: { id: params.complaintId, deletedAt: null },
       data: {
         title: params.title,
         content: params.content,
@@ -260,7 +262,7 @@ export class ComplaintRepo {
   }): Promise<ComplaintDetailWithRelations | null> => {
     // 민원 상태 수정
     await prisma.complaint.update({
-      where: { id: params.complaintId },
+      where: { id: params.complaintId, deletedAt: null },
       data: { status: params.status },
     });
 
@@ -270,7 +272,7 @@ export class ComplaintRepo {
   softDeleteComplaint = async (complaintId: string) => {
     // 민원 소프트 삭제(deletedAt 설정)
     await prisma.complaint.update({
-      where: { id: complaintId },
+      where: { id: complaintId, deletedAt: null },
       data: { deletedAt: new Date() },
     });
   };

@@ -151,7 +151,7 @@ export class EventRepo {
   // 공지(NOTICE) 일정(startDate, endDate) 수정
   updateNoticeEvent = async (noticeId: string, startDate: Date, endDate: Date) => {
     await prisma.notice.update({
-      where: { id: noticeId },
+      where: { id: noticeId, deletedAt: null },
       data: { startDate, endDate },
     });
   };
@@ -159,7 +159,7 @@ export class EventRepo {
   // 투표(POLL) 일정(startDate, endDate) 수정
   updatePollEvent = async (pollId: string, startDate: Date, endDate: Date) => {
     await prisma.poll.update({
-      where: { id: pollId },
+      where: { id: pollId, deletedAt: null },
       data: { startDate, endDate },
     });
   };
@@ -183,7 +183,7 @@ export class EventRepo {
   // 공지(NOTICE) 소프트 삭제
   softDeleteNotice = async (noticeId: string) => {
     await prisma.notice.update({
-      where: { id: noticeId },
+      where: { id: noticeId, deletedAt: null },
       data: { deletedAt: new Date() },
     });
   };
@@ -191,7 +191,7 @@ export class EventRepo {
   // 투표(POLL) 소프트 삭제
   softDeletePoll = async (pollId: string) => {
     await prisma.poll.update({
-      where: { id: pollId },
+      where: { id: pollId, deletedAt: null },
       data: { deletedAt: new Date() },
     });
   };
