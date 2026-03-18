@@ -2,42 +2,25 @@ import { Request, Response, NextFunction } from 'express';
 import { ResidentService } from './resident.service';
 import { ResidentRepo } from './resident.repo';
 import { GetRosterListQuery } from '@/types/resident.types';
+import {
+  getResidentListQuerySchema,
+  createRosterFromUserParamsSchema,
+  RosterIdParamsSchema,
+} from '@modules/resident/resident.validate';
 
 export class ResidentController {
   constructor(private residentService: ResidentService) {}
 
   getRosterList = async (req: Request, res: Response, next: NextFunction) => {
-    const adminId = req.user.id;
-    const { page, limit, building, unitNumber, residenceStatus, isRegistered, keyword } =
-      req.validatedQuery as GetRosterListQuery;
+    const query = getResidentListQuerySchema.parse(req.validatedQuery);
 
-    const rosterList = await this.residentService.getRosterList(
-      adminId,
-      page,
-      limit,
-      building,
-      unitNumber,
-      residenceStatus,
-      isRegistered,
-      keyword,
-    );
+    const rosterList = await this.residentService.getRosterList(req.user.id, query);
     res.status(200).json(rosterList);
   };
 
   createRoster = async (req: Request, res: Response, next: NextFunction) => {
-    const { id: adminId, aptId } = req.user;
-    const { building, unitNumber, contact, name, isHouseholder } = req.body;
-    const roster = await this.residentService.createRoster({
-      data: {
-        building,
-        unitNumber,
-        contact,
-        name,
-        isHouseholder,
-        adminId,
-        aptId: aptId!,
-      },
-    });
+    const data = req.body;
+    const roster = await this.residentService.createRoster(req.user, data);
     res.status(201).json(roster);
   };
 
@@ -49,37 +32,27 @@ export class ResidentController {
   };
 
   getRosterDetail = async (req: Request, res: Response, next: NextFunction) => {
-    const { id } = req.params as { id: string };
-    const roster = await this.residentService.getRosterDetail(id);
+    const { id } = RosterIdParamsSchema.parse(req.params);
+    const roster = await this.residentService.getRosterDetail(id, req.user);
     res.status(200).json(roster);
   };
 
   patchRoster = async (req: Request, res: Response, next: NextFunction) => {
-    const { id } = req.params as { id: string };
-    const { building, unitNumber, contact, name, isHouseholder } = req.body;
-    const roster = await this.residentService.patchRoster({
-      data: {
-        id,
-        building,
-        unitNumber,
-        contact,
-        name,
-        isHouseholder,
-      },
-    });
+    const { id } = RosterIdParamsSchema.parse(req.params);
+    const data = req.body;
+    const roster = await this.residentService.patchRoster(id, data, req.user);
     res.status(200).json(roster);
   };
 
   softDeleteRoster = async (req: Request, res: Response, next: NextFunction) => {
-    const { id } = req.params as { id: string };
+    const { id } = RosterIdParamsSchema.parse(req.params);
     const roster = await this.residentService.softDeleteRoster(id);
     res.status(200).json({ message: '입주민 정보 삭제 성공' });
   };
 
   createRosterFromUser = async (req: Request, res: Response, next: NextFunction) => {
-    const { userId } = req.params as { userId: string };
-    const { id: adminId, aptId } = req.user;
-    const roster = await this.residentService.createRosterFromUser(userId, adminId, aptId!);
+    const { userId } = createRosterFromUserParamsSchema.parse(req.params);
+    const roster = await this.residentService.createRosterFromUser(userId, req.user);
     res.status(201).json(roster);
   };
 
