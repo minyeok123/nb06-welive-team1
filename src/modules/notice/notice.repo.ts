@@ -28,7 +28,7 @@ export class NoticeRepo {
 
   findBoardById = async (id: string) => {
     return prisma.board.findUnique({
-      where: { id },
+      where: { id, deletedAt: null },
     });
   };
 
@@ -106,21 +106,21 @@ export class NoticeRepo {
 
   incrementViewsCount = async (id: string) => {
     return prisma.notice.update({
-      where: { id },
+      where: { id, deletedAt: null },
       data: { viewsCount: { increment: 1 } },
     });
   };
 
   updateNotice = async (id: string, data: Prisma.NoticeUpdateInput) => {
     return prisma.notice.update({
-      where: { id },
+      where: { id, deletedAt: null },
       data,
     });
   };
 
   softDeleteNotice = async (id: string) => {
     return prisma.notice.update({
-      where: { id },
+      where: { id, deletedAt: null },
       data: { deletedAt: new Date() },
     });
   };
