@@ -16,6 +16,7 @@ export type CreateRosterFromUser = Pick<
   Roster,
   'dong' | 'ho' | 'name' | 'phoneNumber' | 'adminId' | 'aptId' | 'is_registered'
 >;
+export type RosterFromUser = Pick<Roster, 'dong' | 'ho' | 'name' | 'phoneNumber' | 'is_registered'>;
 
 export type RosterBody = {
   building: number;
@@ -25,9 +26,9 @@ export type RosterBody = {
   isHouseholder: 'HOUSEHOLDER' | 'MEMBER';
 };
 
-export type CreateRosterBody = RosterBody & { adminId: string; aptId: string };
+export type CreateRosterBody = RosterBody;
 
-export type PatchRosterBody = Partial<RosterBody> & { id: string };
+export type PatchRosterBody = Partial<RosterBody>;
 
 export interface GetRosterListQuery {
   page: number;

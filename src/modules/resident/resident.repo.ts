@@ -1,6 +1,11 @@
 import { prisma } from '@libs/prisma';
 import { Prisma, IsHouseHold } from '@prisma/client';
-import { CreateRosterBody, PatchRosterBody, CreateRosterFromUser } from '@/types/resident.types';
+import {
+  CreateRosterBody,
+  PatchRosterBody,
+  CreateRosterFromUser,
+  RosterFromUser,
+} from '@/types/resident.types';
 
 export class ResidentRepo {
   constructor() {}
@@ -51,7 +56,7 @@ export class ResidentRepo {
     });
   };
 
-  createRoster = async ({ data }: { data: CreateRosterBody }) => {
+  createRoster = async (adminId: string, aptId: string, data: CreateRosterBody) => {
     return await prisma.residentRoster.create({
       data: {
         dong: data.building,
@@ -61,12 +66,12 @@ export class ResidentRepo {
         is_houseHold: data.isHouseholder,
         apartment: {
           connect: {
-            id: data.aptId,
+            id: aptId,
           },
         },
         admin: {
           connect: {
-            id: data.adminId,
+            id: adminId,
           },
         },
       },
@@ -97,10 +102,89 @@ export class ResidentRepo {
     });
   };
 
+  restoreRoster = async (id: string, data: CreateRosterBody) => {
+    return await prisma.residentRoster.update({
+      where: {
+        id,
+      },
+      data: {
+        dong: data.building,
+        ho: data.unitNumber,
+        phoneNumber: data.contact,
+        name: data.name,
+        is_houseHold: data.isHouseholder,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        userId: true,
+        dong: true,
+        ho: true,
+        phoneNumber: true,
+        name: true,
+        is_houseHold: true,
+        is_registered: true,
+        is_residence: true,
+        user: {
+          select: {
+            email: true,
+            register_status: true,
+          },
+        },
+      },
+    });
+  };
+
+  restoreRosterFromUser = async (id: string, data: RosterFromUser) => {
+    return await prisma.residentRoster.update({
+      where: {
+        id,
+      },
+      data: {
+        dong: data.dong,
+        ho: data.ho,
+        phoneNumber: data.phoneNumber,
+        name: data.name,
+        is_registered: data.is_registered,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        userId: true,
+        dong: true,
+        ho: true,
+        phoneNumber: true,
+        name: true,
+        is_houseHold: true,
+        is_registered: true,
+        is_residence: true,
+        user: {
+          select: {
+            email: true,
+            register_status: true,
+          },
+        },
+      },
+    });
+  };
+
+  findHouseholder = async (aptId: string, dong?: number, ho?: number) => {
+    return await prisma.residentRoster.findFirst({
+      where: {
+        aptId,
+        dong,
+        ho,
+        is_houseHold: 'HOUSEHOLDER',
+        deletedAt: null,
+      },
+    });
+  };
+
   getRosterDetail = async (id: string) => {
     return await prisma.residentRoster.findUnique({
       where: {
         id,
+        deletedAt: null,
       },
       select: {
         id: true,
@@ -113,6 +197,7 @@ export class ResidentRepo {
         is_registered: true,
         is_residence: true,
         deletedAt: true,
+        aptId: true,
         user: {
           select: {
             email: true,
@@ -123,10 +208,10 @@ export class ResidentRepo {
     });
   };
 
-  patchRoster = async ({ data }: { data: PatchRosterBody }) => {
+  patchRoster = async (id: string, data: PatchRosterBody) => {
     return await prisma.residentRoster.update({
       where: {
-        id: data.id,
+        id,
       },
       data: {
         dong: data.building,
@@ -159,6 +244,7 @@ export class ResidentRepo {
     return await prisma.residentRoster.update({
       where: {
         id,
+        deletedAt: null,
       },
       data: {
         deletedAt: new Date(),
@@ -170,18 +256,32 @@ export class ResidentRepo {
     return await prisma.register.findUnique({
       where: {
         id: userId,
+        deletedAt: null,
       },
     });
   };
 
-  patchUser = async ({ data }: { data: { userId: string; isHouseholder: IsHouseHold } }) => {
+  patchUser = async (
+    userId: string,
+    data: {
+      name: string;
+      phoneNumber: string;
+      dong: number;
+      ho: number;
+      isHouseholder: IsHouseHold;
+    },
+  ) => {
     return await prisma.user.update({
       where: {
-        id: data.userId,
+        id: userId,
       },
       data: {
+        name: data.name,
+        phoneNumber: data.phoneNumber,
         resident: {
           update: {
+            dong: data.dong,
+            ho: data.ho,
             is_houseHold: data.isHouseholder,
           },
         },
@@ -189,7 +289,7 @@ export class ResidentRepo {
     });
   };
 
-  createRosterFromUser = async ({ data }: { data: CreateRosterFromUser }) => {
+  createRosterFromUser = async (aptId: string, adminId: string, data: RosterFromUser) => {
     return await prisma.residentRoster.create({
       data: {
         dong: data.dong,
@@ -198,12 +298,12 @@ export class ResidentRepo {
         phoneNumber: data.phoneNumber,
         admin: {
           connect: {
-            id: data.adminId,
+            id: adminId,
           },
         },
         apartment: {
           connect: {
-            id: data.aptId,
+            id: aptId,
           },
         },
       },
