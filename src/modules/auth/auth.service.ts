@@ -83,6 +83,11 @@ export class AuthService {
     if (!register) {
       throw new CustomError(400, '회원가입 요청을 생성하지 못했습니다');
     }
+
+    const notification = await this.repo.createUserSignupNotification(
+      apartment.id,
+      apartment.aptName,
+    );
     return signupDto(register);
   };
 
@@ -146,6 +151,8 @@ export class AuthService {
           hashedPassword,
         )
       : await this.repo.createAdminRegister(input, apartment.id, hashedPassword);
+
+    const notification = await this.repo.createAdminSignupNotification(apartment.aptName);
 
     return signupDto(register);
   };
