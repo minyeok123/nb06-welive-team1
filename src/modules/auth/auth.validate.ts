@@ -1,54 +1,22 @@
 import { z } from 'zod';
 
-const intValue = z.preprocess((value) => Number(value), z.number().int());
-const optionalIntValue = z.preprocess((value) => {
-  if (value === undefined || value === null || value === '') {
-    return undefined;
-  }
-  return Number(value);
-}, z.number().int());
-
-export const signupSchema = z
-  .object({
-    username: z.string().trim().min(2).max(30),
-    password: z.string().min(8).max(100),
-    contact: z
-      .string()
-      .trim()
-      .regex(/^\d{9,15}$/, '연락처 형식이 올바르지 않습니다'),
-    name: z.string().trim().min(2).max(50),
-    email: z.string().trim().email(),
-    role: z.enum(['USER', 'ADMIN', 'SUPER_ADMIN']),
-    apartmentName: z.string().trim().min(1).optional(),
-    apartmentAddress: z.string().trim().min(1).optional(),
-    apartmentDong: optionalIntValue.optional(),
-    apartmentHo: optionalIntValue.optional(),
-  })
-  .superRefine((data, ctx) => {
-    if (data.role === 'USER') {
-      if (!data.apartmentAddress && !data.apartmentName) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['apartmentAddress'],
-          message: '아파트 주소 또는 이름이 필요합니다',
-        });
-      }
-      if (!data.apartmentDong) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['apartmentDong'],
-          message: '동 정보가 필요합니다',
-        });
-      }
-      if (!data.apartmentHo) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['apartmentHo'],
-          message: '호 정보가 필요합니다',
-        });
-      }
-    }
-  });
+export const signupSchema = z.object({
+  username: z.string().trim().min(2).max(30),
+  password: z.string().min(8).max(100),
+  contact: z
+    .string()
+    .trim()
+    .refine((val) => !val.includes('-'), {
+      message: '하이픈(-)을 제외한 숫자만 입력해 주세요.',
+    })
+    .regex(/^\d{9,11}$/, '연락처 형식이 올바르지 않습니다'),
+  name: z.string().trim().min(2).max(50),
+  email: z.email(),
+  role: z.enum(['USER']),
+  apartmentName: z.string().trim().min(1),
+  apartmentDong: z.coerce.number().int().min(100).max(9999),
+  apartmentHo: z.coerce.number().int().min(100).max(9999),
+});
 
 export type SignupInput = z.infer<typeof signupSchema>;
 
@@ -60,16 +28,16 @@ export const adminSignupSchema = z.object({
     .trim()
     .regex(/^\d{9,15}$/, '연락처 형식이 올바르지 않습니다'),
   name: z.string().trim().min(2).max(50),
-  email: z.string().trim().email(),
+  email: z.email(),
   description: z.string().trim().max(1000),
-  startComplexNumber: intValue,
-  endComplexNumber: intValue,
-  startDongNumber: intValue,
-  endDongNumber: intValue,
-  startFloorNumber: intValue,
-  endFloorNumber: intValue,
-  startHoNumber: intValue,
-  endHoNumber: intValue,
+  startComplexNumber: z.coerce.number().int().min(1).max(99),
+  endComplexNumber: z.coerce.number().int().min(1).max(99),
+  startDongNumber: z.coerce.number().int().min(1).max(99),
+  endDongNumber: z.coerce.number().int().min(1).max(99),
+  startFloorNumber: z.coerce.number().int().min(1).max(99),
+  endFloorNumber: z.coerce.number().int().min(1).max(99),
+  startHoNumber: z.coerce.number().int().min(1).max(99),
+  endHoNumber: z.coerce.number().int().min(1).max(99),
   role: z.literal('ADMIN'),
   apartmentName: z.string().trim().min(1),
   apartmentAddress: z.string().trim().min(1),
@@ -90,7 +58,8 @@ export const superAdminSignupSchema = z.object({
     .regex(/^\d{9,15}$/, '연락처 형식이 올바르지 않습니다'),
   name: z.string().trim().min(2).max(50),
   email: z.string().trim().email(),
-  role: z.literal('SUPER_ADMIN'),
+  role: z.enum(['SUPER_ADMIN']),
+  joinStatus: z.enum(['APPROVED']),
 });
 
 export type SuperAdminSignupInput = z.infer<typeof superAdminSignupSchema>;
@@ -129,7 +98,7 @@ export const adminUpdateSchema = z.object({
     .regex(/^\d{9,11}$/, '연락처 형식이 올바르지 않습니다')
     .optional(),
   name: z.string().trim().min(2).max(50).optional(),
-  email: z.string().trim().email().optional(),
+  email: z.email().optional(),
   description: z.string().trim().max(1000).optional(),
   apartmentName: z.string().trim().min(1, '아파트 이름은 필수입니다').optional(),
   apartmentAddress: z.string().trim().min(1, '아파트 주소는 필수입니다').optional(),

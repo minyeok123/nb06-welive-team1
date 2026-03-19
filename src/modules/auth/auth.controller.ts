@@ -2,9 +2,16 @@ import { NextFunction, Request, Response } from 'express';
 import { AuthRepo } from './auth.repo';
 import { AuthService } from './auth.service';
 import { setTokensCookies } from '../../libs/cookies';
-import { loginDto } from './dto/loginResponse.dto';
+import { loginDto } from './dto/Response.dto';
 import { clearCookies } from '../../libs/cookies';
-import { adminSignupSchema, signupSchema, superAdminSignupSchema } from './auth.validate';
+import {
+  adminIdSchema,
+  adminSignupSchema,
+  residentIdSchema,
+  signupSchema,
+  superAdminSignupSchema,
+  updateRegisterStatusSchema,
+} from './auth.validate';
 
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -43,30 +50,22 @@ export class AuthController {
   };
 
   refresh = async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.user.id;
-    const { accessToken, refreshToken: newRefreshToken } = await this.authService.refresh(userId);
+    const { accessToken, refreshToken: newRefreshToken } = await this.authService.refresh(req.user);
     setTokensCookies(res, accessToken, newRefreshToken);
     res.status(200).json({ message: '작업이 성공적으로 완료되었습니다' });
   };
 
   updateAdminStatus = async (req: Request, res: Response, next: NextFunction) => {
-    const adminRegisterId = req.params.adminId;
-    if (typeof adminRegisterId !== 'string') {
-      return res.status(400).json({ message: '잘못된 관리자 ID 형식입니다' });
-    }
-    const { status } = req.body;
-    await this.authService.updateAdminStatus(adminRegisterId, status);
+    const { adminId } = adminIdSchema.parse(req.params);
+    const { status } = updateRegisterStatusSchema.parse(req.body);
+    await this.authService.updateAdminStatus(adminId, status);
     return res.status(200).json({ message: '작업이 성공적으로 완료되었습니다' });
   };
 
   updateResidentStatus = async (req: Request, res: Response, next: NextFunction) => {
-    const residentRegisterId = req.params.residentId;
-    if (typeof residentRegisterId !== 'string') {
-      return res.status(400).json({ message: '잘못된 사용자 ID 형식입니다' });
-    }
-    const { status } = req.body;
-    const adminId = req.user.id;
-    await this.authService.updateResidentStatus(residentRegisterId, status, adminId);
+    const { residentId } = residentIdSchema.parse(req.params);
+    const { status } = updateRegisterStatusSchema.parse(req.body);
+    await this.authService.updateResidentStatus(residentId, status, req.user);
     return res.status(200).json({ message: '작업이 성공적으로 완료되었습니다' });
   };
 

@@ -21,6 +21,15 @@ interface LoginDtoOptions {
   } | null;
 }
 
+interface SignupDtoOptions {
+  id: string;
+  name: string;
+  email: string;
+  register_status: string;
+  requestedRole: string;
+  deletedAt: Date | null;
+}
+
 export const loginDto = (options: LoginDtoOptions) => {
   return {
     id: options.id,
@@ -40,5 +49,16 @@ export const loginDto = (options: LoginDtoOptions) => {
     username: options.username,
     contact: options.phoneNumber,
     avatar: options.profileImg,
+  };
+};
+
+export const signupDto = (options: SignupDtoOptions) => {
+  return {
+    id: options.id,
+    name: options.name,
+    email: options.email,
+    joinStatus: options.register_status,
+    isActive: options.deletedAt === null && options.register_status === 'APPROVED',
+    role: options.requestedRole,
   };
 };
