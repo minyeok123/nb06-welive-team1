@@ -2,6 +2,7 @@ import express from 'express';
 import asyncHandler from '../../middlewares/asyncHandler';
 import { validate } from '../../middlewares/validate';
 import { authenticate } from '@/middlewares/authenticate';
+import { isNotUser } from '@/middlewares/authorize';
 import {
   createNoticeSchema,
   updateNoticeSchema,
@@ -15,6 +16,7 @@ const router = express.Router();
 router.post(
   '/',
   authenticate,
+  isNotUser,
   validate(createNoticeSchema, 'body'),
   asyncHandler(noticeController.createNotice),
 );
