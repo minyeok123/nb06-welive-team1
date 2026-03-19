@@ -19,7 +19,7 @@ model User {
   aptId           String?        @map("apt_id")
   name            String
   email           String         @unique
-  phoneNumber     String         @map("phone_number")
+  phoneNumber     String         @unique @map("phone_number")
   password        String
   role            Role
   register_status RegisterStatus
@@ -50,7 +50,7 @@ model Register {
   register_status RegisterStatus
   aptId           String?        @map("apt_id")
   username        String         @unique
-  phoneNumber     String         @map("phone_number")
+  phoneNumber     String         @unique @map("phone_number")
   name            String
   email           String         @unique
   password        String

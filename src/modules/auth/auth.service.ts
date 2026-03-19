@@ -6,6 +6,8 @@ import { AdminSignupInput, SignupInput, SuperAdminSignupInput } from './auth.val
 import { createTokens } from './utils/token';
 import { getImage } from '../user/utils/s3.handler';
 import { withoutPasswordUser } from '@/types/user.types';
+import { makeDong, makeHo } from '@/modules/auth/utils/apt.dong.ho.';
+import { signupDto } from '@/modules/auth/dto/Response.dto';
 
 export class AuthService {
   constructor(private repo: AuthRepo) {}
@@ -17,141 +19,135 @@ export class AuthService {
       phoneNumber: input.contact,
     });
     if (existingUser) {
-      throw new CustomError(409, '이미 사용 중인 정보입니다');
+      throw new CustomError(409, '이미 승인된 유저가 사용 중인 정보입니다');
     }
 
-    const apartment = input.apartmentAddress
-      ? await this.repo.findApartmentByAddress(input.apartmentAddress)
-      : input.apartmentName
-        ? await this.repo.findApartmentByName(input.apartmentName)
-        : null;
-    if (!apartment) {
-      throw new CustomError(400, '존재하지 않는 아파트입니다');
-    }
-
-    // 입주민: 명부 정보와 일치하면 자동 승인
-    let rosterMatch: Awaited<ReturnType<AuthRepo['findResidentRosterMatch']>> | undefined;
-    if (input.role === 'USER' && input.apartmentDong != null && input.apartmentHo != null) {
-      rosterMatch = await this.repo.findResidentRosterMatch({
-        aptId: apartment.id,
-        dong: input.apartmentDong,
-        ho: input.apartmentHo,
-        name: input.name,
-        phoneNumber: input.contact,
-      });
-    }
-
-    const registerStatus = rosterMatch ? RegisterStatus.APPROVED : RegisterStatus.PENDING;
-    const hashedPassword = await bcrypt.hash(input.password, 10); // 비밀번호 해시(서명) 저장
-
-    const register = await this.repo.createRegister({
-      register_status: registerStatus,
-      aptId: apartment.id,
+    const existingRegister = await this.repo.findRegisterByUniqueFields({
+      email: input.email,
       username: input.username,
       phoneNumber: input.contact,
-      name: input.name,
-      email: input.email,
-      password: hashedPassword,
-      requestedRole: input.role,
-      dong: input.role === 'USER' ? input.apartmentDong : undefined,
-      ho: input.role === 'USER' ? input.apartmentHo : undefined,
     });
-
-    // 자동 승인 시 User, Resident 생성 및 명부 연결
-    if (rosterMatch && registerStatus === RegisterStatus.APPROVED) {
-      const user = await this.repo.createUser({
-        username: register.username,
-        phoneNumber: register.phoneNumber,
-        name: register.name,
-        email: register.email,
-        password: register.password,
-        role: register.requestedRole,
-        register_status: RegisterStatus.APPROVED,
-        register: { connect: { id: register.id } },
-        apartment: { connect: { id: apartment.id } },
-      });
-      await this.repo.createResident({
-        user: { connect: { id: user.id } },
-        apartment: { connect: { id: apartment.id } },
-        dong: input.apartmentDong!,
-        ho: input.apartmentHo!,
-      });
-      await this.repo.updateRosterWithUser(rosterMatch.id, user.id);
+    //  가입 신청 요청 체크 (PENDING인 경우만 차단, REJECTED/DELETED는 패스)
+    if (existingRegister) {
+      if (existingRegister.register_status === 'PENDING' && existingRegister.deletedAt === null) {
+        throw new CustomError(409, '이미 검토 중인 회원가입 요청입니다.');
+      }
     }
 
-    return {
-      id: register.id,
-      name: register.name,
-      email: register.email,
-      joinStatus: register.register_status,
-      isActive: register.deletedAt === null && register.register_status === 'APPROVED',
-      role: register.requestedRole,
-    };
+    const apartment = await this.repo.findApartmentByName(input.apartmentName);
+    if (!apartment) {
+      throw new CustomError(404, '존재하지 않는 아파트입니다');
+    }
+
+    const invalidDong = makeDong(apartment);
+    const invalidHo = makeHo(apartment);
+
+    if (input.apartmentDong < invalidDong.min || input.apartmentDong > invalidDong.max) {
+      throw new CustomError(400, '해당 아파트의 동 범위를 벗어났습니다.');
+    }
+    if (input.apartmentHo < invalidHo.min || input.apartmentHo > invalidHo.max) {
+      throw new CustomError(400, '해당 아파트의 호수 범위를 벗어났습니다.');
+    }
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(input.password, salt);
+
+    const roster = await this.repo.findRosterMatch({
+      aptId: apartment.id,
+      dong: input.apartmentDong,
+      ho: input.apartmentHo,
+      name: input.name,
+      phoneNumber: input.contact,
+    });
+
+    if (roster) {
+      const approvedUser = await this.repo.autoApprovedUser(
+        input,
+        apartment.id,
+        roster.id,
+        hashedPassword,
+        existingRegister?.id,
+      );
+      return signupDto(approvedUser);
+    }
+
+    /* 중복 회원가입 요청 데이터는 있지만 조건에 안걸린 경우 REJECTED,삭제 상태인 경우 복구
+     * 회원가입 요청이 없는 경우 생성*/
+    const register = existingRegister
+      ? await this.repo.restoreUserRegister(
+          existingRegister.id,
+          input,
+          apartment.id,
+          hashedPassword,
+        )
+      : await this.repo.createUserRegister(input, apartment.id, hashedPassword);
+    if (!register) {
+      throw new CustomError(400, '회원가입 요청을 생성하지 못했습니다');
+    }
+    return signupDto(register);
   };
 
   signupAdmin = async (input: AdminSignupInput) => {
-    if (input.role !== 'ADMIN') {
-      throw new CustomError(400, '관리자 회원가입 요청이 아닙니다');
-    }
-
+    // 유저 체크 (승인 후 활동 중인 유저)
     const existingUser = await this.repo.findUserByUniqueFields({
       email: input.email,
       username: input.username,
       phoneNumber: input.contact,
     });
-
     if (existingUser) {
-      throw new CustomError(409, '이미 사용 중인 정보입니다');
+      throw new CustomError(409, '이미 승인된 유저가 사용 중인 정보입니다.');
     }
 
-    const existingApartment = await this.repo.findApartmentByAddress(input.apartmentAddress);
-    if (existingApartment) {
-      throw new CustomError(409, '이미 등록된 아파트입니다');
-    }
-
-    const existingOffice = await this.repo.findApartmentByOfficeNumber(
-      input.apartmentManagementNumber,
-    );
-    if (existingOffice) {
-      throw new CustomError(409, '이미 등록된 관리소 번호입니다');
-    }
-
-    const hashedPassword = await bcrypt.hash(input.password, 10); // 비밀번호 해시(서명) 저장
-
-    const apartment = await this.repo.createApartment({
-      aptName: input.apartmentName,
-      aptAddress: input.apartmentAddress,
-      description: input.description,
-      officeNumber: input.apartmentManagementNumber,
-      startComplexNumber: input.startComplexNumber,
-      endComplexNumber: input.endComplexNumber,
-      startDongNumber: input.startDongNumber,
-      endDongNumber: input.endDongNumber,
-      startFloorNumber: input.startFloorNumber,
-      endFloorNumber: input.endFloorNumber,
-      startHoNumber: input.startHoNumber,
-      endHoNumber: input.endHoNumber,
-    });
-
-    const register = await this.repo.createRegister({
-      register_status: RegisterStatus.PENDING,
-      aptId: apartment.id,
+    //  가입 신청 요청 체크 (PENDING인 경우만 차단, REJECTED/DELETED는 패스)
+    const existingRegister = await this.repo.findRegisterByUniqueFields({
+      email: input.email,
       username: input.username,
       phoneNumber: input.contact,
-      name: input.name,
-      email: input.email,
-      password: hashedPassword,
-      requestedRole: input.role,
     });
+    if (existingRegister) {
+      if (existingRegister.register_status === 'PENDING' && existingRegister.deletedAt === null) {
+        throw new CustomError(409, '이미 검토 중인 회원가입 요청입니다.');
+      }
+    }
 
-    return {
-      id: register.id,
-      name: register.name,
-      email: register.email,
-      joinStatus: register.register_status,
-      isActive: register.deletedAt === null && register.register_status === 'APPROVED',
-      role: register.requestedRole,
-    };
+    //아파트 정보 중복 체크 (PENDING/APPROVED인 경우만 차단)
+    const existingApt = await this.repo.findApartmentByUniqueFields(
+      input.apartmentAddress,
+      input.apartmentManagementNumber,
+    );
+    if (existingApt) {
+      if (existingApt.aptStatus === 'PENDING' || existingApt.aptStatus === 'APPROVED') {
+        const isAddressMatch = existingApt.aptAddress === input.apartmentAddress;
+        throw new CustomError(
+          409,
+          existingApt.aptStatus === 'PENDING'
+            ? '이미 가입 신청 후 검토 중인 아파트 정보입니다.'
+            : isAddressMatch
+              ? '이미 등록된 아파트 주소입니다.'
+              : '이미 등록된 관리소 번호입니다.',
+        );
+      }
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(input.password, salt);
+
+    /* 중복 아파트 데이터는 있지만 조건에 안걸린 경우 (REJECTED,삭제) 상태인 경우 복구
+     * 아파트 정보가 없는 경우 생성*/
+    const apartment = existingApt
+      ? await this.repo.restoreApartment(existingApt.id, input)
+      : await this.repo.createApartment(input);
+
+    /* 중복 회원가입 요청 데이터는 있지만 조건에 안걸린 경우(REJECTED,삭제)상태인 경우 복구
+     * 회원가입 요청이 없는 경우 생성*/ const register = existingRegister
+      ? await this.repo.restoreAdminRegister(
+          existingRegister.id,
+          input,
+          apartment.id,
+          hashedPassword,
+        )
+      : await this.repo.createAdminRegister(input, apartment.id, hashedPassword);
+
+    return signupDto(register);
   };
 
   signupSuperAdmin = async (input: SuperAdminSignupInput) => {
@@ -172,24 +168,12 @@ export class AuthService {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(input.password, salt); // 비밀번호 해시(서명) 저장
 
-    const user = await this.repo.createUser({
-      username: input.username,
-      phoneNumber: input.contact,
-      name: input.name,
-      email: input.email,
-      password: hashedPassword,
-      role: input.role,
-      register_status: RegisterStatus.APPROVED,
-    });
+    const { role: requestedRole, ...user } = await this.repo.createSuperAdminUser(
+      input,
+      hashedPassword,
+    );
 
-    return {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      joinStatus: user.register_status,
-      isActive: user.deletedAt === null,
-      role: user.role,
-    };
+    return signupDto({ ...user, requestedRole });
   };
 
   login = async (username: string, password: string) => {
@@ -223,34 +207,24 @@ export class AuthService {
     return { accessToken, refreshToken, withoutPassword };
   };
 
-  refresh = async (userId: string) => {
-    const { accessToken, refreshToken } = createTokens(userId);
+  refresh = async (user: withoutPasswordUser) => {
+    const { accessToken, refreshToken } = createTokens(user.id);
     return { accessToken, refreshToken };
   };
 
-  updateAdminStatus = async (adminRegisterId: string, status: string) => {
+  updateAdminStatus = async (adminRegisterId: string, reqStatus: string) => {
     const register = await this.repo.findRegisterById(adminRegisterId);
     if (!register) {
       throw new CustomError(404, '존재하지 않는 관리자 회원가입 요청입니다');
     }
 
-    if (status === 'APPROVED') {
+    if (reqStatus === 'APPROVED') {
       if (!register.aptId) {
         throw new CustomError(400, '아파트 정보가 없습니다');
       }
       await this.repo.registerApprove(adminRegisterId);
       await this.repo.aptApprove(register.aptId);
-      const user = await this.repo.createUser({
-        username: register.username,
-        phoneNumber: register.phoneNumber,
-        name: register.name,
-        email: register.email,
-        password: register.password,
-        role: register.requestedRole,
-        register_status: RegisterStatus.APPROVED,
-        register: { connect: { id: register.id } },
-        apartment: { connect: { id: register.aptId } },
-      });
+      const user = await this.repo.createUser(register);
       await this.repo.createManyBoard([
         { aptId: user.aptId!, boardType: 'NOTICE' },
         { aptId: user.aptId!, boardType: 'VOTE' },
@@ -265,7 +239,11 @@ export class AuthService {
     return;
   };
 
-  updateResidentStatus = async (residentRegisterId: string, status: string, adminId: string) => {
+  updateResidentStatus = async (
+    residentRegisterId: string,
+    status: string,
+    admin: withoutPasswordUser,
+  ) => {
     const register = await this.repo.findRegisterById(residentRegisterId);
     if (!register) {
       throw new CustomError(404, '존재하지 않는 주민 회원가입 요청입니다');
@@ -279,54 +257,53 @@ export class AuthService {
         throw new CustomError(400, '동/호 정보가 없습니다');
       }
       await this.repo.registerApprove(residentRegisterId);
-      const user = await this.repo.createUser({
-        username: register.username,
-        phoneNumber: register.phoneNumber,
-        name: register.name,
-        email: register.email,
-        password: register.password,
-        role: register.requestedRole,
-        register_status: RegisterStatus.APPROVED,
-        register: { connect: { id: register.id } },
-        apartment: { connect: { id: register.aptId } },
-      });
+      const user = await this.repo.createUser(register);
       await this.repo.createResident({
         user: { connect: { id: user.id } },
         apartment: { connect: { id: register.aptId } },
         dong: register.dong,
         ho: register.ho,
       });
-      const roster = await this.repo.createRoster({
-        apartment: { connect: { id: register.aptId } },
-        admin: { connect: { id: adminId } },
-        user: { connect: { id: user.id } },
-        dong: register.dong,
-        ho: register.ho,
-        name: user.name,
-        phoneNumber: user.phoneNumber,
-        is_houseHold: IsHouseHold.MEMBER,
-        is_registered: true,
-        is_residence: true,
-      });
+      const roster = await this.repo.createRoster(user, register, admin.id);
+      if (!roster) {
+        throw new CustomError(400, '입주민 명단 등록에 실패했습니다');
+      }
     } else {
       await this.repo.registerReject(residentRegisterId);
     }
     return;
   };
 
-  // updateAdminsStatusBatch = async (adminRegisterIds: string[], status: string) => {
-  //   for (const id of adminRegisterIds) {
-  //     await this.updateAdminStatus(id, status);
-  //   }
-  //   return;
-  // };
+  updateAdminsStatusBatch = async (status: string) => {
+    const pendingAdminRegisters = await this.repo.findPendingAdminRegisters();
+    if (pendingAdminRegisters.length === 0) {
+      throw new CustomError(404, '승인 대기 상태의 관리자 회원가입 요청이 없습니다');
+    }
+    if (status === 'APPROVED') {
+      const result = await this.repo.approveAllPendingAdminsBatch(pendingAdminRegisters);
+      return result;
+    } else {
+      await this.repo.rejectAllPendingAdminsBatch(pendingAdminRegisters);
+      return;
+    }
+  };
 
-  // updateResidentsStatusBatch = async (residentRegisterIds: string[], status: string) => {
-  //   for (const id of residentRegisterIds) {
-  //     await this.updateResidentStatus(id, status);
-  //   }
-  //   return;
-  // };
+  updateResidentsStatusBatch = async (admin: withoutPasswordUser, status: string) => {
+    const pendingResidentRegisters = await this.repo.findPendingResidentRegisters(admin.aptId!);
+    if (pendingResidentRegisters.length === 0) {
+      throw new CustomError(404, '승인 대기 상태의 주민 회원가입 요청이 없습니다');
+    }
+    if (status === 'APPROVED') {
+      const result = await this.repo.approveAllPendingResidentsBatch(
+        pendingResidentRegisters,
+        admin.id,
+      );
+      return result;
+    } else {
+      await this.repo.rejectAllPendingResidentsBatch(admin.aptId!);
+      return;
+    }
+  };
 
   updateAdmin = async (
     adminId: string,
@@ -338,7 +315,7 @@ export class AuthService {
       throw new CustomError(404, '존재하지 않는 관리자입니다');
     }
 
-    //(실제로 값이 들어온 게 있는지 확인)
+    //실제로 값이 들어온 게 있는지 확인
     const hasAdminData = Object.values(adminData).some((val) => val !== undefined);
     const hasAptData = Object.values(aptData).some((val) => val !== undefined);
 

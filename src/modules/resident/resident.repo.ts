@@ -181,7 +181,7 @@ export class ResidentRepo {
   };
 
   getRosterDetail = async (id: string) => {
-    return await prisma.residentRoster.findUnique({
+    return await prisma.residentRoster.findFirst({
       where: {
         id,
         deletedAt: null,
@@ -253,7 +253,7 @@ export class ResidentRepo {
   };
 
   findRegister = async (userId: string) => {
-    return await prisma.register.findUnique({
+    return await prisma.register.findFirst({
       where: {
         id: userId,
         deletedAt: null,

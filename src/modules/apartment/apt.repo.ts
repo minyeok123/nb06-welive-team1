@@ -72,7 +72,7 @@ export class AptRepo {
   };
 
   getAptDetail = async (id: string) => {
-    const aptDetail = await prisma.apartment.findUnique({
+    const aptDetail = await prisma.apartment.findFirst({
       where: { id, deletedAt: null },
       select: {
         id: true,
@@ -104,8 +104,8 @@ export class AptRepo {
   };
 
   getAptDetailPublic = async (id: string) => {
-    const aptDetail = await prisma.apartment.findUnique({
-      where: { id },
+    const aptDetail = await prisma.apartment.findFirst({
+      where: { id, deletedAt: null },
       select: {
         id: true,
         aptName: true,
