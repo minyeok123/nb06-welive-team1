@@ -1,14 +1,19 @@
 import { CustomError } from '@libs/error';
+import {
+  pollsvoteVoteResponseDto,
+  pollsvoteCancelResponseDto,
+} from './dto/response.dto';
 import { PollsvoteRepo } from './pollsvote.repo';
 
 // 투표하기 비즈니스 로직
 export class PollsvoteService {
   constructor(private repo: PollsvoteRepo) {}
 
-  voteOption = async (
-    optionId: string,
-    user: { id: string; aptId: string | null; role: string },
-  ) => {
+  voteOption = async (params: {
+    optionId: string;
+    user: { id: string; aptId: string | null; role: string };
+  }) => {
+    const { optionId, user } = params;
     if (!user?.id) throw new CustomError(403, '접근 권한이 없습니다');
 
     const resident = await this.repo.findResidentByUserIdForVote(user.id);
@@ -53,7 +58,7 @@ export class PollsvoteService {
     const maxVotes = options.length > 0 ? Math.max(...options.map((o) => o.votes)) : 0;
     const winnerOption = options.find((o) => o.votes === maxVotes) ?? updatedOption;
 
-    return {
+    return pollsvoteVoteResponseDto({
       message: '투표가 완료되었습니다',
       updatedOption: {
         id: updatedOption.id,
@@ -70,14 +75,15 @@ export class PollsvoteService {
         title: o.title,
         votes: o.votes,
       })),
-    };
+    });
   };
 
   // 투표 취소 (입주민만, 본인이 투표한 선택지만 취소 가능)
-  cancelVote = async (
-    optionId: string,
-    user: { id: string; aptId: string | null; role: string },
-  ) => {
+  cancelVote = async (params: {
+    optionId: string;
+    user: { id: string; aptId: string | null; role: string };
+  }) => {
+    const { optionId, user } = params;
     if (!user?.id) throw new CustomError(403, '접근 권한이 없습니다');
 
     const resident = await this.repo.findResidentByUserIdForVote(user.id);
@@ -115,13 +121,13 @@ export class PollsvoteService {
       votes: 0,
     };
 
-    return {
+    return pollsvoteCancelResponseDto({
       message: '투표가 취소되었습니다',
       updatedOption: {
         id: updatedOption.id,
         title: updatedOption.title,
         votes: updatedOption.votes,
       },
-    };
+    });
   };
 }

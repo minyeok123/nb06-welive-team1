@@ -1,17 +1,27 @@
 import { Status } from '@prisma/client';
 import { CustomError } from '@libs/error';
-import { PollRepo, PollForList } from './poll.repo';
-import { CreatePollInput, ListPollsQuery, UpdatePollInput } from './poll.validate';
+import {
+  type CreatePollDto,
+  type UpdatePollDto,
+  pollCreateResponseDto,
+  pollDetailResponseDto,
+  pollListResponseDto,
+  pollDeleteResponseDto,
+  pollUpdateResponseDto,
+} from './dto/response.dto';
+import { PollRepo } from './poll.repo';
+import type { ListPollsQuery } from './poll.validate';
 
 // 투표 비즈니스 로직
 export class PollService {
   constructor(private repo: PollRepo) {}
 
   // 투표 등록 (관리자만 가능)
-  createPoll = async (
-    input: CreatePollInput,
-    user: { id: string; aptId: string | null; role: string },
-  ) => {
+  createPoll = async (params: {
+    input: CreatePollDto;
+    user: { id: string; aptId: string | null; role: string };
+  }) => {
+    const { input, user } = params;
     if (!user?.id) {
       throw new CustomError(403, '접근 권한이 없습니다');
     }
@@ -45,14 +55,15 @@ export class PollService {
       options: input.options,
     });
 
-    return { message: '정상적으로 등록 처리되었습니다' };
+    return pollCreateResponseDto();
   };
 
   // 투표 목록 조회 (관리자·입주민)
-  listPolls = async (
-    query: ListPollsQuery,
-    user: { id: string; aptId: string | null; role: string },
-  ) => {
+  listPolls = async (params: {
+    query: ListPollsQuery;
+    user: { id: string; aptId: string | null; role: string };
+  }) => {
+    const { query, user } = params;
     if (!user?.id) {
       throw new CustomError(403, '접근 권한이 없습니다');
     }
@@ -113,12 +124,16 @@ export class PollService {
       take: limit,
     });
 
-    const polls = items.map((p) => this.mapPollListItem(p));
+    const polls = items.map((p) => pollListResponseDto(p));
     return { polls, totalCount };
   };
 
   // 투표 상세 조회 (관리자·입주민)
-  getPoll = async (pollId: string, user: { id: string; aptId: string | null; role: string }) => {
+  getPoll = async (params: {
+    pollId: string;
+    user: { id: string; aptId: string | null; role: string };
+  }) => {
+    const { pollId, user } = params;
     if (!user?.id) {
       throw new CustomError(403, '접근 권한이 없습니다');
     }
@@ -151,15 +166,16 @@ export class PollService {
       }
     }
 
-    return this.mapPollDetail(poll);
+    return pollDetailResponseDto(poll);
   };
 
   // 투표 수정 (관리자만, 시작 전에만)
-  updatePoll = async (
-    pollId: string,
-    input: UpdatePollInput,
-    user: { id: string; aptId: string | null; role: string },
-  ) => {
+  updatePoll = async (params: {
+    pollId: string;
+    input: UpdatePollDto;
+    user: { id: string; aptId: string | null; role: string };
+  }) => {
+    const { pollId, input, user } = params;
     if (!user?.id) {
       throw new CustomError(403, '접근 권한이 없습니다');
     }
@@ -217,11 +233,15 @@ export class PollService {
       options: input.options,
     });
 
-    return { message: '정상적으로 수정 처리되었습니다' };
+    return pollUpdateResponseDto();
   };
 
   // 투표 삭제 (관리자만, 시작 전에만)
-  deletePoll = async (pollId: string, user: { id: string; aptId: string | null; role: string }) => {
+  deletePoll = async (params: {
+    pollId: string;
+    user: { id: string; aptId: string | null; role: string };
+  }) => {
+    const { pollId, user } = params;
     if (!user?.id) {
       throw new CustomError(403, '접근 권한이 없습니다');
     }
@@ -251,50 +271,6 @@ export class PollService {
 
     await this.repo.softDeletePoll(pollId);
 
-    return { message: '정상적으로 삭제 처리되었습니다' };
-  };
-
-  private mapPollDetail = (p: Awaited<ReturnType<PollRepo['findPollById']>>) => {
-    if (!p) throw new CustomError(404, '투표를 찾을 수 없습니다');
-    const buildingPermission = p.targetDong.length === 0 ? 0 : p.targetDong[0] || 0;
-    const status = p.status === 'DONE' ? 'CLOSED' : p.status;
-    const boardName = p.board?.boardType === 'VOTE' ? '주민투표' : '투표';
-    const options = (p.options ?? []).map((opt) => ({
-      id: opt.id,
-      title: opt.option,
-      voteCount: opt._count?.participations ?? 0,
-    }));
-    return {
-      pollId: p.id,
-      userId: p.authorId,
-      title: p.title,
-      writerName: p.author?.name ?? '',
-      buildingPermission,
-      createdAt: p.createdAt,
-      updatedAt: p.updatedAt,
-      startDate: p.startDate,
-      endDate: p.endDate,
-      status,
-      content: p.content,
-      boardName,
-      options,
-    };
-  };
-
-  private mapPollListItem = (p: PollForList) => {
-    const buildingPermission = p.targetDong.length === 0 ? 0 : p.targetDong[0] || 0;
-    const status = p.status === 'DONE' ? 'CLOSED' : p.status;
-    return {
-      pollId: p.id,
-      userId: p.authorId,
-      title: p.title,
-      writerName: p.author?.name ?? '',
-      buildingPermission,
-      createdAt: p.createdAt,
-      updatedAt: p.updatedAt,
-      startDate: p.startDate,
-      endDate: p.endDate,
-      status,
-    };
+    return pollDeleteResponseDto();
   };
 }

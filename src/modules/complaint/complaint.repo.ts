@@ -57,37 +57,43 @@ export type ComplaintDetailWithRelations = Prisma.ComplaintGetPayload<{
 }>;
 
 export class ComplaintRepo {
-  createComplaintWithBoard = async (params: {
+  // 아파트별 민원 게시판 조회 (없으면 생성)
+  findOrCreateComplaintBoardForApartment = async (aptId: string) => {
+    const existing = await prisma.board.findFirst({
+      where: {
+        aptId,
+        boardType: 'COMPLAINT',
+        deletedAt: null,
+      },
+    });
+    if (existing) return existing;
+
+    return prisma.board.create({
+      data: {
+        boardType: 'COMPLAINT',
+        apartment: { connect: { id: aptId } },
+      },
+    });
+  };
+
+  // 민원 등록 (기존 Board 사용)
+  createComplaint = async (params: {
+    boardId: string;
     authorId: string;
-    aptId: string;
     title: string;
     content: string;
     status: Status;
     isPublic: boolean;
-    boardId?: string;
   }) => {
-    return prisma.$transaction(async (tx) => {
-      // 게시판 생성 후 민원과 연결(같은 트랜잭션)
-      const board = await tx.board.create({
-        data: {
-          id: params.boardId,
-          boardType: 'COMPLAINT',
-          apartment: { connect: { id: params.aptId } },
-        },
-      });
-
-      const complaint = await tx.complaint.create({
-        data: {
-          boardId: board.id,
-          authorId: params.authorId,
-          title: params.title,
-          content: params.content,
-          status: params.status,
-          is_public: params.isPublic ? IsPublic.PUBLIC : IsPublic.PRIVATE,
-        },
-      });
-
-      return { board, complaint };
+    return prisma.complaint.create({
+      data: {
+        boardId: params.boardId,
+        authorId: params.authorId,
+        title: params.title,
+        content: params.content,
+        status: params.status,
+        is_public: params.isPublic ? IsPublic.PUBLIC : IsPublic.PRIVATE,
+      },
     });
   };
 
@@ -97,6 +103,7 @@ export class ComplaintRepo {
       where: {
         aptId,
         role: { in: ['ADMIN', 'SUPER_ADMIN'] },
+        deletedAt: null,
       },
       select: {
         id: true,
@@ -191,6 +198,7 @@ export class ComplaintRepo {
           },
         },
         complaintComment: {
+          where: { deletedAt: null },
           orderBy: { createdAt: 'asc' },
           select: {
             id: true,
@@ -217,7 +225,7 @@ export class ComplaintRepo {
   }): Promise<ComplaintWithRelations> => {
     // 민원 내용 수정
     return prisma.complaint.update({
-      where: { id: params.complaintId },
+      where: { id: params.complaintId, deletedAt: null },
       data: {
         title: params.title,
         content: params.content,
@@ -254,7 +262,7 @@ export class ComplaintRepo {
   }): Promise<ComplaintDetailWithRelations | null> => {
     // 민원 상태 수정
     await prisma.complaint.update({
-      where: { id: params.complaintId },
+      where: { id: params.complaintId, deletedAt: null },
       data: { status: params.status },
     });
 
@@ -264,7 +272,7 @@ export class ComplaintRepo {
   softDeleteComplaint = async (complaintId: string) => {
     // 민원 소프트 삭제(deletedAt 설정)
     await prisma.complaint.update({
-      where: { id: complaintId },
+      where: { id: complaintId, deletedAt: null },
       data: { deletedAt: new Date() },
     });
   };

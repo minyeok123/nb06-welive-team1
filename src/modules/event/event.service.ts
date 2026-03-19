@@ -1,13 +1,20 @@
 import { CustomError } from '@libs/error';
+import {
+  type PutEventDto,
+  eventListResponseDto,
+  eventDeleteNoticeResponseDto,
+  eventDeletePollResponseDto,
+} from './dto/response.dto';
 import { EventRepo } from './event.repo';
-import { ListEventsQuery, PutEventQuery } from './event.validate';
+import type { ListEventsQuery } from './event.validate';
 
 // 이벤트 비즈니스 로직
 export class EventService {
   constructor(private repo: EventRepo) {}
 
   // 연도·월 기준으로 아파트 이벤트(NOTICE, POLL) 목록 조회
-  listEvents = async (query: ListEventsQuery) => {
+  listEvents = async (params: { query: ListEventsQuery }) => {
+    const { query } = params;
     const monthStart = new Date(query.year, query.month - 1, 1); // 해당 월 1일 00:00
     const monthEnd = new Date(query.year, query.month, 0, 23, 59, 59, 999); // 해당 월 마지막 날 23:59:59
 
@@ -17,22 +24,15 @@ export class EventService {
       monthEnd,
     );
 
-    // ISO 문자열로 변환하여 응답
-    return events.map((e) => ({
-      id: e.id,
-      start: e.start.toISOString(),
-      end: e.end.toISOString(),
-      title: e.title,
-      category: e.category,
-      type: e.type,
-    }));
+    return events.map((e) => eventListResponseDto(e));
   };
 
   // 게시글(NOTICE 또는 POLL) 일정 생성/수정 (관리자만)
-  putEvent = async (
-    query: PutEventQuery,
-    user: { id: string; aptId: string | null; role: string },
-  ) => {
+  putEvent = async (params: {
+    input: PutEventDto;
+    user: { id: string; aptId: string | null; role: string };
+  }) => {
+    const { input: query, user } = params;
     if (!user?.id) {
       throw new CustomError(403, '접근 권한이 없습니다');
     }
@@ -71,10 +71,11 @@ export class EventService {
   };
 
   // 이벤트 삭제 (관리자만, eventId는 noticeId 또는 pollId)
-  deleteEvent = async (
-    eventId: string,
-    user: { id: string; aptId: string | null; role: string },
-  ) => {
+  deleteEvent = async (params: {
+    eventId: string;
+    user: { id: string; aptId: string | null; role: string };
+  }) => {
+    const { eventId, user } = params;
     if (!user?.id) {
       throw new CustomError(403, '접근 권한이 없습니다');
     }
@@ -96,14 +97,7 @@ export class EventService {
       const startDate = notice.startDate ?? notice.createdAt;
       const endDate = notice.endDate ?? startDate;
       await this.repo.softDeleteNotice(eventId);
-      return {
-        id: eventId,
-        startDate: new Date(startDate).toISOString(),
-        endDate: new Date(endDate).toISOString(),
-        boardType: 'NOTICE' as const,
-        noticeId: eventId,
-        pollId: null as string | null,
-      };
+      return eventDeleteNoticeResponseDto(eventId, startDate, endDate);
     }
 
     const vote = await this.repo.findPollById(eventId);
@@ -112,14 +106,7 @@ export class EventService {
         throw new CustomError(403, '접근 권한이 없습니다');
       }
       await this.repo.softDeletePoll(eventId);
-      return {
-        id: eventId,
-        startDate: vote.startDate.toISOString(),
-        endDate: vote.endDate.toISOString(),
-        boardType: 'POLL' as const,
-        noticeId: null as string | null,
-        pollId: eventId,
-      };
+      return eventDeletePollResponseDto(eventId, vote.startDate, vote.endDate);
     }
 
     throw new CustomError(404, '이벤트를 찾을 수 없습니다');

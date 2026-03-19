@@ -121,7 +121,7 @@ export class PollRepo {
 
       if (Object.keys(updateData).length > 0) {
         await tx.poll.update({
-          where: { id: params.pollId },
+          where: { id: params.pollId, deletedAt: null },
           data: updateData,
         });
       }
@@ -141,7 +141,7 @@ export class PollRepo {
   // 투표 소프트 삭제 (deletedAt 설정)
   softDeletePoll = async (pollId: string) => {
     await prisma.poll.update({
-      where: { id: pollId },
+      where: { id: pollId, deletedAt: null },
       data: { deletedAt: new Date() },
     });
   };

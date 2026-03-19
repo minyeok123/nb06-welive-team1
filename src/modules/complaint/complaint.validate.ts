@@ -15,12 +15,12 @@ const booleanSchema = z.preprocess((value) => {
   return value;
 }, z.boolean());
 
-// 민원 등록 요청 본문 스키마
+// 민원 등록 요청 본문 스키마 (CreateComplaintDto)
 export const createComplaintSchema = z.object({
   title: z.string().trim().min(1).max(200), // 민원 제목
   content: z.string().trim().min(1).max(5000), // 민원 내용
   isPublic: z.boolean(), // 공개 여부
-  boardId: z.string().uuid().optional(), // 게시판 ID(있으면 기존 게시판 재사용)
+  boardId: z.string().uuid().optional(), // 게시판 ID(미사용, 하위 호환)
   status: z.enum(['PENDING', 'IN_PROGRESS', 'DONE']).optional(), // 처리 상태
 });
 
