@@ -274,19 +274,36 @@ export class AuthService {
     return;
   };
 
-  // updateAdminsStatusBatch = async (adminRegisterIds: string[], status: string) => {
-  //   for (const id of adminRegisterIds) {
-  //     await this.updateAdminStatus(id, status);
-  //   }
-  //   return;
-  // };
+  updateAdminsStatusBatch = async (status: string) => {
+    const pendingAdminRegisters = await this.repo.findPendingAdminRegisters();
+    if (pendingAdminRegisters.length === 0) {
+      throw new CustomError(404, '승인 대기 상태의 관리자 회원가입 요청이 없습니다');
+    }
+    if (status === 'APPROVED') {
+      const result = await this.repo.approveAllPendingAdminsBatch(pendingAdminRegisters);
+      return result;
+    } else {
+      await this.repo.rejectAllPendingAdminsBatch(pendingAdminRegisters);
+      return;
+    }
+  };
 
-  // updateResidentsStatusBatch = async (residentRegisterIds: string[], status: string) => {
-  //   for (const id of residentRegisterIds) {
-  //     await this.updateResidentStatus(id, status);
-  //   }
-  //   return;
-  // };
+  updateResidentsStatusBatch = async (admin: withoutPasswordUser, status: string) => {
+    const pendingResidentRegisters = await this.repo.findPendingResidentRegisters(admin.aptId!);
+    if (pendingResidentRegisters.length === 0) {
+      throw new CustomError(404, '승인 대기 상태의 주민 회원가입 요청이 없습니다');
+    }
+    if (status === 'APPROVED') {
+      const result = await this.repo.approveAllPendingResidentsBatch(
+        pendingResidentRegisters,
+        admin.id,
+      );
+      return result;
+    } else {
+      await this.repo.rejectAllPendingResidentsBatch(admin.aptId!);
+      return;
+    }
+  };
 
   updateAdmin = async (
     adminId: string,

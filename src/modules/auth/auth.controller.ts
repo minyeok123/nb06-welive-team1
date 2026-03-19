@@ -69,17 +69,17 @@ export class AuthController {
     return res.status(200).json({ message: '작업이 성공적으로 완료되었습니다' });
   };
 
-  // updateAdminsStatusBatch = async (req: Request, res: Response, next: NextFunction) => {
-  //   const { ids, status } = req.body;
-  //   await this.authService.updateAdminsStatusBatch(ids, status);
-  //   return res.status(200).json({ message: '관리자 가입 상태 일괄 변경이 완료되었습니다' });
-  // };
+  updateAdminsStatusBatch = async (req: Request, res: Response, next: NextFunction) => {
+    const { status } = updateRegisterStatusSchema.parse(req.body);
+    await this.authService.updateAdminsStatusBatch(status);
+    return res.status(200).json({ message: '작업이 성공적으로 완료되었습니다' });
+  };
 
-  // updateResidentsStatusBatch = async (req: Request, res: Response, next: NextFunction) => {
-  //   const { ids, status } = req.body;
-  //   await this.authService.updateResidentsStatusBatch(ids, status);
-  //   return res.status(200).json({ message: '주민 가입 상태 일괄 변경이 완료되었습니다' });
-  // };
+  updateResidentsStatusBatch = async (req: Request, res: Response, next: NextFunction) => {
+    const { status } = updateRegisterStatusSchema.parse(req.body);
+    await this.authService.updateResidentsStatusBatch(req.user, status);
+    return res.status(200).json({ message: '작업이 성공적으로 완료되었습니다' });
+  };
 
   updateAdmin = async (req: Request, res: Response, next: NextFunction) => {
     const adminId = req.params.adminId as string;

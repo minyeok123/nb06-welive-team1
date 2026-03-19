@@ -9,8 +9,6 @@ import {
   adminIdSchema,
   residentIdSchema,
   updateRegisterStatusSchema,
-  updateAdminsStatusBatchSchema,
-  updateResidentsStatusBatchSchema,
   superAdminSignupSchema,
   adminUpdateSchema,
   adminSignupSchema,
@@ -34,34 +32,34 @@ router.post(
 router.post('/login', validate(loginSchema), asyncHandler(authController.login));
 router.post('/refresh', authenticateRefresh, asyncHandler(authController.refresh));
 router.post('/logout', asyncHandler(authController.logout));
-// router.patch(
-//   '/admins/status',
-//   validate(updateAdminsStatusBatchSchema, 'body'),
-//   authenticate,
-//   superAdminAuthorize,
-//   asyncHandler(authController.updateAdminsStatusBatch),
-// );
 router.patch(
-  '/admins/:adminId/status',
-  validate(adminIdSchema, 'params'),
-  validate(updateRegisterStatusSchema, 'body'),
+  '/admins/status',
   authenticate,
   superAdminAuthorize,
+  validate(updateRegisterStatusSchema, 'body'),
+  asyncHandler(authController.updateAdminsStatusBatch),
+);
+router.patch(
+  '/admins/:adminId/status',
+  authenticate,
+  superAdminAuthorize,
+  validate(adminIdSchema, 'params'),
+  validate(updateRegisterStatusSchema, 'body'),
   asyncHandler(authController.updateAdminStatus),
 );
-// router.patch(
-//   '/residents/status',
-//   validate(updateResidentsStatusBatchSchema, 'body'),
-//   authenticate,
-//   adminAuthorize,
-//   asyncHandler(authController.updateResidentsStatusBatch),
-// );
 router.patch(
-  '/residents/:residentId/status',
-  validate(residentIdSchema, 'params'),
-  validate(updateRegisterStatusSchema, 'body'),
+  '/residents/status',
   authenticate,
   adminAuthorize,
+  validate(updateRegisterStatusSchema, 'body'),
+  asyncHandler(authController.updateResidentsStatusBatch),
+);
+router.patch(
+  '/residents/:residentId/status',
+  authenticate,
+  adminAuthorize,
+  validate(residentIdSchema, 'params'),
+  validate(updateRegisterStatusSchema, 'body'),
   asyncHandler(authController.updateResidentStatus),
 );
 router.patch(

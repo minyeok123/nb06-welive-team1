@@ -1,5 +1,5 @@
 import { prisma } from '@libs/prisma';
-import { Prisma, RegisterStatus } from '@prisma/client';
+import { BoardType, Prisma, RegisterStatus } from '@prisma/client';
 import { signupBody, AdminSignupBody, Register, SuperAdminSignupBody } from '@/types/auth.type';
 import { withoutPasswordUser } from '@/types/user.types';
 export class AuthRepo {
@@ -452,15 +452,29 @@ export class AuthRepo {
     return await prisma.$transaction(async (tx) => {
       const apartment = await tx.apartment.update({
         where: { id: aptId },
-        data: { deletedAt: new Date() },
+        data: {
+          aptStatus: 'REJECTED',
+          deletedAt: new Date(),
+        },
       });
 
       const users = await tx.user.updateMany({
         where: { aptId, deletedAt: null },
-        data: { deletedAt: new Date() },
+        data: {
+          register_status: 'REJECTED',
+          deletedAt: new Date(),
+        },
       });
 
-      return { apartment, deletedUserCount: users.count };
+      const registers = await tx.register.updateMany({
+        where: { aptId, deletedAt: null },
+        data: {
+          register_status: 'REJECTED',
+          deletedAt: new Date(),
+        },
+      });
+
+      return { apartment, deletedUserCount: users.count + registers.count };
     });
   };
 
@@ -502,6 +516,153 @@ export class AuthRepo {
         deletedAt: null,
       },
       data: { deletedAt: new Date() },
+    });
+  };
+
+  findPendingAdminRegisters = async () => {
+    return await prisma.register.findMany({
+      where: {
+        requestedRole: 'ADMIN',
+        register_status: 'PENDING',
+        deletedAt: null,
+      },
+    });
+  };
+
+  approveAllPendingAdminsBatch = async (pendingAdmins: Register[]) => {
+    return await prisma.$transaction(async (tx) => {
+      const adminRegisterIds = pendingAdmins.map((reg) => reg.id);
+      const aptIds = pendingAdmins.map((reg) => reg.aptId).filter((id) => id !== null);
+      await tx.register.updateMany({
+        where: { id: { in: adminRegisterIds }, deletedAt: null },
+        data: { register_status: 'APPROVED' },
+      });
+      // 모든 연관 아파트 상태 변경
+      await tx.apartment.updateMany({
+        where: { id: { in: aptIds }, deletedAt: null },
+        data: { aptStatus: 'APPROVED' },
+      });
+      //  모든 관리자 유저 계정 일괄 생성
+      const userData = pendingAdmins.map((adminRegister) => ({
+        username: adminRegister.username,
+        name: adminRegister.name,
+        email: adminRegister.email,
+        password: adminRegister.password,
+        phoneNumber: adminRegister.phoneNumber,
+        role: adminRegister.requestedRole,
+        register_status: RegisterStatus.APPROVED,
+        aptId: adminRegister.aptId!,
+        registerId: adminRegister.id,
+      }));
+      await tx.user.createMany({ data: userData });
+      // 모든 아파트 전용 게시판 일괄 생성
+      const boardsData = aptIds.flatMap((aptId) => [
+        { aptId, boardType: BoardType.NOTICE },
+        { aptId, boardType: BoardType.VOTE },
+        { aptId, boardType: BoardType.COMPLAINT },
+      ]);
+      await tx.board.createMany({ data: boardsData });
+    });
+  };
+
+  rejectAllPendingAdminsBatch = async (pendingAdmins: Register[]) => {
+    return await prisma.$transaction(async (tx) => {
+      const adminIds = pendingAdmins.map((adminRegister) => adminRegister.id);
+      const aptIds = pendingAdmins.map((reg) => reg.aptId).filter((id) => id !== null);
+
+      await tx.register.updateMany({
+        where: { id: { in: adminIds }, deletedAt: null },
+        data: { register_status: 'REJECTED' },
+      });
+      await tx.apartment.updateMany({
+        where: { id: { in: aptIds }, deletedAt: null },
+        data: { aptStatus: 'REJECTED' },
+      });
+    });
+  };
+
+  findPendingResidentRegisters = async (aptId: string) => {
+    return await prisma.register.findMany({
+      where: {
+        requestedRole: 'USER',
+        register_status: 'PENDING',
+        deletedAt: null,
+        aptId,
+      },
+    });
+  };
+
+  approveAllPendingResidentsBatch = async (pendingResidents: Register[], adminId: string) => {
+    return await prisma.$transaction(async (tx) => {
+      const residentRegisterIds = pendingResidents.map((reg) => reg.id);
+      //  가입 신청서 상태 변경
+      await tx.register.updateMany({
+        where: { id: { in: residentRegisterIds }, deletedAt: null },
+        data: { register_status: 'APPROVED' },
+      });
+      //  유저 계정 일괄 생성
+      const userData = pendingResidents.map((item) => ({
+        username: item.username,
+        name: item.name,
+        email: item.email,
+        password: item.password,
+        phoneNumber: item.phoneNumber,
+        role: item.requestedRole,
+        register_status: RegisterStatus.APPROVED,
+        aptId: item.aptId!,
+        registerId: item.id,
+      }));
+      await tx.user.createMany({ data: userData });
+      //  DB가 생성한 유저 정보 다시 조회 (동, 호 까지 함께)
+      const createdUsers = await tx.user.findMany({
+        where: { registerId: { in: residentRegisterIds }, deletedAt: null },
+        select: {
+          id: true,
+          aptId: true,
+          name: true,
+          phoneNumber: true,
+          register: {
+            select: { id: true, dong: true, ho: true },
+          },
+        },
+      });
+      // 입주민 정보 생성
+      const residentData = createdUsers.map((user) => ({
+        userId: user.id,
+        aptId: user.aptId!,
+        dong: user.register!.dong!,
+        ho: user.register!.ho!,
+      }));
+
+      // 주민 정보 일괄 생성
+      await tx.resident.createMany({
+        data: residentData,
+      });
+
+      //입주민 명단 테이블 정보 생성
+      const rosterData = createdUsers.map((user) => ({
+        aptId: user.aptId!,
+        adminId: adminId,
+        userId: user.id,
+        dong: user.register!.dong!,
+        ho: user.register!.ho!,
+        name: user.name,
+        phoneNumber: user.phoneNumber,
+        is_registered: true,
+        is_residence: true,
+      }));
+
+      //  입주민 명단 일괄 등록
+      await tx.residentRoster.createMany({
+        data: rosterData,
+      });
+    });
+  };
+
+  rejectAllPendingResidentsBatch = async (aptId: string) => {
+    return await prisma.register.updateMany({
+      where: { aptId, register_status: 'PENDING', requestedRole: 'USER', deletedAt: null },
+      data: { register_status: 'REJECTED' },
     });
   };
 }
