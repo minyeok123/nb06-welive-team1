@@ -90,14 +90,22 @@ export class CommentService {
   deleteComment = async (commentId: string, user: withoutPasswordUser) => {
     const complaintComment = await this.repo.findComplaintCommentById(commentId);
     if (complaintComment) {
-      if (complaintComment.userId !== user.id) throw new CustomError(403, '삭제 권한이 없습니다');
+      if (complaintComment.userId !== user.id) {
+        if (user.role === 'USER') throw new CustomError(403, '삭제 권한이 없습니다');
+        if (user.role === 'ADMIN' && complaintComment.complaint.board.aptId !== user.aptId)
+          throw new CustomError(403, '해당 아파트의 관리자만 삭제 권한이 있습니다');
+      }
       await this.repo.deleteComplaintComment(commentId);
       return { message: '정상적으로 삭제 처리되었습니다' };
     }
 
     const noticeComment = await this.repo.findNoticeCommentById(commentId);
     if (noticeComment) {
-      if (noticeComment.userId !== user.id) throw new CustomError(403, '삭제 권한이 없습니다');
+      if (noticeComment.userId !== user.id) {
+        if (user.role === 'USER') throw new CustomError(403, '삭제 권한이 없습니다');
+        if (user.role === 'ADMIN' && noticeComment.notice.board.aptId !== user.aptId)
+          throw new CustomError(403, '해당 아파트의 관리자만 삭제 권한이 있습니다');
+      }
       await this.repo.deleteNoticeComment(commentId);
       return { message: '정상적으로 삭제 처리되었습니다' };
     }

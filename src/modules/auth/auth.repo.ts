@@ -1,5 +1,5 @@
 import { prisma } from '@libs/prisma';
-import { BoardType, Prisma, RegisterStatus } from '@prisma/client';
+import { BoardType, Prisma, RegisterStatus, NotificationType } from '@prisma/client';
 import { signupBody, AdminSignupBody, Register, SuperAdminSignupBody } from '@/types/auth.type';
 import { withoutPasswordUser } from '@/types/user.types';
 export class AuthRepo {
@@ -663,6 +663,42 @@ export class AuthRepo {
     return await prisma.register.updateMany({
       where: { aptId, register_status: 'PENDING', requestedRole: 'USER', deletedAt: null },
       data: { register_status: 'REJECTED' },
+    });
+  };
+
+  createAdminSignupNotification = async (aptName: string) => {
+    const superAdmins = await prisma.user.findMany({
+      where: { role: 'SUPER_ADMIN', deletedAt: null },
+      select: { id: true },
+    });
+    if (superAdmins.length === 0) return null;
+
+    const notificationData = superAdmins.map((admin) => ({
+      userId: admin.id,
+      notificationType: NotificationType.SIGNUP_REQ,
+      message: `${aptName} 아파트의 관리자 가입 요청이 들어왔습니다.`,
+      notificatedAt: new Date(),
+    }));
+    return await prisma.notification.createMany({
+      data: notificationData,
+    });
+  };
+
+  createUserSignupNotification = async (aptId: string, aptName: string) => {
+    const Admins = await prisma.user.findMany({
+      where: { aptId, role: 'ADMIN', deletedAt: null },
+      select: { id: true },
+    });
+    if (Admins.length === 0) return null;
+
+    const notificationData = Admins.map((admin) => ({
+      userId: admin.id,
+      notificationType: NotificationType.SIGNUP_REQ,
+      message: `${aptName} 아파트의 입주민 가입 요청이 들어왔습니다.`,
+      notificatedAt: new Date(),
+    }));
+    return await prisma.notification.createMany({
+      data: notificationData,
     });
   };
 }

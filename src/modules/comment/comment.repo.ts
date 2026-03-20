@@ -55,6 +55,13 @@ export class CommentRepo {
         createdAt: true,
         updatedAt: true,
         user: { select: { name: true } },
+        complaint: {
+          select: {
+            board: {
+              select: { aptId: true },
+            },
+          },
+        },
       },
     });
   };
@@ -100,6 +107,22 @@ export class CommentRepo {
   findNoticeCommentById = async (id: string) => {
     return await prisma.noticeComment.findUnique({
       where: { id, deletedAt: null },
+      select: {
+        id: true,
+        userId: true,
+        noticeId: true,
+        content: true,
+        createdAt: true,
+        updatedAt: true,
+        user: { select: { name: true } },
+        notice: {
+          select: {
+            board: {
+              select: { aptId: true },
+            },
+          },
+        },
+      },
     });
   };
 
