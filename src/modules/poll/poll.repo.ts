@@ -11,6 +11,24 @@ export type PollForList = Prisma.PollGetPayload<{
 
 // 투표 DB 접근 레이어
 export class PollRepo {
+  findBoardById = async (boardId: string) => {
+    return prisma.board.findUnique({
+      where: { id: boardId, deletedAt: null },
+      select: {
+        id: true,
+        aptId: true,
+        apartment: {
+          select: {
+            startComplexNumber: true,
+            endComplexNumber: true,
+            startDongNumber: true,
+            endDongNumber: true,
+          },
+        },
+      },
+    });
+  };
+
   // 투표 등록 (게시판 + 투표 + 선택지 트랜잭션)
   createPoll = async (params: {
     boardId: string;
@@ -19,7 +37,7 @@ export class PollRepo {
     title: string;
     content: string;
     status: Status;
-    targetDong: number[]; // Int[] 타입에 맞춰 number[]로 수정
+    targetDong: number; // Int 타입에 맞춰 number로 수정 (0: 전체 동, 그 외: 특정 동)
     startDate: Date;
     endDate: Date;
     options: { title: string }[];
@@ -79,7 +97,21 @@ export class PollRepo {
       where: { id: pollId, deletedAt: null },
       include: {
         author: { select: { id: true, name: true } },
-        board: { select: { aptId: true, boardType: true } },
+        board: {
+          select: {
+            aptId: true,
+            boardType: true,
+            apartment: {
+              // 아파트 정보를 포함시킵니다.
+              select: {
+                startComplexNumber: true,
+                endComplexNumber: true,
+                startDongNumber: true,
+                endDongNumber: true,
+              },
+            },
+          },
+        },
         options: {
           include: {
             _count: { select: { participations: true } },
@@ -95,7 +127,7 @@ export class PollRepo {
     title?: string;
     content?: string;
     status?: Status;
-    targetDong?: number[];
+    targetDong?: number;
     startDate?: Date;
     endDate?: Date;
     options?: { title: string }[];
@@ -134,14 +166,6 @@ export class PollRepo {
     await prisma.poll.update({
       where: { id: pollId, deletedAt: null },
       data: { deletedAt: new Date() },
-    });
-  };
-
-  // 입주민 동 정보 조회 (투표권자 필터용)
-  findResidentByUserId = async (userId: string) => {
-    return prisma.resident.findFirst({
-      where: { userId, deletedAt: null },
-      select: { dong: true },
     });
   };
 }

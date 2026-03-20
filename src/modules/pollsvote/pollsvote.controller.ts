@@ -11,20 +11,14 @@ export class PollsvoteController {
   /** 투표 - POST /api/options/:optionId/vote */
   voteOption = async (req: Request, res: Response) => {
     const params = optionIdParamSchema.parse(req.params) as OptionIdParamDto; // 경로 파라미터 검증
-    const result = await this.pollsvoteService.voteOption({
-      optionId: params.optionId,
-      user: req.user,
-    });
+    const result = await this.pollsvoteService.voteOption(params.optionId, req.user);
     return res.status(200).json(result);
   };
 
   /** 투표 취소 - DELETE /api/options/:optionId/vote */
   cancelVote = async (req: Request, res: Response) => {
     const params = optionIdParamSchema.parse(req.params) as OptionIdParamDto; // 경로 파라미터 검증
-    const result = await this.pollsvoteService.cancelVote({
-      optionId: params.optionId,
-      user: req.user,
-    });
+    const result = await this.pollsvoteService.cancelVote(params.optionId, req.user);
     return res.status(200).json(result);
   };
 }

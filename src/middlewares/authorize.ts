@@ -28,3 +28,10 @@ export const isNotSuperAdmin = (req: Request, res: Response, next: NextFunction)
   }
   next();
 };
+
+export const userAuthorize = (req: Request, res: Response, next: NextFunction) => {
+  if (req.user.role !== 'USER') {
+    throw new CustomError(403, '권한이 없습니다');
+  }
+  next();
+};

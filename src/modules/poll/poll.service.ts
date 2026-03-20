@@ -11,47 +11,44 @@ import {
 } from './dto/response.dto';
 import { PollRepo } from './poll.repo';
 import type { ListPollsQuery } from './poll.validate';
-
+import { withoutPasswordUser } from '@/types/user.types';
+import { Prisma } from '@prisma/client';
+import { makeDong } from './utils/apt.dong';
 // 투표 비즈니스 로직
 export class PollService {
   constructor(private repo: PollRepo) {}
 
   // 투표 등록 (관리자만 가능)
-  createPoll = async (params: {
-    input: CreatePollDto;
-    user: { id: string; aptId: string | null; role: string };
-  }) => {
-    const { input, user } = params;
-    if (!user?.id) {
-      throw new CustomError(403, '접근 권한이 없습니다');
+  createPoll = async (input: CreatePollDto, user: withoutPasswordUser) => {
+    // 1. 게시판 권한 확인 (사용자의 아파트와 게시판의 아파트가 일치하는지)
+    const board = await this.repo.findBoardById(input.boardId);
+    if (!board || board.aptId !== user.aptId) {
+      throw new CustomError(403, '소속된 아파트 게시판만 이용할 수 있습니다.');
     }
 
-    // 관리자(ADMIN, SUPER_ADMIN)만 투표 등록 가능
-    const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
-    if (!isAdmin) {
-      throw new CustomError(403, '관리자만 투표를 등록할 수 있습니다');
+    const dongRange = makeDong(board.apartment);
+
+    if (
+      input.buildingPermission !== 0 &&
+      (input.buildingPermission < dongRange.min || input.buildingPermission > dongRange.max)
+    ) {
+      throw new CustomError(400, '유효하지 않은 동 번호입니다.');
     }
 
-    // 아파트 소속 관리자만 등록 가능
-    if (!user.aptId) {
-      throw new CustomError(403, '아파트에 소속된 관리자만 투표를 등록할 수 있습니다');
+    if (input.startDate < new Date()) {
+      throw new CustomError(400, '시작 시간은 현재 시간 이후여야 합니다.');
     }
-
-    // 투표권자 범위: buildingPermission 0 = 전체, 그 외 = 특정 동
-    const targetDong = input.buildingPermission === 0 ? [] : [input.buildingPermission];
-
-    const status = (input.status ?? 'IN_PROGRESS') as Status;
 
     await this.repo.createPoll({
       boardId: input.boardId,
       authorId: user.id,
-      aptId: user.aptId,
+      aptId: user.aptId!,
       title: input.title,
       content: input.content,
-      status,
-      targetDong,
-      startDate: new Date(input.startDate),
-      endDate: new Date(input.endDate),
+      status: input.status,
+      targetDong: input.buildingPermission,
+      startDate: input.startDate,
+      endDate: input.endDate,
       options: input.options,
     });
 
@@ -59,69 +56,36 @@ export class PollService {
   };
 
   // 투표 목록 조회 (관리자·입주민)
-  listPolls = async (params: {
-    query: ListPollsQuery;
-    user: { id: string; aptId: string | null; role: string };
-  }) => {
-    const { query, user } = params;
-    if (!user?.id) {
-      throw new CustomError(403, '접근 권한이 없습니다');
-    }
-
-    const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
-    if (!isAdmin && !user.aptId) {
-      throw new CustomError(403, '접근 권한이 없습니다');
-    }
-
-    const where: any = {
+  listPolls = async (query: ListPollsQuery, user: withoutPasswordUser) => {
+    const where: Prisma.PollWhereInput = {
       deletedAt: null,
-      board: user.aptId ? { deletedAt: null, aptId: user.aptId } : { deletedAt: null },
+      board: { deletedAt: null, aptId: user.aptId! },
     };
 
-    // 입주민: 자신이 투표권자인 투표만 조회
-    if (!isAdmin && user.aptId) {
-      const resident = await this.repo.findResidentByUserId(user.id);
-      if (!resident) {
-        return { polls: [], totalCount: 0 };
-      }
-      const dong = resident.dong;
-      where.OR = [{ targetDong: { isEmpty: true } }, { targetDong: { has: dong } }];
-    }
-
     // 상태 필터 (CLOSED → DONE)
-    const statusFilter = query.status === 'CLOSED' ? 'DONE' : query.status;
-    if (statusFilter) {
-      where.status = statusFilter;
+    if (query.status) {
+      where.status = query.status === 'CLOSED' ? 'DONE' : query.status;
     }
 
     // 투표권자 필터 (buildingPermission)
-    if (query.buildingPermission !== undefined) {
-      if (query.buildingPermission === 0) {
-        where.targetDong = { isEmpty: true };
-      } else {
-        where.targetDong = { has: query.buildingPermission };
-      }
+    if (query.buildingPermission) {
+      where.targetDong = query.buildingPermission;
     }
 
     // 검색어 (제목, 내용)
     if (query.keyword) {
-      const keywordFilter = {
-        OR: [
-          { title: { contains: query.keyword, mode: 'insensitive' } },
-          { content: { contains: query.keyword, mode: 'insensitive' } },
-        ],
-      };
-      where.AND = [...(where.AND ?? []), keywordFilter];
+      where.OR = [
+        { title: { contains: query.keyword, mode: 'insensitive' } },
+        { content: { contains: query.keyword, mode: 'insensitive' } },
+      ];
     }
 
-    const page = query.page ?? 1;
-    const limit = query.limit ?? 11;
-    const skip = (page - 1) * limit;
+    const skip = (query.page - 1) * query.limit;
 
     const { items, totalCount } = await this.repo.findPolls({
       where,
       skip,
-      take: limit,
+      take: query.limit,
     });
 
     const polls = items.map((p) => pollListResponseDto(p));
@@ -129,73 +93,29 @@ export class PollService {
   };
 
   // 투표 상세 조회 (관리자·입주민)
-  getPoll = async (params: {
-    pollId: string;
-    user: { id: string; aptId: string | null; role: string };
-  }) => {
-    const { pollId, user } = params;
-    if (!user?.id) {
-      throw new CustomError(403, '접근 권한이 없습니다');
-    }
-
-    const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
-    if (!isAdmin && !user.aptId) {
-      throw new CustomError(403, '접근 권한이 없습니다');
-    }
-
+  getPoll = async (pollId: string, user: withoutPasswordUser) => {
     const poll = await this.repo.findPollById(pollId);
     if (!poll) {
       throw new CustomError(404, '투표를 찾을 수 없습니다');
     }
 
     // 동일 아파트 확인
-    if (user.aptId && poll.board?.aptId !== user.aptId) {
-      throw new CustomError(403, '접근 권한이 없습니다');
-    }
-
-    // 입주민: 자신이 투표권자인 투표만 조회 가능
-    if (!isAdmin && user.aptId) {
-      const resident = await this.repo.findResidentByUserId(user.id);
-      if (!resident) {
-        throw new CustomError(403, '접근 권한이 없습니다');
-      }
-      const dong = resident.dong;
-      const isEligible = poll.targetDong.length === 0 || poll.targetDong.includes(dong);
-      if (!isEligible) {
-        throw new CustomError(403, '접근 권한이 없습니다');
-      }
+    if (poll.board.aptId !== user.aptId) {
+      throw new CustomError(403, '소속 아파트 게시판이 아닙니다.');
     }
 
     return pollDetailResponseDto(poll);
   };
 
   // 투표 수정 (관리자만, 시작 전에만)
-  updatePoll = async (params: {
-    pollId: string;
-    input: UpdatePollDto;
-    user: { id: string; aptId: string | null; role: string };
-  }) => {
-    const { pollId, input, user } = params;
-    if (!user?.id) {
-      throw new CustomError(403, '접근 권한이 없습니다');
-    }
-
-    const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
-    if (!isAdmin) {
-      throw new CustomError(403, '관리자만 투표를 수정할 수 있습니다');
-    }
-
-    if (!user.aptId) {
-      throw new CustomError(403, '아파트에 소속된 관리자만 수정할 수 있습니다');
-    }
-
+  updatePoll = async (pollId: string, input: UpdatePollDto, user: withoutPasswordUser) => {
     const vote = await this.repo.findPollById(pollId);
     if (!vote) {
       throw new CustomError(404, '투표를 찾을 수 없습니다');
     }
 
     if (vote.board?.aptId !== user.aptId) {
-      throw new CustomError(403, '접근 권한이 없습니다');
+      throw new CustomError(403, '아파트에 소속된 관리자만 수정할 수 있습니다');
     }
 
     // 투표가 이미 시작된 경우 수정 불가
@@ -203,6 +123,14 @@ export class PollService {
       throw new CustomError(403, '이미 시작된 투표는 수정할 수 없습니다');
     }
 
+    const finalStartDate = input.startDate ?? vote.startDate;
+    const finalEndDate = input.endDate ?? vote.endDate;
+    if (finalStartDate >= finalEndDate) {
+      throw new CustomError(400, '종료 시간은 시작 시간보다 이후여야 합니다');
+    }
+    if (finalStartDate < new Date() || finalEndDate < new Date()) {
+      throw new CustomError(400, '투표 시작 및 종료 시간은 현재 시간보다 이후여야 합니다.');
+    }
     const hasUpdates =
       input.title !== undefined ||
       input.content !== undefined ||
@@ -215,12 +143,13 @@ export class PollService {
       throw new CustomError(400, '수정할 내용이 없습니다');
     }
 
-    const targetDong =
-      input.buildingPermission !== undefined
-        ? input.buildingPermission === 0
-          ? []
-          : [input.buildingPermission]
-        : undefined;
+    const targetDong = input.buildingPermission;
+    if (targetDong !== undefined && targetDong !== 0) {
+      const dongRange = makeDong(vote.board.apartment);
+      if (targetDong < dongRange.min || targetDong > dongRange.max) {
+        throw new CustomError(400, '유효하지 않은 동 번호입니다.');
+      }
+    }
 
     await this.repo.updatePoll({
       pollId,
@@ -228,8 +157,8 @@ export class PollService {
       content: input.content,
       status: input.status as Status | undefined,
       targetDong,
-      startDate: input.startDate ? new Date(input.startDate) : undefined,
-      endDate: input.endDate ? new Date(input.endDate) : undefined,
+      startDate: input.startDate,
+      endDate: input.endDate,
       options: input.options,
     });
 
@@ -237,24 +166,7 @@ export class PollService {
   };
 
   // 투표 삭제 (관리자만, 시작 전에만)
-  deletePoll = async (params: {
-    pollId: string;
-    user: { id: string; aptId: string | null; role: string };
-  }) => {
-    const { pollId, user } = params;
-    if (!user?.id) {
-      throw new CustomError(403, '접근 권한이 없습니다');
-    }
-
-    const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
-    if (!isAdmin) {
-      throw new CustomError(403, '관리자만 투표를 삭제할 수 있습니다');
-    }
-
-    if (!user.aptId) {
-      throw new CustomError(403, '아파트에 소속된 관리자만 삭제할 수 있습니다');
-    }
-
+  deletePoll = async (pollId: string, user: withoutPasswordUser) => {
     const vote = await this.repo.findPollById(pollId);
     if (!vote) {
       throw new CustomError(404, '투표를 찾을 수 없습니다');
