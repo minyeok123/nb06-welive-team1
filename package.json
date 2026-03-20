@@ -9,7 +9,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node dist/app.js",
-    "test": "NODE_ENV=test jest --testPathIgnorePatterns='poll|pollsvote'",
+    "test": "NODE_ENV=test jest --testPathIgnorePatterns='poll|pollsvote' --coverage",
     "dev": "nodemon --watch src --exec ts-node -r tsconfig-paths/register src/app.ts",
     "build": "tsc && tsc-alias"
   },
