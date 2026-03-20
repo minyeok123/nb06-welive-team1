@@ -3,13 +3,13 @@ import { z } from 'zod';
 // 투표 등록 요청 본문 스키마
 export const createPollSchema = z
   .object({
-    boardId: z.string().uuid(), // 게시판 고유 ID (민원, 투표, 공지 중 하나)
-    status: z.enum(['PENDING', 'IN_PROGRESS', 'DONE']).default('IN_PROGRESS'), // 투표 상태
-    title: z.string().trim().min(1).max(200), // 투표 제목
-    content: z.string().trim().min(1).max(5000), // 투표 내용
+    boardId: z.uuid(), // 게시판 고유 ID (민원, 투표, 공지 중 하나)
+    status: z.enum(['PENDING', 'IN_PROGRESS']), // 투표 상태
+    title: z.string().trim().min(1).max(50), // 투표 제목
+    content: z.string().trim().min(1).max(300), // 투표 내용
     buildingPermission: z.number().int().min(0), // 투표권자 범위 (0: 전체, 그 외: 특정 동)
-    startDate: z.string().datetime(), // 투표 시작 시간
-    endDate: z.string().datetime(), // 투표 종료 시간
+    startDate: z.coerce.date(), // 투표 시작 시간
+    endDate: z.coerce.date(), // 투표 종료 시간
     options: z
       .array(
         z.object({
@@ -29,18 +29,13 @@ export type CreatePollInput = z.infer<typeof createPollSchema>;
 
 // 투표 목록 조회 쿼리 스키마
 const emptyToUndefined = (v: unknown) => (v === '' ? undefined : v);
-const pageSchema = z.preprocess(emptyToUndefined, z.coerce.number().int().min(1).default(1));
-const limitSchema = z.preprocess(
-  emptyToUndefined,
-  z.coerce.number().int().min(1).max(100).default(11),
-);
 
 export const listPollsSchema = z.object({
-  page: pageSchema.optional(), // 페이지 번호 (기본값: 1)
-  limit: limitSchema.optional(), // 한 페이지당 항목 수 (기본값: 11)
+  page: z.preprocess(emptyToUndefined, z.coerce.number().int().min(1).default(1)), // 페이지 번호 (기본값: 1)
+  limit: z.preprocess(emptyToUndefined, z.coerce.number().int().min(1).max(100).default(11)), // 한 페이지당 항목 수 (기본값: 11)
   buildingPermission: z.preprocess(emptyToUndefined, z.coerce.number().int().min(0).optional()), // 투표권자 필터 (0: 전체)
   status: z.preprocess(emptyToUndefined, z.enum(['PENDING', 'IN_PROGRESS', 'CLOSED']).optional()), // 투표 상태 (CLOSED = DONE)
-  keyword: z.preprocess(emptyToUndefined, z.string().trim().min(1).optional()), // 검색어 (투표 제목, 내용)
+  keyword: z.preprocess(emptyToUndefined, z.string().trim().min(1).max(15).optional()), // 검색어 (투표 제목, 내용)
 });
 
 export type ListPollsQuery = z.infer<typeof listPollsSchema>;
@@ -51,8 +46,8 @@ export const updatePollSchema = z
     title: z.string().trim().min(1).max(200).optional(),
     content: z.string().trim().min(1).max(5000).optional(),
     buildingPermission: z.number().int().min(0).optional(),
-    startDate: z.string().datetime().optional(),
-    endDate: z.string().datetime().optional(),
+    startDate: z.coerce.date().optional(), // 투표 시작 시간
+    endDate: z.coerce.date().optional(),
     status: z.enum(['PENDING', 'IN_PROGRESS', 'DONE']).optional(),
     options: z
       .array(

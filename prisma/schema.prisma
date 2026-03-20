@@ -146,7 +146,7 @@ model Poll {
   title      String
   content    String
   status     Status
-  targetDong Int[]     @map("target_dong")
+  targetDong Int       @map("target_dong")
   startDate  DateTime  @map("start_date")
   endDate    DateTime  @map("end_date")
   viewsCount Int       @default(0) @map("views_count")

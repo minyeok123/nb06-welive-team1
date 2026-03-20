@@ -2,7 +2,7 @@ import express from 'express';
 import asyncHandler from '../../middlewares/asyncHandler';
 import { validate } from '../../middlewares/validate';
 import { authenticate } from '../../middlewares/authenticate';
-import { isNotUser } from '../../middlewares/authorize';
+import { adminAuthorize, isNotSuperAdmin, isNotUser } from '../../middlewares/authorize';
 import {
   createPollSchema,
   listPollsSchema,
@@ -17,6 +17,7 @@ const router = express.Router();
 router.get(
   '/',
   authenticate,
+  isNotSuperAdmin,
   validate(listPollsSchema, 'query'),
   asyncHandler(pollController.listPolls),
 );
@@ -25,6 +26,7 @@ router.get(
 router.get(
   '/:pollId',
   authenticate,
+  isNotSuperAdmin,
   validate(pollIdParamSchema, 'params'),
   asyncHandler(pollController.getPoll),
 );
@@ -33,7 +35,7 @@ router.get(
 router.patch(
   '/:pollId',
   authenticate,
-  isNotUser,
+  adminAuthorize,
   validate(pollIdParamSchema, 'params'),
   validate(updatePollSchema),
   asyncHandler(pollController.updatePoll),
@@ -43,7 +45,7 @@ router.patch(
 router.delete(
   '/:pollId',
   authenticate,
-  isNotUser,
+  adminAuthorize,
   validate(pollIdParamSchema, 'params'),
   asyncHandler(pollController.deletePoll),
 );
@@ -52,7 +54,7 @@ router.delete(
 router.post(
   '/',
   authenticate, // 로그인 필요
-  isNotUser, // 관리자(ADMIN, SUPER_ADMIN)만 허용
+  adminAuthorize, // 관리자(ADMIN)만 허용
   validate(createPollSchema), // 요청 본문 검증
   asyncHandler(pollController.createPoll),
 );

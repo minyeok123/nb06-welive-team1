@@ -3,12 +3,12 @@ import type { PollForList } from '../poll.repo';
 /** 투표 등록 요청 DTO */
 export interface CreatePollDto {
   boardId: string;
-  status?: 'PENDING' | 'IN_PROGRESS' | 'DONE';
+  status: 'PENDING' | 'IN_PROGRESS';
   title: string;
   content: string;
   buildingPermission: number;
-  startDate: string;
-  endDate: string;
+  startDate: Date;
+  endDate: Date;
   options: { title: string }[];
 }
 
@@ -17,8 +17,8 @@ export interface UpdatePollDto {
   title?: string;
   content?: string;
   buildingPermission?: number;
-  startDate?: string;
-  endDate?: string;
+  startDate?: Date;
+  endDate?: Date;
   status?: 'PENDING' | 'IN_PROGRESS' | 'DONE';
   options?: { title: string }[];
 }
@@ -29,7 +29,7 @@ export type PollDetailSource = {
   authorId: string;
   title: string;
   content: string;
-  targetDong: number[];
+  targetDong: number;
   startDate: Date;
   endDate: Date;
   status: string;
@@ -97,8 +97,14 @@ export interface PollListResultDto {
  * 투표 목록 항목 → 응답 DTO 변환
  */
 export const pollListResponseDto = (v: PollForList): PollListResponseDto => {
-  const buildingPermission = v.targetDong.length === 0 ? 0 : (v.targetDong[0] ?? 0);
-  const status = v.status === 'DONE' ? 'CLOSED' : v.status;
+  const buildingPermission = v.targetDong;
+  let status = 'IN_PROGRESS';
+  const now = new Date();
+  if (v.status === 'DONE' || v.endDate < now) {
+    status = 'CLOSED';
+  } else if (v.startDate > now) {
+    status = 'PENDING';
+  }
   return {
     pollId: v.id,
     userId: v.authorId,
@@ -117,8 +123,14 @@ export const pollListResponseDto = (v: PollForList): PollListResponseDto => {
  * 투표 상세 → 응답 DTO 변환
  */
 export const pollDetailResponseDto = (v: PollDetailSource): PollDetailResponseDto => {
-  const buildingPermission = v.targetDong.length === 0 ? 0 : (v.targetDong[0] ?? 0);
-  const status = v.status === 'DONE' ? 'CLOSED' : v.status;
+  let status = 'IN_PROGRESS';
+  const now = new Date();
+  if (v.status === 'DONE' || v.endDate < now) {
+    status = 'CLOSED';
+  } else if (v.startDate > now) {
+    status = 'PENDING';
+  }
+  const buildingPermission = v.targetDong;
   const boardName = v.board?.boardType === 'VOTE' ? '주민투표' : '투표';
   const options = (v.options ?? []).map((opt) => ({
     id: opt.id,

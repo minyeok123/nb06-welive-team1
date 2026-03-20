@@ -4,6 +4,7 @@ import { validate } from '@/middlewares/validate';
 import { authenticate } from '@/middlewares/authenticate';
 import { optionIdParamSchema } from './pollsvote.validate';
 import { pollsvoteController } from './pollsvote.controller';
+import { userAuthorize } from '@/middlewares/authorize';
 
 const router = express.Router();
 
@@ -11,6 +12,7 @@ const router = express.Router();
 router.post(
   '/:optionId/vote',
   authenticate,
+  userAuthorize,
   validate(optionIdParamSchema, 'params'),
   asyncHandler(pollsvoteController.voteOption),
 );
@@ -19,6 +21,7 @@ router.post(
 router.delete(
   '/:optionId/vote',
   authenticate,
+  userAuthorize,
   validate(optionIdParamSchema, 'params'),
   asyncHandler(pollsvoteController.cancelVote),
 );
