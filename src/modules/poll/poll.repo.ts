@@ -25,19 +25,10 @@ export class PollRepo {
     options: { title: string }[];
   }) => {
     return prisma.$transaction(async (tx) => {
-      // 1. 투표용 게시판 생성
-      const board = await tx.board.create({
-        data: {
-          id: params.boardId,
-          boardType: 'VOTE',
-          apartment: { connect: { id: params.aptId } },
-        },
-      });
-
       // 2. 투표 본문 생성 (vote -> poll)
       const poll = await tx.poll.create({
         data: {
-          boardId: board.id,
+          boardId: params.boardId,
           authorId: params.authorId,
           title: params.title,
           content: params.content,
@@ -56,7 +47,7 @@ export class PollRepo {
         })),
       });
 
-      return { board, poll };
+      return poll;
     });
   };
 
