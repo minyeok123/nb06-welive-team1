@@ -25,6 +25,9 @@ export class PollService {
     if (!board || board.aptId !== user.aptId) {
       throw new CustomError(403, '소속된 아파트 게시판만 이용할 수 있습니다.');
     }
+    if (board.boardType !== 'VOTE') {
+      throw new CustomError(403, '투표 게시판에서만 투표를 생성할 수 있습니다.');
+    }
 
     const dongRange = makeDong(board.apartment);
 

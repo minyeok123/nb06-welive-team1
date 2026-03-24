@@ -17,6 +17,7 @@ export class PollRepo {
       select: {
         id: true,
         aptId: true,
+        boardType: true,
         apartment: {
           select: {
             startComplexNumber: true,

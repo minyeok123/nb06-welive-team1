@@ -1,6 +1,10 @@
 import { IsPublic, Status } from '@prisma/client';
 import { CustomError } from '@libs/error';
-import { ComplaintDetailWithRelations, ComplaintRepo, ComplaintWithRelations } from './complaint.repo';
+import {
+  ComplaintDetailWithRelations,
+  ComplaintRepo,
+  ComplaintWithRelations,
+} from './complaint.repo';
 import {
   type CreateComplaintDto,
   type UpdateComplaintDto,
@@ -58,8 +62,8 @@ export class ComplaintService {
     }
 
     // 관리자 여부 확인
-    const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
-    if (!isAdmin && !user.aptId) {
+    const isAdmin = user.role === 'SUPER_ADMIN';
+    if (isAdmin) {
       throw new CustomError(403, '접근 권한이 없습니다');
     }
 
@@ -69,8 +73,7 @@ export class ComplaintService {
     }
 
     // RESOLVED는 DONE으로 매핑
-    const statusFilter =
-      query.status === 'RESOLVED' ? 'DONE' : query.status;
+    const statusFilter = query.status === 'RESOLVED' ? 'DONE' : query.status;
 
     const where: any = {
       deletedAt: null,
@@ -85,10 +88,10 @@ export class ComplaintService {
       where.is_public = query.isPublic ? IsPublic.PUBLIC : IsPublic.PRIVATE;
     }
 
-    if (!isAdmin) {
-      // 입주민은 공개글 또는 본인 글만 조회
-      where.OR = [{ is_public: IsPublic.PUBLIC }, { authorId: user.id }];
-    }
+    // if (!isAdmin) {
+    //   // 입주민은 공개글 또는 본인 글만 조회
+    //   where.OR = [{ is_public: IsPublic.PUBLIC }, { authorId: user.id }];
+    // }
 
     if (user.aptId) {
       // 동일 아파트 기준 필터
@@ -238,7 +241,7 @@ export class ComplaintService {
     if (!user?.id) {
       throw new CustomError(403, '접근 권한이 없습니다');
     }
-
+    
     // 관리자 여부 확인
     const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
     if (!isAdmin) {

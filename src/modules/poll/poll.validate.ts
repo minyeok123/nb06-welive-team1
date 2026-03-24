@@ -66,7 +66,7 @@ export const updatePollSchema = z
       }
       return true;
     },
-    { message: '종료 시간은 시작 시간보다 이후여야 합니다', path: ['endDate'] },
+   { message: '종료 시간은 시작 시간보다 이후여야 합니다', path: ['endDate'] },
   );
 
 export type UpdatePollInput = z.infer<typeof updatePollSchema>;

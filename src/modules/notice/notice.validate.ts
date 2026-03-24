@@ -39,10 +39,16 @@ export const noticeIdSchema = z.object({
 });
 
 export const getNoticesQuerySchema = z.object({
-  page: z.preprocess((v) => Number(v), z.number().int().min(1).optional().default(1)),
-  limit: z.preprocess((v) => Number(v), z.number().int().min(1).max(100).optional().default(11)),
-  category: noticeCategoryEnum.optional(),
-  search: z.string().trim().optional(),
+  page: z.preprocess(
+    (v) => (v === '' || v === undefined ? undefined : Number(v)),
+    z.number().int().min(1).optional().default(1),
+  ),
+  limit: z.preprocess(
+    (v) => (v === '' || v === undefined ? undefined : Number(v)),
+    z.number().int().min(1).max(100).optional().default(11),
+  ),
+  category: z.preprocess((v) => (v === '' ? undefined : v), noticeCategoryEnum.optional()),
+  search: z.preprocess((v) => (v === '' ? undefined : v), z.string().trim().optional()),
 });
 
 export type GetNoticesQuery = z.infer<typeof getNoticesQuerySchema>;

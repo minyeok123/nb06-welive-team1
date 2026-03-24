@@ -81,13 +81,6 @@ export const residentIdSchema = z.object({
   residentId: z.uuid(),
 });
 
-export const updateAdminsStatusBatchSchema = z.object({
-  status: z.enum(['APPROVED', 'REJECTED']),
-});
-
-export const updateResidentsStatusBatchSchema = z.object({
-  status: z.enum(['APPROVED', 'REJECTED']),
-});
 
 export const adminUpdateSchema = z.object({
   contact: z
