@@ -69,7 +69,7 @@ export class NoticeRepo {
               boardType: true,
             },
           },
-          _count: { select: { noticeComment: true } },
+          _count: { select: { noticeComment: { where: { deletedAt: null } } } },
         },
         orderBy: [{ is_pinned: 'desc' }, { createdAt: 'desc' }],
         skip: (params.page - 1) * params.limit,

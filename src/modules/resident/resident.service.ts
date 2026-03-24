@@ -180,7 +180,6 @@ export class ResidentService {
 
   patchRoster = async (id: string, data: PatchRosterBody, user: withoutPasswordUser) => {
     const existingRoster = await this.residentRepo.getRosterDetail(id);
-
     if (!existingRoster) throw new CustomError(404, '입주민 정보를 찾을 수 없습니다.');
     if (existingRoster.aptId !== user.aptId) throw new CustomError(403, '수정 권한이 없습니다.');
 
@@ -188,7 +187,8 @@ export class ResidentService {
     const isChangingToHouseholder =
       data.isHouseholder === 'HOUSEHOLDER' && existingRoster.is_houseHold !== 'HOUSEHOLDER';
     const isHouseholderMoving =
-      existingRoster.is_houseHold === 'HOUSEHOLDER' && (data.building || data.unitNumber);
+      data.isHouseholder === 'HOUSEHOLDER' &&
+      (data.building !== existingRoster.dong || data.unitNumber !== existingRoster.ho);
     if (isChangingToHouseholder || isHouseholderMoving) {
       const dong = data.building || existingRoster.dong;
       const ho = data.unitNumber || existingRoster.ho;
