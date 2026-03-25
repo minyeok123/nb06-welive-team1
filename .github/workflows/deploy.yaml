@@ -1,0 +1,54 @@
+name: Deploy To EC2
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # 수동 실행 버튼 추가하는 옵션
+# GitHub Actions 탭 가면 "Run workflow" 버튼 생김
+# main에 머지 안 해도 테스트 가능
+# 배포 강제로 한 번 돌리고 싶을 때
+# 디버깅할 때
+
+concurrency:
+  group: deploy-main
+  cancel-in-progress: true # 진행 중인 작업이 있으면 취소
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v1.6.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          script: |
+            set -e
+
+            cd /home/ec2-user/nb06-welive-team1
+
+            echo "=== current branch ==="
+            git branch --show-current
+
+            echo "=== fetch & pull main ==="
+            git fetch origin
+            git checkout main
+            git pull origin main
+
+            echo "=== install dependencies ==="
+            npm ci
+
+            echo "=== build ==="
+            npm run build
+
+            echo "=== restart app ==="
+            pm2 restart welive
+
+            echo "=== latest commit ==="
+            git log -1 --oneline
