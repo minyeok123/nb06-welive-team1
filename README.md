@@ -8,3 +8,5 @@ refactor: → 코드 리팩토링 (기능 변화 없음)
 perf: → 성능 개선
 test: → 테스트 추가/수정
 chore: → 빌드/환경/패키지 변경
+
+ec2deploy용 수정
