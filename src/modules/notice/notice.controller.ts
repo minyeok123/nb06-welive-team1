@@ -29,6 +29,12 @@ export class NoticeController {
     return res.status(200).json(result);
   };
 
+  incrementNoticeView = async (req: Request, res: Response) => {
+    const { noticeId } = noticeIdSchema.parse(req.params);
+    const result = await this.noticeService.incrementNoticeView(noticeId, req.user?.aptId ?? null);
+    return res.status(200).json(result);
+  };
+
   updateNotice = async (req: Request, res: Response) => {
     const { noticeId } = noticeIdSchema.parse(req.params);
     const input = updateNoticeSchema.parse(req.body);

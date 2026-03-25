@@ -28,6 +28,13 @@ router.get(
   asyncHandler(noticeController.getNotices),
 );
 
+router.post(
+  '/:noticeId/view',
+  authenticate,
+  validate(noticeIdSchema, 'params'),
+  asyncHandler(noticeController.incrementNoticeView),
+);
+
 router.get(
   '/:noticeId',
   authenticate,

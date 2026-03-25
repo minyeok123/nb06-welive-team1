@@ -4,14 +4,15 @@ import { validate } from '../../middlewares/validate';
 import { authenticate } from '@/middlewares/authenticate';
 import { CommentSchema, commentIdSchema } from './comment.validate';
 import { commentController } from './comment.controller';
-import { adminAuthorize, isNotSuperAdmin } from '@/middlewares/authorize';
+import { isNotSuperAdmin } from '@/middlewares/authorize';
 
 const router = express.Router();
 
+// 댓글 작성: 입주민·관리자 모두 가능(소속 아파트 글만 서비스에서 검증). adminAuthorize 제거 시 USER 403 해소
 router.post(
   '/',
   authenticate,
-  adminAuthorize,
+  isNotSuperAdmin,
   validate(CommentSchema, 'body'),
   asyncHandler(commentController.createComment),
 );
