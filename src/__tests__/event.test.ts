@@ -9,6 +9,13 @@ describe('Event API 테스트', () => {
     });
   });
 
+  describe('GET /api/events', () => {
+    it('인증 없이 조회 시 401을 반환한다 (/api/event 와 동일 라우터)', async () => {
+      const res = await request(app).get('/api/events');
+      expect(res.status).toEqual(401);
+    });
+  });
+
   describe('PUT /api/event', () => {
     it('인증 없이 이벤트 수정 시 401을 반환한다', async () => {
       const res = await request(app).put('/api/event');
