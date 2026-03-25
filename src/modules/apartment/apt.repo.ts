@@ -1,5 +1,5 @@
 import { prisma } from '@libs/prisma';
-import { Prisma, Role } from '@prisma/client';
+import { Prisma, RegisterStatus, Role } from '@prisma/client';
 
 export class AptRepo {
   getListAptForSignUp = async (whereCondition: Prisma.ApartmentWhereInput) => {
@@ -27,7 +27,7 @@ export class AptRepo {
   };
 
   getListApt = async (whereCondition: Prisma.ApartmentWhereInput, page: number, limit: number) => {
-    const { totalCount, apartments } = await prisma.$transaction(async (tx) => {
+    const { totalCount, apartments, pendingAdminRegisters } = await prisma.$transaction(async (tx) => {
       const totalCount = await tx.apartment.count({
         where: whereCondition,
       });
@@ -65,10 +65,30 @@ export class AptRepo {
         },
       });
 
-      return { totalCount, apartments };
+      const aptIds = apartments.map((a) => a.id);
+      const pendingAdminRegisters =
+        aptIds.length === 0
+          ? []
+          : await tx.register.findMany({
+              where: {
+                aptId: { in: aptIds },
+                requestedRole: Role.ADMIN,
+                register_status: RegisterStatus.PENDING,
+                deletedAt: null,
+              },
+              select: {
+                id: true,
+                aptId: true,
+                name: true,
+                email: true,
+                phoneNumber: true,
+              },
+            });
+
+      return { totalCount, apartments, pendingAdminRegisters };
     });
 
-    return { totalCount, apartments };
+    return { totalCount, apartments, pendingAdminRegisters };
   };
 
   getAptDetail = async (id: string) => {

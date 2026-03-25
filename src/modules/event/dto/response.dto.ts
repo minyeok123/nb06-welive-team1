@@ -15,7 +15,10 @@ export interface EventItemResponseDto {
   end: string;
   title: string;
   category: string;
+  /** 공지/투표 구분(기존) */
   type: 'NOTICE' | 'POLL';
+  /** 게시판 타입과 동일한 값 — 달력 UI가 VOTE만 표시하는 경우 사용 */
+  boardType: 'NOTICE' | 'VOTE';
 }
 
 /** 이벤트 삭제 응답 DTO */
@@ -38,6 +41,7 @@ export const eventListResponseDto = (e: EventRow): EventItemResponseDto => ({
   title: e.title,
   category: e.category,
   type: e.type,
+  boardType: e.type === 'POLL' ? 'VOTE' : 'NOTICE',
 });
 
 /**
