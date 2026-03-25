@@ -14,7 +14,8 @@
  *   SEED_PASSWORD           — 공통 평문 비밀번호(로그인 API 규칙 8~15자 권장)
  *   SEED_SUPER_*            — 슈퍼관리자 username / email / phone
  *   SEED_ADMIN_*            — 관리자 username / email / phone
- *   SEED_RESIDENT{1,2,3}_*  — 입주민 3명 각각의 username / email / phone
+ *   SEED_RESIDENT{1..8}_*        — 입주민(단독·세대주 등) username / email / phone
+ *   SEED_RESIDENT101_MATE_* 등  — 동일 호 세대원(아래 mate 행과 매칭)
  */
 import { BoardType, PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
@@ -161,6 +162,16 @@ async function main() {
       ho: 101,
       is_houseHold: 'HOUSEHOLDER' as const,
     },
+    // 1동 101 — 세대주(resident1)와 동일 호 세대원
+    {
+      username: process.env.SEED_RESIDENT101_MATE_USERNAME ?? 'resident101_mate',
+      email: process.env.SEED_RESIDENT101_MATE_EMAIL ?? 'resident101_mate@welive.local',
+      phone: process.env.SEED_RESIDENT101_MATE_PHONE ?? '01000000021',
+      name: '시드 입주민 (1동 101 세대원)',
+      dong: 1,
+      ho: 101,
+      is_houseHold: 'MEMBER' as const,
+    },
     {
       username: process.env.SEED_RESIDENT2_USERNAME ?? 'resident2',
       email: process.env.SEED_RESIDENT2_EMAIL ?? 'resident2@welive.local',
@@ -171,12 +182,95 @@ async function main() {
       is_houseHold: 'HOUSEHOLDER' as const,
     },
     {
+      username: process.env.SEED_RESIDENT201_MATE_USERNAME ?? 'resident201_mate',
+      email: process.env.SEED_RESIDENT201_MATE_EMAIL ?? 'resident201_mate@welive.local',
+      phone: process.env.SEED_RESIDENT201_MATE_PHONE ?? '01000000022',
+      name: '시드 입주민 (2동 201 세대원)',
+      dong: 2,
+      ho: 201,
+      is_houseHold: 'MEMBER' as const,
+    },
+    // 1동 102호: 세대원(MEMBER)만 시드함. 101호처럼 세대주+세대원 쌍이 아니라,
+    // 「한 호에 세대원 계정만 있는」 케이스를 두기 위함(실제로는 세대주가 따로 있을 수 있음).
+    {
       username: process.env.SEED_RESIDENT3_USERNAME ?? 'resident3',
       email: process.env.SEED_RESIDENT3_EMAIL ?? 'resident3@welive.local',
       phone: process.env.SEED_RESIDENT3_PHONE ?? '01000000013',
-      name: '시드 입주민 (동호 1-102)',
+      name: '시드 입주민 (1동 102 세대원)',
       dong: 1,
       ho: 102,
+      is_houseHold: 'MEMBER' as const,
+    },
+    {
+      username: process.env.SEED_RESIDENT4_USERNAME ?? 'resident4',
+      email: process.env.SEED_RESIDENT4_EMAIL ?? 'resident4@welive.local',
+      phone: process.env.SEED_RESIDENT4_PHONE ?? '01000000014',
+      name: '시드 입주민 (2동 202)',
+      dong: 2,
+      ho: 202,
+      is_houseHold: 'MEMBER' as const,
+    },
+    {
+      username: process.env.SEED_RESIDENT5_USERNAME ?? 'resident5',
+      email: process.env.SEED_RESIDENT5_EMAIL ?? 'resident5@welive.local',
+      phone: process.env.SEED_RESIDENT5_PHONE ?? '01000000015',
+      name: '시드 입주민 (3동 301 세대주)',
+      dong: 3,
+      ho: 301,
+      is_houseHold: 'HOUSEHOLDER' as const,
+    },
+    {
+      username: process.env.SEED_RESIDENT301_MATE_USERNAME ?? 'resident301_mate',
+      email: process.env.SEED_RESIDENT301_MATE_EMAIL ?? 'resident301_mate@welive.local',
+      phone: process.env.SEED_RESIDENT301_MATE_PHONE ?? '01000000023',
+      name: '시드 입주민 (3동 301 세대원)',
+      dong: 3,
+      ho: 301,
+      is_houseHold: 'MEMBER' as const,
+    },
+    {
+      username: process.env.SEED_RESIDENT6_USERNAME ?? 'resident6',
+      email: process.env.SEED_RESIDENT6_EMAIL ?? 'resident6@welive.local',
+      phone: process.env.SEED_RESIDENT6_PHONE ?? '01000000016',
+      name: '시드 입주민 (3동 302)',
+      dong: 3,
+      ho: 302,
+      is_houseHold: 'MEMBER' as const,
+    },
+    {
+      username: process.env.SEED_RESIDENT7_USERNAME ?? 'resident7',
+      email: process.env.SEED_RESIDENT7_EMAIL ?? 'resident7@welive.local',
+      phone: process.env.SEED_RESIDENT7_PHONE ?? '01000000017',
+      name: '시드 입주민 (4동 401)',
+      dong: 4,
+      ho: 401,
+      is_houseHold: 'HOUSEHOLDER' as const,
+    },
+    {
+      username: process.env.SEED_RESIDENT401_MATE_USERNAME ?? 'resident401_mate',
+      email: process.env.SEED_RESIDENT401_MATE_EMAIL ?? 'resident401_mate@welive.local',
+      phone: process.env.SEED_RESIDENT401_MATE_PHONE ?? '01000000024',
+      name: '시드 입주민 (4동 401 세대원)',
+      dong: 4,
+      ho: 401,
+      is_houseHold: 'MEMBER' as const,
+    },
+    {
+      username: process.env.SEED_RESIDENT8_USERNAME ?? 'resident8',
+      email: process.env.SEED_RESIDENT8_EMAIL ?? 'resident8@welive.local',
+      phone: process.env.SEED_RESIDENT8_PHONE ?? '01000000018',
+      name: '시드 입주민 (5동 501)',
+      dong: 5,
+      ho: 501,
+      is_houseHold: 'HOUSEHOLDER' as const,
+    },
+    {
+      username: process.env.SEED_RESIDENT501_MATE_USERNAME ?? 'resident501_mate',
+      email: process.env.SEED_RESIDENT501_MATE_EMAIL ?? 'resident501_mate@welive.local',
+      phone: process.env.SEED_RESIDENT501_MATE_PHONE ?? '01000000025',
+      name: '시드 입주민 (5동 501 세대원)',
+      dong: 5,
+      ho: 501,
       is_houseHold: 'MEMBER' as const,
     },
   ];
