@@ -62,7 +62,8 @@ model Register {
   deletedAt       DateTime?      @map("deleted_at")
 
   // Relations
-  user User?
+  user      User?
+  apartment Apartment? @relation(fields: [aptId], references: [id])
 
   @@index([aptId, register_status])
   @@index([requestedRole, register_status])
@@ -93,6 +94,7 @@ model Apartment {
   boards         Board[]
   residents      Resident[]
   residentRoster residentRoster[]
+  registers      Register[]
 
   @@map("apartment")
 }

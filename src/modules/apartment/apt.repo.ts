@@ -27,7 +27,7 @@ export class AptRepo {
   };
 
   getListApt = async (whereCondition: Prisma.ApartmentWhereInput, page: number, limit: number) => {
-    const { totalCount, apartments, pendingAdminRegisters } = await prisma.$transaction(async (tx) => {
+    const { totalCount, apartments } = await prisma.$transaction(async (tx) => {
       const totalCount = await tx.apartment.count({
         where: whereCondition,
       });
@@ -62,33 +62,26 @@ export class AptRepo {
               phoneNumber: true,
             },
           },
+          registers: {
+            where: {
+              requestedRole: Role.ADMIN,
+              register_status: { in: [RegisterStatus.PENDING, RegisterStatus.REJECTED] },
+              deletedAt: null,
+            },
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              phoneNumber: true,
+            },
+          },
         },
       });
 
-      const aptIds = apartments.map((a) => a.id);
-      const pendingAdminRegisters =
-        aptIds.length === 0
-          ? []
-          : await tx.register.findMany({
-              where: {
-                aptId: { in: aptIds },
-                requestedRole: Role.ADMIN,
-                register_status: RegisterStatus.PENDING,
-                deletedAt: null,
-              },
-              select: {
-                id: true,
-                aptId: true,
-                name: true,
-                email: true,
-                phoneNumber: true,
-              },
-            });
-
-      return { totalCount, apartments, pendingAdminRegisters };
+      return { totalCount, apartments };
     });
 
-    return { totalCount, apartments, pendingAdminRegisters };
+    return { totalCount, apartments };
   };
 
   getAptDetail = async (id: string) => {
@@ -111,6 +104,19 @@ export class AptRepo {
         endHoNumber: true,
         users: {
           where: { role: Role.ADMIN },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phoneNumber: true,
+          },
+        },
+        registers: {
+          where: {
+            requestedRole: Role.ADMIN,
+            register_status: { in: [RegisterStatus.PENDING, RegisterStatus.REJECTED] },
+            deletedAt: null,
+          },
           select: {
             id: true,
             name: true,

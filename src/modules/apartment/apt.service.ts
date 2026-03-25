@@ -85,7 +85,7 @@ export class AptService {
       whereCondition.aptStatus = { equals: query.apartmentStatus as RegisterStatus };
     }
 
-    const { totalCount, apartments, pendingAdminRegisters } = await this.aptRepo.getListApt(
+    const { totalCount, apartments } = await this.aptRepo.getListApt(
       whereCondition,
       query.page!,
       query.limit!,
@@ -95,23 +95,8 @@ export class AptService {
       throw new CustomError(404, '아파트 목록 조회 실패');
     }
 
-    const pendingAdminByAptId = new Map<
-      string,
-      { id: string; name: string; email: string; phoneNumber: string }
-    >();
-    for (const r of pendingAdminRegisters) {
-      if (r.aptId) {
-        pendingAdminByAptId.set(r.aptId, {
-          id: r.id,
-          name: r.name,
-          email: r.email,
-          phoneNumber: r.phoneNumber,
-        });
-      }
-    }
-
     return {
-      apartments: aptListDto(apartments, pendingAdminByAptId),
+      apartments: aptListDto(apartments),
       count: totalCount,
     };
   };
