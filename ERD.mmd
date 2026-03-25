@@ -1,0 +1,204 @@
+erDiagram
+    User {
+        String id PK
+        String profileImg
+        String registerId FK
+        String username
+        String aptId FK
+        String name
+        String email
+        String phoneNumber
+        String password
+        Role role
+        RegisterStatus register_status
+        DateTime createdAt
+        DateTime updatedAt
+        DateTime deletedAt
+    }
+
+    Register {
+        String id PK
+        RegisterStatus register_status
+        String aptId FK
+        String username
+        String phoneNumber
+        String name
+        String email
+        String password
+        Role requestedRole
+        Int dong
+        Int ho
+        DateTime createdAt
+        DateTime updatedAt
+        DateTime deletedAt
+    }
+
+    Apartment {
+        String id PK
+        String aptName
+        String aptAdress
+        String officeNumber
+        Int startComplexNumber
+        Int endComplexNumber
+        Int startDongNumber
+        Int endDongNumber
+        Int startFloorNumber
+        Int endFloorNumber
+        Int startHoNumber
+        Int endHoNumber
+        RegisterStatus aptStatus
+        DateTime createdAt
+        DateTime updatedAt
+        DateTime deletedAt
+    }
+
+    Resident {
+        String id PK
+        String userId FK
+        String aptId FK
+        Int dong
+        Int ho
+        IsHouseHold is_houseHold
+        DateTime createdAt
+        DateTime updatedAt
+        DateTime deletedAt
+    }
+
+    Complaint {
+        String id PK
+        String boardId FK
+        String authorId FK
+        String title
+        String content
+        Status status
+        IsPublic is_public
+        DateTime createdAt
+        DateTime updatedAt
+        DateTime deletedAt
+    }
+
+    Vote {
+        String id PK
+        String boardId FK
+        String authorId FK
+        String title
+        String content
+        Status status
+        String[] targetDong
+        DateTime startDate
+        DateTime endDate
+        DateTime createdAt
+        DateTime updatedAt
+        DateTime deletedAt
+    }
+
+    Notice {
+        String id PK
+        String boardId FK
+        String authorId FK
+        String title
+        String content
+        DateTime startDate
+        DateTime endDate
+        Boolean is_pinned
+        NoticeCategory category
+        DateTime createdAt
+        DateTime updatedAt
+        DateTime deletedAt
+    }
+
+    Board {
+        String id PK
+        String aptId FK
+        BoardType boardType
+        DateTime createdAt
+        DateTime updatedAt
+        DateTime deletedAt
+    }
+
+    Comment {
+        String id PK
+        String userId FK
+        String boardId FK
+        String content
+        DateTime createdAt
+        DateTime updatedAt
+    }
+
+    VoteOption {
+        String id PK
+        String voteId FK
+        String option
+        DateTime createdAt
+        DateTime updatedAt
+    }
+
+    VoteParticipation {
+        String id PK
+        String residentId FK
+        String voteId FK
+        String voteOptionId FK
+        DateTime createdAt
+        DateTime updatedAt
+    }
+
+    Notification {
+        String id PK
+        String userId FK
+        String boardId FK
+        String message
+        Boolean is_read
+        NotificationType notificationType
+        String complaintId
+        String noticeId
+        String voteId
+        DateTime notificatedAt
+        DateTime createdAt
+        DateTime updatedAt
+    }
+
+    residentRoster {
+        String id PK
+        String aptId FK
+        String adminId FK
+        String userId FK
+        Int dong
+        Int ho
+        String name
+        String phoneNumber
+        IsHouseHold is_houseHold
+        Boolean is_registered
+        Boolean is_residence
+        DateTime createdAt
+        DateTime updatedAt
+    }
+
+    %% Relationships
+    Apartment ||--o{ User : "users"
+    Apartment ||--o{ Board : "boards"
+    Apartment ||--o{ Resident : "residents"
+    Apartment ||--o{ residentRoster : "residentRosters"
+
+    Register |o--o| User : "creates"
+
+    User ||--o| Resident : "has"
+    User ||--o{ Comment : "writes"
+    User ||--o{ Notification : "receives"
+    User |o--o| residentRoster : "matches"
+    User ||--o{ residentRoster : "manages_as_admin"
+    User ||--o{ Complaint : "authors"
+    User ||--o{ Vote : "authors"
+    User ||--o{ Notice : "authors"
+
+    Resident ||--o{ VoteParticipation : "participates"
+
+    Board ||--o| Complaint : "has"
+    Board ||--o| Vote : "has"
+    Board ||--o| Notice : "has"
+    Board ||--o{ Comment : "has"
+    Board ||--o{ Notification : "triggers"
+
+    Vote ||--o{ VoteOption : "has"
+    Vote ||--o{ VoteParticipation : "has"
+    
+    VoteOption ||--o{ VoteParticipation : "receives"

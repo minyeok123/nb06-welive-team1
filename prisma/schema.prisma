@@ -1,0 +1,388 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ----------------------------------------------------------------------------
+// Models
+// ----------------------------------------------------------------------------
+
+model User {
+  id              String         @id @default(uuid())
+  profileImg      String?        @map("profile_img")
+  registerId      String?        @unique @map("register_id")
+  username        String         @unique
+  aptId           String?        @map("apt_id")
+  name            String
+  email           String         @unique
+  phoneNumber     String         @unique @map("phone_number")
+  password        String
+  role            Role
+  register_status RegisterStatus
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+  deletedAt       DateTime?      @map("deleted_at")
+
+  // Relations
+  apartment         Apartment?         @relation(fields: [aptId], references: [id])
+  resident          Resident?
+  complaintComments ComplaintComment[]
+  notification      Notification[]
+  register          Register?          @relation(fields: [registerId], references: [id])
+
+  // residentRoster 테이블에서 참조하는 외래키들의 역방향 관계 (관계 이름으로 연결)
+  userResidentRoster  residentRoster?  @relation("userResidentRosters")
+  adminResidentRoster residentRoster[] @relation("adminResidentRosters")
+  complaint           Complaint[]
+  poll                Poll[]
+  notice              Notice[]
+  noticeComment       NoticeComment[]
+
+  @@map("users")
+}
+
+model Register {
+  id              String         @id @default(uuid())
+  register_status RegisterStatus
+  aptId           String?        @map("apt_id")
+  username        String         @unique
+  phoneNumber     String         @unique @map("phone_number")
+  name            String
+  email           String         @unique
+  password        String
+  requestedRole   Role           @map("requested_role")
+  dong            Int?
+  ho              Int?
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+  deletedAt       DateTime?      @map("deleted_at")
+
+  // Relations
+  user User?
+
+  @@index([aptId, register_status])
+  @@index([requestedRole, register_status])
+  @@map("registers")
+}
+
+model Apartment {
+  id                 String         @id @default(uuid())
+  aptName            String         @map("apt_name")
+  aptAddress         String         @unique @map("apt_address")
+  officeNumber       String         @unique @map("office_number")
+  description        String         @map("description")
+  startComplexNumber Int            @map("start_complex_number")
+  endComplexNumber   Int            @map("end_complex_number")
+  startDongNumber    Int            @map("start_dong_number")
+  endDongNumber      Int            @map("end_dong_number")
+  startFloorNumber   Int            @map("start_floor_number")
+  endFloorNumber     Int            @map("end_floor_number")
+  startHoNumber      Int            @map("start_ho_number")
+  endHoNumber        Int            @map("end_ho_number")
+  aptStatus          RegisterStatus @default(PENDING)
+  createdAt          DateTime       @default(now()) @map("created_at")
+  updatedAt          DateTime       @updatedAt @map("updated_at")
+  deletedAt          DateTime?      @map("deleted_at")
+
+  // Relations
+  users          User[]
+  boards         Board[]
+  residents      Resident[]
+  residentRoster residentRoster[]
+
+  @@map("apartment")
+}
+
+model Resident {
+  id           String      @id @default(uuid())
+  userId       String      @unique @map("user_id")
+  aptId        String      @map("apt_id")
+  dong         Int
+  ho           Int
+  is_houseHold IsHouseHold @default(MEMBER)
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
+  deletedAt    DateTime?   @map("deleted_at")
+
+  // Relations
+  user              User                @relation(fields: [userId], references: [id])
+  apartment         Apartment           @relation(fields: [aptId], references: [id])
+  voteParticipation VoteParticipation[]
+
+  @@unique([aptId, userId])
+  @@map("residents")
+}
+
+model Complaint {
+  id         String    @id @default(uuid())
+  boardId    String    @map("board_id")
+  authorId   String    @map("author_id")
+  title      String
+  content    String
+  status     Status
+  is_public  IsPublic
+  viewsCount Int       @default(0) @map("views_count")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  deletedAt  DateTime? @map("deleted_at")
+
+  // Relations
+  board            Board              @relation(fields: [boardId], references: [id])
+  author           User               @relation(fields: [authorId], references: [id])
+  complaintComment ComplaintComment[]
+
+  @@index([status])
+  @@map("complaints")
+}
+
+model Poll {
+  id         String    @id @default(uuid())
+  boardId    String    @map("board_id")
+  authorId   String    @map("author_id")
+  title      String
+  content    String
+  status     Status
+  targetDong Int       @map("target_dong")
+  startDate  DateTime  @map("start_date")
+  endDate    DateTime  @map("end_date")
+  viewsCount Int       @default(0) @map("views_count")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  deletedAt  DateTime? @map("deleted_at")
+
+  // Relations
+  board         Board               @relation(fields: [boardId], references: [id])
+  author        User                @relation(fields: [authorId], references: [id])
+  options       VoteOption[]
+  participation VoteParticipation[]
+
+  @@map("polls")
+}
+
+model Notice {
+  id         String         @id @default(uuid())
+  boardId    String         @map("board_id")
+  authorId   String         @map("author_id")
+  title      String
+  content    String
+  startDate  DateTime?      @map("start_date")
+  endDate    DateTime?      @map("end_date")
+  is_pinned  Boolean        @map("is_pinned")
+  category   NoticeCategory
+  viewsCount Int            @default(0) @map("views_count")
+  createdAt  DateTime       @default(now()) @map("created_at")
+  updatedAt  DateTime       @updatedAt @map("updated_at")
+  deletedAt  DateTime?      @map("deleted_at")
+
+  // Relations
+  board         Board           @relation(fields: [boardId], references: [id])
+  author        User            @relation(fields: [authorId], references: [id])
+  noticeComment NoticeComment[]
+
+  @@map("notices")
+}
+
+model Board {
+  id        String    @id @default(uuid())
+  aptId     String    @map("apt_id")
+  boardType BoardType @map("board_type")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  // Relations
+  complaint    Complaint[]
+  poll         Poll[]
+  notice       Notice[]
+  apartment    Apartment      @relation(fields: [aptId], references: [id])
+  notification Notification[]
+
+  @@index([boardType, aptId])
+  @@map("boards")
+}
+
+// model Comment {
+//   id        String   @id @default(uuid())
+//   userId    String   @map("user_id")
+//   boardId   String   @map("board_id")
+//   content   String
+//   createdAt DateTime @default(now()) @map("created_at")
+//   updatedAt DateTime @updatedAt @map("updated_at")
+
+//   // Relations
+//   user  User  @relation(fields: [userId], references: [id])
+//   board Board @relation(fields: [boardId], references: [id])
+
+//   @@map("comments")
+// }
+
+model ComplaintComment {
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  complaintId String    @map("complaint_id")
+  content     String
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+  // Relations
+  user        User      @relation(fields: [userId], references: [id])
+  complaint   Complaint @relation(fields: [complaintId], references: [id])
+
+  @@map("complaint_comments")
+}
+
+model NoticeComment {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  noticeId  String    @map("notice_id")
+  content   String
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  // Relations
+  user      User      @relation(fields: [userId], references: [id])
+  notice    Notice    @relation(fields: [noticeId], references: [id])
+
+  @@map("notice_comments")
+}
+
+model VoteOption {
+  id        String   @id @default(uuid())
+  voteId    String   @map("vote_id")
+  option    String   @db.VarChar(20)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  poll           Poll                @relation(fields: [voteId], references: [id])
+  participations VoteParticipation[]
+
+  @@unique([voteId, option])
+  @@map("vote_options")
+}
+
+model VoteParticipation {
+  id           String   @id @default(uuid())
+  residentId   String   @map("resident_id")
+  voteId       String   @map("vote_id")
+  voteOptionId String?  @map("vote_option_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  resident   Resident    @relation(fields: [residentId], references: [id])
+  poll       Poll        @relation(fields: [voteId], references: [id])
+  voteOption VoteOption? @relation(fields: [voteOptionId], references: [id])
+
+  @@unique([residentId, voteId])
+  @@map("vote_participations")
+}
+
+model Notification {
+  id               String           @id @default(uuid())
+  userId           String           @map("user_id")
+  boardId          String?          @map("board_id")
+  message          String
+  is_read          Boolean          @default(false)
+  notificationType NotificationType @map("notification_type")
+  complaintId      String?
+  noticeId         String?
+  voteId           String?
+  notificatedAt    DateTime?        @map("notificated_at")
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  user  User   @relation(fields: [userId], references: [id])
+  board Board? @relation(fields: [boardId], references: [id])
+
+  @@map("notifications")
+}
+
+model residentRoster {
+  id            String      @id @default(uuid())
+  aptId         String      @map("apt_id")
+  adminId       String      @map("admin_id")
+  userId        String?     @unique @map("user_id")
+  dong          Int
+  ho            Int
+  name          String
+  phoneNumber   String      @unique @map("phone_number")
+  is_houseHold  IsHouseHold @default(MEMBER) @map("is_house_hold")
+  is_registered Boolean     @default(false) @map("is_registered")
+  is_residence  Boolean     @default(true) @map("is_residence")
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+  deletedAt     DateTime?   @map("deleted_at")
+
+  // Relations
+  apartment Apartment @relation(fields: [aptId], references: [id])
+  admin     User      @relation("adminResidentRosters", fields: [adminId], references: [id])
+  user      User?     @relation("userResidentRosters", fields: [userId], references: [id])
+}
+
+// ----------------------------------------------------------------------------
+// Enums
+// ----------------------------------------------------------------------------
+
+enum Role {
+  USER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum Status {
+  PENDING
+  IN_PROGRESS
+  DONE
+}
+
+enum IsPublic {
+  PRIVATE
+  PUBLIC
+}
+
+enum RegisterStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum IsHouseHold {
+  HOUSEHOLDER
+  MEMBER
+}
+
+enum BoardType {
+  COMPLAINT
+  VOTE
+  NOTICE
+}
+
+enum NoticeCategory {
+  MAINTENANCE
+  EMERGENCY
+  COMMUNITY
+  RESIDENT_VOTE
+  RESIDENT_COUNCIL
+  ETC
+}
+
+enum NotificationType {
+  GENERAL
+  SIGNUP_REQ
+  COMPLAINT_REQ
+  COMPLAINT_IN_PROGRESS
+  COMPLAINT_RESOLVED
+  COMPLAINT_REJECTED
+  NOTICE_REG
+  POLL_REG
+  POLL_CLOSED
+  POLL_RESULT
+  SYSTEM
+  TEST
+}
