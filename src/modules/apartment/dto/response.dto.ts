@@ -31,6 +31,8 @@ export const aptListDto = (apt: aptDtoType[]) => {
       startHoNumber: apt.startHoNumber,
       endHoNumber: apt.endHoNumber,
       apartmentStatus: apt.aptStatus,
+      /** 가입 승인/거절 PATCH /auth/admins/:id/status 에 사용 (Register id) */
+      adminRegisterId: apt.registers[0]?.id ?? null,
       adminId: apt.users[0]?.id ?? apt.registers[0]?.id ?? null,
       adminName: apt.users[0]?.name ?? apt.registers[0]?.name ?? null,
       adminEmail: apt.users[0]?.email ?? apt.registers[0]?.email ?? null,
@@ -63,6 +65,7 @@ export const aptDetailDto = (apt: aptDtoType) => {
     startHoNumber: apt.startHoNumber,
     endHoNumber: apt.endHoNumber,
     apartmentStatus: apt.aptStatus,
+    adminRegisterId: apt.registers[0]?.id ?? null,
     adminId: apt.users[0]?.id ?? apt.registers[0]?.id ?? null,
     adminName: apt.users[0]?.name ?? apt.registers[0]?.name ?? null,
     adminEmail: apt.users[0]?.email ?? apt.registers[0]?.email ?? null,
