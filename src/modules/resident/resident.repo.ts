@@ -240,15 +240,43 @@ export class ResidentRepo {
     });
   };
 
-  softDeleteRoster = async (id: string) => {
-    return await prisma.residentRoster.update({
-      where: {
-        id,
-        deletedAt: null,
-      },
-      data: {
-        deletedAt: new Date(),
-      },
+  softDeleteRoster = async (id: string, userId: string | null) => {
+    return await prisma.$transaction(async (tx) => {
+      if (userId) {
+        // 1. 유저 정보 조회 (가입 신청서 ID 확인 목적)
+        const user = await tx.user.findUnique({
+          where: { id: userId },
+          select: { registerId: true },
+        });
+
+        // 2. 유저 상세 거주 정보(Resident) 소프트 딜리트
+        await tx.resident.updateMany({
+          where: { userId: userId, deletedAt: null },
+          data: { deletedAt: new Date() },
+        });
+
+        // 3. 최초 가입 신청서(Register) 소프트 딜리트
+        if (user?.registerId) {
+          await tx.register.updateMany({
+            where: { id: user.registerId, deletedAt: null },
+            data: { deletedAt: new Date() },
+          });
+        }
+
+        // 4. 유저 본인(User) 소프트 딜리트
+        await tx.user.update({
+          where: { id: userId },
+          data: { deletedAt: new Date() },
+        });
+      }
+
+      // 5. 명단(ResidentRoster) 소프트 딜리트
+      return await tx.residentRoster.update({
+        where: { id },
+        data: {
+          deletedAt: new Date(),
+        },
+      });
     });
   };
 

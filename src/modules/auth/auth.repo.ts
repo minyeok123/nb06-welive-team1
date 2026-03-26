@@ -17,10 +17,10 @@ export class AuthRepo {
           { username: params.username },
           { phoneNumber: params.phoneNumber },
         ],
-        deletedAt: null,
       },
       select: {
         id: true,
+        deletedAt: true,
       },
     });
   };
@@ -156,9 +156,21 @@ export class AuthRepo {
     });
   };
 
-  createUser = async (register: Register) => {
-    return prisma.user.create({
-      data: {
+  upsertUser = async (register: Register) => {
+    return prisma.user.upsert({
+      where: { email: register.email },
+      update: {
+        username: register.username,
+        phoneNumber: register.phoneNumber,
+        name: register.name,
+        password: register.password,
+        role: register.requestedRole,
+        register_status: RegisterStatus.APPROVED,
+        registerId: register.id,
+        aptId: register.aptId!,
+        deletedAt: null,
+      },
+      create: {
         username: register.username,
         phoneNumber: register.phoneNumber,
         name: register.name,
@@ -258,7 +270,7 @@ export class AuthRepo {
     existingRegisterId?: string,
   ) => {
     return await prisma.$transaction(async (tx) => {
-      // 1. Register 생성 (APPROVED 상태) 또는 거절 되거나 삭제된 데이터 복구
+      //  Register 생성 (APPROVED 상태) 또는 거절 되거나 삭제된 데이터 복구
       const register = existingRegisterId
         ? await tx.register.update({
             where: { id: existingRegisterId },
@@ -298,29 +310,51 @@ export class AuthRepo {
               deletedAt: true,
             },
           });
-      // 2. User 생성 (Register와 연결)
-      const user = await tx.user.create({
-        data: {
+      //  User 업서트 (이메일로 비교하여 있으면 복구 및 업데이트, 없으면 생성)
+      const user = await tx.user.upsert({
+        where: { email: params.email },
+        update: {
+          username: params.username,
+          password: hashedPassword,
+          phoneNumber: params.contact,
+          name: params.name,
+          role: params.role,
+          register_status: 'APPROVED',
+          aptId,
+          registerId: register.id,
+          deletedAt: null,
+        },
+        create: {
           username: params.username,
           password: hashedPassword,
           email: params.email,
           phoneNumber: params.contact,
           name: params.name,
           role: params.role,
-          apartment: { connect: { id: aptId } },
           register_status: 'APPROVED',
+          apartment: { connect: { id: aptId } },
           register: { connect: { id: register.id } },
-          resident: {
-            create: {
-              apartment: { connect: { id: aptId } },
-              dong: params.apartmentDong,
-              ho: params.apartmentHo,
-            },
-          },
         },
       });
 
-      // 4. 명부(ResidentRoster) 업데이트 (유저와 연결 및 등록 상태 변경)
+      //  Resident 업서트 (유저와 1:1 관계 복구 및 정보 갱신)
+      await tx.resident.upsert({
+        where: { userId: user.id },
+        update: {
+          aptId,
+          dong: params.apartmentDong,
+          ho: params.apartmentHo,
+          deletedAt: null,
+        },
+        create: {
+          userId: user.id,
+          aptId,
+          dong: params.apartmentDong,
+          ho: params.apartmentHo,
+        },
+      });
+
+      //  명부 업데이트 (유저와 연결 및 등록 상태 변경)
       await tx.residentRoster.update({
         where: { id: rosterId },
         data: {
@@ -407,8 +441,22 @@ export class AuthRepo {
     });
   };
 
-  createResident = async (data: Prisma.ResidentCreateInput) => {
-    return await prisma.resident.create({ data });
+  upsertResident = async (data: { userId: string; aptId: string; dong: number; ho: number }) => {
+    return await prisma.resident.upsert({
+      where: { userId: data.userId },
+      update: {
+        aptId: data.aptId,
+        dong: data.dong,
+        ho: data.ho,
+        deletedAt: null,
+      },
+      create: {
+        userId: data.userId,
+        aptId: data.aptId,
+        dong: data.dong,
+        ho: data.ho,
+      },
+    });
   };
 
   createRoster = async (user: withoutPasswordUser, register: Register, adminId: string) => {
@@ -427,10 +475,28 @@ export class AuthRepo {
     });
   };
 
-  updateRosterWithUser = async (rosterId: string, userId: string) => {
+  findRosterByContact = async (aptId: string, phoneNumber: string) => {
+    return await prisma.residentRoster.findFirst({
+      where: { aptId, phoneNumber },
+    });
+  };
+
+  updateRosterWithUser = async (
+    rosterId: string,
+    data: { userId: string; adminId: string; dong: number; ho: number; name: string },
+  ) => {
     return await prisma.residentRoster.update({
       where: { id: rosterId },
-      data: { userId, is_registered: true },
+      data: {
+        userId: data.userId,
+        adminId: data.adminId,
+        dong: data.dong,
+        ho: data.ho,
+        name: data.name,
+        is_registered: true,
+        is_residence: true,
+        deletedAt: null,
+      },
     });
   };
 
@@ -439,6 +505,14 @@ export class AuthRepo {
   };
   createManyBoard = async (data: Prisma.BoardCreateManyInput[]) => {
     return await prisma.board.createMany({ data });
+  };
+
+  checkBoards = async (aptId: string) => {
+    const board = await prisma.board.findFirst({
+      where: { aptId, deletedAt: null },
+      select: { id: true },
+    });
+    return board ? true : false;
   };
 
   updateAdmin = async (id: string, data: Prisma.UserUpdateInput) => {

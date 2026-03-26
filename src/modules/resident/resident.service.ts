@@ -230,9 +230,14 @@ export class ResidentService {
   };
 
   softDeleteRoster = async (id: string) => {
-    const roster = await this.residentRepo.softDeleteRoster(id);
+    const existingRoster = await this.residentRepo.getRosterDetail(id);
+    if (!existingRoster) {
+      throw new CustomError(404, '존재하지 않거나 이미 삭제된 입주민 정보입니다.');
+    }
+
+    const roster = await this.residentRepo.softDeleteRoster(existingRoster.id, existingRoster.userId);
     if (!roster) {
-      throw new CustomError(400, '입주민 정보 삭제 실패 또는 이미 삭제된 입주민 입니다.');
+      throw new CustomError(400, '입주민 정보 삭제 실패');
     }
     return;
   };
