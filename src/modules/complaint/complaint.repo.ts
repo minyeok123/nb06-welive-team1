@@ -175,6 +175,13 @@ export class ComplaintRepo {
     return { items, totalCount };
   };
 
+  incrementViewsCount = async (complaintId: string) => {
+    return prisma.complaint.update({
+      where: { id: complaintId, deletedAt: null },
+      data: { viewsCount: { increment: 1 } },
+    });
+  };
+
   findComplaintById = async (complaintId: string): Promise<ComplaintDetailWithRelations | null> => {
     // 민원 상세(작성자/댓글 포함) 조회
     return prisma.complaint.findFirst({
