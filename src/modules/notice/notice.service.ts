@@ -92,8 +92,7 @@ export class NoticeService {
       throw new CustomError(403, '접근 권한이 없습니다');
     }
 
-    await this.repo.incrementViewsCount(noticeId);
-
+    // 조회수는 GET이 아닌 POST /:noticeId/view 에서만 증가 (React Strict Mode 이중 useEffect 등으로 중복 카운트 방지)
     return {
       noticeId: notice.id,
       userId: notice.authorId,
@@ -102,7 +101,7 @@ export class NoticeService {
       writerName: notice.author.name,
       createdAt: notice.createdAt.toISOString(),
       updatedAt: notice.updatedAt.toISOString(),
-      viewsCount: notice.viewsCount + 1,
+      viewsCount: notice.viewsCount,
       commentsCount: notice.noticeComment.length,
       isPinned: notice.is_pinned,
       content: notice.content,
@@ -116,6 +115,25 @@ export class NoticeService {
         writerName: c.user.name,
       })),
     };
+  };
+
+  incrementNoticeView = async (noticeId: string, userAptId: string | null) => {
+    if (!userAptId) {
+      throw new CustomError(403, '접근 권한이 없습니다');
+    }
+
+    const notice = await this.repo.findNoticeById(noticeId);
+    if (!notice) {
+      throw new CustomError(404, '공지사항을 찾을 수 없습니다');
+    }
+
+    const boardAptId = notice.board.aptId;
+    if (boardAptId && boardAptId !== userAptId) {
+      throw new CustomError(403, '접근 권한이 없습니다');
+    }
+
+    const updated = await this.repo.incrementViewsCount(noticeId);
+    return { viewsCount: updated.viewsCount };
   };
 
   updateNotice = async (

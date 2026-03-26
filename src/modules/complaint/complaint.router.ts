@@ -32,6 +32,15 @@ router.get(
   asyncHandler(complaintController.listComplaints),
 );
 
+// 민원 조회수 증가 (상세 GET보다 먼저 등록)
+router.post(
+  '/:complaintId/view',
+  authenticate,
+  isNotSuperAdmin,
+  validate(complaintIdParamSchema, 'params'),
+  asyncHandler(complaintController.incrementComplaintView),
+);
+
 // 민원 상세 조회
 router.get(
   '/:complaintId',
