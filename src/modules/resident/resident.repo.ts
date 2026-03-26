@@ -95,6 +95,24 @@ export class ResidentRepo {
     });
   };
 
+  findApartmentById = async (aptId: string) => {
+    return await prisma.apartment.findUnique({
+      where: {
+        id: aptId,
+      },
+      select: {
+        startComplexNumber: true,
+        endComplexNumber: true,
+        startDongNumber: true,
+        endDongNumber: true,
+        startFloorNumber: true,
+        endFloorNumber: true,
+        startHoNumber: true,
+        endHoNumber: true,
+      },
+    });
+  };
+
   createRosters = async (data: Prisma.residentRosterCreateManyInput[]) => {
     return await prisma.residentRoster.createMany({
       data,
