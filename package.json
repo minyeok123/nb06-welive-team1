@@ -11,7 +11,12 @@
     "start": "node dist/app.js",
     "test": "NODE_ENV=test jest --testPathIgnorePatterns='poll|pollsvote' --coverage",
     "dev": "nodemon --watch src --exec ts-node -r tsconfig-paths/register src/app.ts",
-    "build": "tsc && tsc-alias"
+    "build": "tsc && tsc-alias",
+    "db:seed": "npx prisma db seed",
+    "deploy": "npx prisma migrate deploy && npx prisma generate"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1003.0",

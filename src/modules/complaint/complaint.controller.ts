@@ -42,6 +42,16 @@ export class ComplaintController {
     return res.status(200).json(result);
   };
 
+  /** 민원 조회수 증가 - POST /api/complaints/:complaintId/view */
+  incrementComplaintView = async (req: Request, res: Response) => {
+    const params = complaintIdParamSchema.parse(req.params);
+    const result = await this.complaintService.incrementComplaintView({
+      complaintId: params.complaintId,
+      user: req.user,
+    });
+    return res.status(200).json(result);
+  };
+
   /** 민원 수정 - PATCH /api/complaints/:complaintId (작성자만, 접수 전에만) */
   updateComplaint = async (req: Request, res: Response) => {
     const params = complaintIdParamSchema.parse(req.params); // 경로 파라미터 검증

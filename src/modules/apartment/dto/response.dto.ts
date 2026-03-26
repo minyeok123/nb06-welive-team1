@@ -13,6 +13,7 @@ export const aptListForSignUpDto = (apt: aptListForSignUpDtoType[]) => {
   });
 };
 
+/** 승인 대기 중에는 User가 없고 Register만 있음 — 가입 승인 API는 Register id가 필요 */
 export const aptListDto = (apt: aptDtoType[]) => {
   return apt.map((apt) => {
     return {
@@ -30,10 +31,10 @@ export const aptListDto = (apt: aptDtoType[]) => {
       startHoNumber: apt.startHoNumber,
       endHoNumber: apt.endHoNumber,
       apartmentStatus: apt.aptStatus,
-      adminId: apt.users[0].id,
-      adminName: apt.users[0].name,
-      adminEmail: apt.users[0].email,
-      adminContact: apt.users[0].phoneNumber,
+      adminId: apt.users[0]?.id ?? apt.registers[0]?.id ?? null,
+      adminName: apt.users[0]?.name ?? apt.registers[0]?.name ?? null,
+      adminEmail: apt.users[0]?.email ?? apt.registers[0]?.email ?? null,
+      adminContact: apt.users[0]?.phoneNumber ?? apt.registers[0]?.phoneNumber ?? null,
       dongRange: {
         start: makeDongString(apt.startComplexNumber, apt.startDongNumber),
         end: makeDongString(apt.endComplexNumber, apt.endDongNumber),
@@ -62,10 +63,10 @@ export const aptDetailDto = (apt: aptDtoType) => {
     startHoNumber: apt.startHoNumber,
     endHoNumber: apt.endHoNumber,
     apartmentStatus: apt.aptStatus,
-    adminId: apt.users[0].id,
-    adminName: apt.users[0].name,
-    adminEmail: apt.users[0].email,
-    adminContact: apt.users[0].phoneNumber,
+    adminId: apt.users[0]?.id ?? apt.registers[0]?.id ?? null,
+    adminName: apt.users[0]?.name ?? apt.registers[0]?.name ?? null,
+    adminEmail: apt.users[0]?.email ?? apt.registers[0]?.email ?? null,
+    adminContact: apt.users[0]?.phoneNumber ?? apt.registers[0]?.phoneNumber ?? null,
     dongRange: {
       start: makeDongString(apt.startComplexNumber, apt.startDongNumber),
       end: makeDongString(apt.endComplexNumber, apt.endDongNumber),
@@ -119,6 +120,12 @@ type aptDtoType = {
   users: {
     name: string;
     id: string;
+    email: string;
+    phoneNumber: string;
+  }[];
+  registers: {
+    id: string;
+    name: string;
     email: string;
     phoneNumber: string;
   }[];

@@ -1,12 +1,13 @@
 import { Prisma } from '@prisma/client';
-import { ResidentRepo } from './resident.repo';
+import { ResidentRepo } from '@/modules/resident/resident.repo';
 import { CustomError } from '@/libs/error';
-import { rosterListDto, personalRosterDto } from './dto/response.dto';
-import { RosterFromUserDto } from './dto/request.dto';
+import { rosterListDto, personalRosterDto } from '@/modules/resident/dto/response.dto';
+import { RosterFromUserDto } from '@/modules/resident/dto/request.dto';
 import { CreateRosterBody, PatchRosterBody, CsvRosterRecord } from '@/types/resident.types';
 import { parse } from 'csv-parse/sync';
 import iconv from 'iconv-lite';
 import { withoutPasswordUser } from '@/types/user.types';
+import { makeDong, makeHo } from '@/modules/resident/utils/makeDongHo';
 
 export class ResidentService {
   constructor(private residentRepo: ResidentRepo) {}
@@ -183,6 +184,25 @@ export class ResidentService {
     if (!existingRoster) throw new CustomError(404, '입주민 정보를 찾을 수 없습니다.');
     if (existingRoster.aptId !== user.aptId) throw new CustomError(403, '수정 권한이 없습니다.');
 
+    //동 호수 범위 체크
+    if (data.building !== undefined || data.unitNumber !== undefined) {
+      const apartment = await this.residentRepo.findApartmentById(user.aptId!);
+      if (!apartment) throw new CustomError(404, '아파트 정보를 찾을 수 없습니다.');
+
+      const invalidDong = makeDong(apartment);
+      const invalidHo = makeHo(apartment);
+      if (data.building !== undefined) {
+        if (data.building < invalidDong.min || data.building > invalidDong.max) {
+          throw new CustomError(400, '동 범위가 올바르지 않습니다.');
+        }
+      }
+      if (data.unitNumber !== undefined) {
+        if (data.unitNumber < invalidHo.min || data.unitNumber > invalidHo.max) {
+          throw new CustomError(400, '호 범위가 올바르지 않습니다.');
+        }
+      }
+    }
+
     // 세대주 변경 또는 세대주 이사 시 하우스홀더 중복 검증
     const isChangingToHouseholder =
       data.isHouseholder === 'HOUSEHOLDER' && existingRoster.is_houseHold !== 'HOUSEHOLDER';
@@ -230,9 +250,17 @@ export class ResidentService {
   };
 
   softDeleteRoster = async (id: string) => {
-    const roster = await this.residentRepo.softDeleteRoster(id);
+    const existingRoster = await this.residentRepo.getRosterDetail(id);
+    if (!existingRoster) {
+      throw new CustomError(404, '존재하지 않거나 이미 삭제된 입주민 정보입니다.');
+    }
+
+    const roster = await this.residentRepo.softDeleteRoster(
+      existingRoster.id,
+      existingRoster.userId,
+    );
     if (!roster) {
-      throw new CustomError(400, '입주민 정보 삭제 실패 또는 이미 삭제된 입주민 입니다.');
+      throw new CustomError(400, '입주민 정보 삭제 실패');
     }
     return;
   };

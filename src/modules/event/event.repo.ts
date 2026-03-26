@@ -142,7 +142,7 @@ export class EventRepo {
         start: v.startDate,
         end: endDate,
         title: v.title,
-        category: 'POLL',
+        category: '주민투표',
         type: 'POLL' as const,
       };
     });

@@ -44,6 +44,9 @@ jobs:
             echo "=== install dependencies ==="
             npm ci
 
+            echo "=== prisma deploy ==="
+            npm run deploy
+
             echo "=== build ==="
             npm run build
 

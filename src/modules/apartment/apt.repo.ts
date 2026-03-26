@@ -1,5 +1,5 @@
 import { prisma } from '@libs/prisma';
-import { Prisma, Role } from '@prisma/client';
+import { Prisma, RegisterStatus, Role } from '@prisma/client';
 
 export class AptRepo {
   getListAptForSignUp = async (whereCondition: Prisma.ApartmentWhereInput) => {
@@ -62,6 +62,19 @@ export class AptRepo {
               phoneNumber: true,
             },
           },
+          registers: {
+            where: {
+              requestedRole: Role.ADMIN,
+              register_status: { in: [RegisterStatus.PENDING, RegisterStatus.REJECTED] },
+              deletedAt: null,
+            },
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              phoneNumber: true,
+            },
+          },
         },
       });
 
@@ -91,6 +104,19 @@ export class AptRepo {
         endHoNumber: true,
         users: {
           where: { role: Role.ADMIN },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phoneNumber: true,
+          },
+        },
+        registers: {
+          where: {
+            requestedRole: Role.ADMIN,
+            register_status: { in: [RegisterStatus.PENDING, RegisterStatus.REJECTED] },
+            deletedAt: null,
+          },
           select: {
             id: true,
             name: true,

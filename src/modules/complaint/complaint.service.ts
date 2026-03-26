@@ -88,11 +88,6 @@ export class ComplaintService {
       where.is_public = query.isPublic ? IsPublic.PUBLIC : IsPublic.PRIVATE;
     }
 
-    // if (!isAdmin) {
-    //   // 입주민은 공개글 또는 본인 글만 조회
-    //   where.OR = [{ is_public: IsPublic.PUBLIC }, { authorId: user.id }];
-    // }
-
     if (user.aptId) {
       // 동일 아파트 기준 필터
       where.author = {
@@ -169,6 +164,34 @@ export class ComplaintService {
     return complaintDetailResponseDto(complaint as ComplaintDetailWithRelations, IsPublic);
   };
 
+  /** 조회수 증가 — GET 상세와 분리 (React Strict Mode 이중 요청 등 중복 카운트 완화는 FE에서 sessionStorage로 처리) */
+  incrementComplaintView = async (params: {
+    complaintId: string;
+    user: { id: string; aptId: string | null; role: string };
+  }) => {
+    const { complaintId, user } = params;
+    if (!user?.id) {
+      throw new CustomError(403, '접근 권한이 없습니다');
+    }
+
+    const complaint = await this.repo.findComplaintById(complaintId);
+    if (!complaint) {
+      throw new CustomError(404, '민원을 찾을 수 없습니다');
+    }
+
+    const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
+    if (!isAdmin && complaint.is_public === IsPublic.PRIVATE && complaint.authorId !== user.id) {
+      throw new CustomError(403, '비밀글은 확인할 수 없습니다');
+    }
+
+    if (user.aptId && complaint.author?.aptId && complaint.author.aptId !== user.aptId) {
+      throw new CustomError(403, '접근 권한이 없습니다');
+    }
+
+    const updated = await this.repo.incrementViewsCount(complaintId);
+    return { viewsCount: updated.viewsCount };
+  };
+
   updateComplaint = async (params: {
     complaintId: string;
     input: UpdateComplaintDto;
@@ -241,7 +264,7 @@ export class ComplaintService {
     if (!user?.id) {
       throw new CustomError(403, '접근 권한이 없습니다');
     }
-    
+
     // 관리자 여부 확인
     const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
     if (!isAdmin) {

@@ -18,7 +18,7 @@ export class AuthService {
       username: input.username,
       phoneNumber: input.contact,
     });
-    if (existingUser) {
+    if (existingUser && existingUser.deletedAt === null) {
       throw new CustomError(409, '이미 승인된 유저가 사용 중인 정보입니다');
     }
 
@@ -51,6 +51,7 @@ export class AuthService {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(input.password, salt);
 
+    // 명단에 있을 시 자동 승인 처리
     const roster = await this.repo.findRosterMatch({
       aptId: apartment.id,
       dong: input.apartmentDong,
@@ -58,7 +59,6 @@ export class AuthService {
       name: input.name,
       phoneNumber: input.contact,
     });
-
     if (roster) {
       const approvedUser = await this.repo.autoApprovedUser(
         input,
@@ -98,7 +98,7 @@ export class AuthService {
       username: input.username,
       phoneNumber: input.contact,
     });
-    if (existingUser) {
+    if (existingUser && existingUser.deletedAt === null) {
       throw new CustomError(409, '이미 승인된 유저가 사용 중인 정보입니다.');
     }
 
@@ -143,7 +143,8 @@ export class AuthService {
       : await this.repo.createApartment(input);
 
     /* 중복 회원가입 요청 데이터는 있지만 조건에 안걸린 경우(REJECTED,삭제)상태인 경우 복구
-     * 회원가입 요청이 없는 경우 생성*/ const register = existingRegister
+     * 회원가입 요청이 없는 경우 생성*/
+    const register = existingRegister
       ? await this.repo.restoreAdminRegister(
           existingRegister.id,
           input,
@@ -168,7 +169,7 @@ export class AuthService {
       phoneNumber: input.contact,
     });
 
-    if (existingUser) {
+    if (existingUser && existingUser.deletedAt === null) {
       throw new CustomError(409, '이미 사용 중인 정보입니다');
     }
 
@@ -231,12 +232,19 @@ export class AuthService {
       }
       await this.repo.registerApprove(adminRegisterId);
       await this.repo.aptApprove(register.aptId);
-      const user = await this.repo.createUser(register);
-      await this.repo.createManyBoard([
-        { aptId: user.aptId!, boardType: 'NOTICE' },
-        { aptId: user.aptId!, boardType: 'VOTE' },
-        { aptId: user.aptId!, boardType: 'COMPLAINT' },
-      ]);
+      const user = await this.repo.upsertUser(register);
+
+      // 이미 생성된 게시판이 있는지 확인 (재가입)
+      const hasBoards = await this.repo.checkBoards(register.aptId!);
+
+      // 보드가 없는 경우에만(신규 가입) 3대 필수 게시판 생성
+      if (!hasBoards) {
+        await this.repo.createManyBoard([
+          { aptId: user.aptId!, boardType: 'NOTICE' },
+          { aptId: user.aptId!, boardType: 'VOTE' },
+          { aptId: user.aptId!, boardType: 'COMPLAINT' },
+        ]);
+      }
     } else {
       await this.repo.registerReject(adminRegisterId);
       if (register.aptId) {
@@ -264,16 +272,34 @@ export class AuthService {
         throw new CustomError(400, '동/호 정보가 없습니다');
       }
       await this.repo.registerApprove(residentRegisterId);
-      const user = await this.repo.createUser(register);
-      await this.repo.createResident({
-        user: { connect: { id: user.id } },
-        apartment: { connect: { id: register.aptId } },
+
+      // 삭제 후 재 가입을 대비, 삭제된 정보가 있으면 업데이트 없으면 새로 생성
+      const user = await this.repo.upsertUser(register);
+      await this.repo.upsertResident({
+        userId: user.id,
+        aptId: register.aptId,
         dong: register.dong,
         ho: register.ho,
       });
-      const roster = await this.repo.createRoster(user, register, admin.id);
-      if (!roster) {
-        throw new CustomError(400, '입주민 명단 등록에 실패했습니다');
+
+      const findRoster = await this.repo.findRosterByContact(
+        register.aptId!,
+        register.phoneNumber!,
+      );
+      // 유저로부터 명단 생성 이후, 이미 명단에 있는 데이터인 경우 유저 정보와 동기화 로직
+      if (findRoster) {
+        await this.repo.updateRosterWithUser(findRoster.id, {
+          userId: user.id,
+          adminId: admin.id,
+          dong: register.dong!,
+          ho: register.ho!,
+          name: register.name,
+        });
+      } else {
+        const roster = await this.repo.createRoster(user, register, admin.id);
+        if (!roster) {
+          throw new CustomError(400, '입주민 명단 등록에 실패했습니다');
+        }
       }
     } else {
       await this.repo.registerReject(residentRegisterId);

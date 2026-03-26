@@ -10,6 +10,7 @@ import {
   updateComplaintStatusSchema,
 } from './complaint.validate';
 import { complaintController } from './complaint.controller';
+import { userAuthorize, isNotSuperAdmin, adminAuthorize } from '../../middlewares/authorize';
 
 const router = express.Router();
 
@@ -17,6 +18,7 @@ const router = express.Router();
 router.post(
   '/',
   authenticate,
+  userAuthorize,
   validate(createComplaintSchema), // 요청 검증
   asyncHandler(complaintController.createComplaint),
 );
@@ -25,14 +27,25 @@ router.post(
 router.get(
   '/',
   authenticate,
+  isNotSuperAdmin,
   validate(listComplaintsSchema, 'query'),
   asyncHandler(complaintController.listComplaints),
+);
+
+// 민원 조회수 증가 (상세 GET보다 먼저 등록)
+router.post(
+  '/:complaintId/view',
+  authenticate,
+  isNotSuperAdmin,
+  validate(complaintIdParamSchema, 'params'),
+  asyncHandler(complaintController.incrementComplaintView),
 );
 
 // 민원 상세 조회
 router.get(
   '/:complaintId',
   authenticate,
+  isNotSuperAdmin,
   validate(complaintIdParamSchema, 'params'),
   asyncHandler(complaintController.getComplaint),
 );
@@ -41,6 +54,7 @@ router.get(
 router.delete(
   '/:complaintId',
   authenticate,
+  userAuthorize,
   validate(complaintIdParamSchema, 'params'),
   asyncHandler(complaintController.deleteComplaint),
 );
@@ -49,6 +63,7 @@ router.delete(
 router.patch(
   '/:complaintId',
   authenticate,
+  userAuthorize,
   validate(complaintIdParamSchema, 'params'),
   validate(updateComplaintSchema),
   asyncHandler(complaintController.updateComplaint),
@@ -58,6 +73,7 @@ router.patch(
 router.patch(
   '/:complaintId/status',
   authenticate,
+  adminAuthorize,
   validate(complaintIdParamSchema, 'params'),
   validate(updateComplaintStatusSchema),
   asyncHandler(complaintController.updateComplaintStatus),
