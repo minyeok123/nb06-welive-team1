@@ -13,8 +13,7 @@ export class ResidentController {
 
   getRosterList = async (req: Request, res: Response, next: NextFunction) => {
     const query = getResidentListQuerySchema.parse(req.validatedQuery);
-
-    const rosterList = await this.residentService.getRosterList(req.user.id, query);
+    const rosterList = await this.residentService.getRosterList(req.user, query);
     res.status(200).json(rosterList);
   };
 
