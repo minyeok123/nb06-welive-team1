@@ -13,7 +13,7 @@ export class ResidentService {
   constructor(private residentRepo: ResidentRepo) {}
 
   getRosterList = async (
-    adminId: string,
+    user: withoutPasswordUser,
     query: {
       page: number;
       limit: number;
@@ -25,7 +25,7 @@ export class ResidentService {
     },
   ) => {
     let whereCondition: Prisma.residentRosterWhereInput = {
-      adminId,
+      aptId: user.aptId!,
       deletedAt: null,
     };
 
@@ -47,13 +47,25 @@ export class ResidentService {
         { phoneNumber: { contains: query.keyword, mode: 'insensitive' } },
       ];
     }
-    const result = await this.residentRepo.getRosterList(whereCondition, query.page, query.limit);
+    // Apartment 모델을 통해 한꺼번에 조회
+    const aptData = await this.residentRepo.getResidentDataByAptId(
+      user.aptId!,
+      whereCondition,
+      query.page,
+      query.limit,
+    );
+
+    if (!aptData) {
+      throw new CustomError(404, '해당 아파트 정보를 찾을 수 없습니다.');
+    }
+
+    const residents = rosterListDto(aptData.residentRoster, aptData.registers);
 
     return {
-      residents: rosterListDto(result.rosters),
+      residents,
       message: '입주민 목록 조회 성공',
-      count: result.rosters.length,
-      totalCount: result.totalCount,
+      count: residents.length,
+      totalCount: aptData._count.residentRoster + aptData._count.registers,
     };
   };
 
@@ -251,17 +263,26 @@ export class ResidentService {
 
   softDeleteRoster = async (id: string) => {
     const existingRoster = await this.residentRepo.getRosterDetail(id);
-    if (!existingRoster) {
-      throw new CustomError(404, '존재하지 않거나 이미 삭제된 입주민 정보입니다.');
+
+    if (existingRoster) {
+      const roster = await this.residentRepo.softDeleteRoster(
+        existingRoster.id,
+        existingRoster.userId,
+      );
+      if (!roster) throw new CustomError(400, '입주민 정보 삭제 실패');
+      return;
     }
 
-    const roster = await this.residentRepo.softDeleteRoster(
-      existingRoster.id,
-      existingRoster.userId,
-    );
-    if (!roster) {
-      throw new CustomError(400, '입주민 정보 삭제 실패');
+    // 명단에 없다면 가입 신청 테이블인지 확인.
+    const existingRegister = await this.residentRepo.findRegister(id);
+    if (!existingRegister) {
+      throw new CustomError(404, '존재하지 않거나 이미 삭제된 정보입니다.');
     }
+
+    // 신청서 데이터 삭제
+    const deletedRegister = await this.residentRepo.softDeleteRegister(id);
+    if (!deletedRegister) throw new CustomError(400, '가입 신청 정보 삭제 실패');
+
     return;
   };
 

@@ -298,6 +298,80 @@ export class ResidentRepo {
     });
   };
 
+  getResidentDataByAptId = async (
+    aptId: string,
+    whereCondition: Prisma.residentRosterWhereInput,
+    page: number,
+    limit: number,
+  ) => {
+    return await prisma.apartment.findUnique({
+      where: { id: aptId },
+      include: {
+        residentRoster: {
+          where: whereCondition,
+          select: {
+            id: true,
+            userId: true,
+            dong: true,
+            ho: true,
+            name: true,
+            phoneNumber: true,
+            is_houseHold: true,
+            is_registered: true,
+            is_residence: true,
+            user: {
+              select: {
+                email: true,
+                register_status: true,
+              },
+            },
+          },
+          orderBy: [{ dong: 'asc' }, { ho: 'asc' }],
+          skip: (page - 1) * limit,
+          take: limit,
+        },
+        registers: {
+          where: {
+            register_status: { in: ['PENDING', 'REJECTED'] },
+            requestedRole: 'USER',
+            deletedAt: null,
+          },
+          select: {
+            id: true,
+            dong: true,
+            ho: true,
+            name: true,
+            phoneNumber: true,
+            email: true,
+            register_status: true,
+          },
+        },
+        _count: {
+          select: {
+            residentRoster: { where: whereCondition },
+            registers: {
+              where: {
+                register_status: { in: ['PENDING', 'REJECTED'] },
+                requestedRole: 'USER',
+                deletedAt: null,
+              },
+            },
+          },
+        },
+      },
+    });
+  };
+
+  softDeleteRegister = async (id: string) => {
+    return await prisma.register.update({
+      where: { id },
+      data: {
+        deletedAt: new Date(),
+        register_status: 'REJECTED',
+      },
+    });
+  };
+
   findRegister = async (userId: string) => {
     return await prisma.register.findFirst({
       where: {
