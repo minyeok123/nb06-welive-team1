@@ -1,6 +1,6 @@
 import { CustomError } from '@libs/error';
-import { NoticeRepo } from './notice.repo';
-import { CreateNoticeInput, GetNoticesQuery, UpdateNoticeInput } from './notice.validate';
+import { NoticeRepo } from '@modules/notice/notice.repo';
+import { CreateNoticeInput, GetNoticesQuery, UpdateNoticeInput } from '@modules/notice/notice.validate';
 
 export class NoticeService {
   constructor(private repo: NoticeRepo) {}

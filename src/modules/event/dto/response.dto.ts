@@ -1,4 +1,4 @@
-import type { EventRow } from '../event.repo';
+import type { EventRow } from '@modules/event/event.repo';
 
 /** 이벤트 생성/수정 요청 DTO (쿼리 파라미터) */
 export interface PutEventDto {

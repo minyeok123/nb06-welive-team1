@@ -1,6 +1,6 @@
 import { CustomError } from '@libs/error';
-import { NotificationRepo } from './notification.repo';
-import { GetNotificationsQuery } from './notification.validate';
+import { NotificationRepo } from '@modules/notification/notification.repo';
+import { GetNotificationsQuery } from '@modules/notification/notification.validate';
 
 const toNotificationResponse = (n: {
   id: string;

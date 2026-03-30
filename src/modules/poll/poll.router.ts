@@ -1,15 +1,15 @@
 import express from 'express';
-import asyncHandler from '../../middlewares/asyncHandler';
-import { validate } from '../../middlewares/validate';
-import { authenticate } from '../../middlewares/authenticate';
-import { adminAuthorize, isNotSuperAdmin, isNotUser } from '../../middlewares/authorize';
+import asyncHandler from '@middlewares/asyncHandler';
+import { validate } from '@middlewares/validate';
+import { authenticate } from '@middlewares/authenticate';
+import { adminAuthorize, isNotSuperAdmin, isNotUser } from '@middlewares/authorize';
 import {
   createPollSchema,
   listPollsSchema,
   pollIdParamSchema,
   updatePollSchema,
-} from './poll.validate';
-import { pollController } from './poll.controller';
+} from '@modules/poll/poll.validate';
+import { pollController } from '@modules/poll/poll.controller';
 
 const router = express.Router();
 

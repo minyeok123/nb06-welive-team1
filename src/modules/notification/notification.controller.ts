@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
-import { NotificationRepo } from './notification.repo';
-import { NotificationService } from './notification.service';
+import { NotificationRepo } from '@modules/notification/notification.repo';
+import { NotificationService } from '@modules/notification/notification.service';
 import {
   notificationIdSchema,
   getNotificationsQuerySchema,
-} from './notification.validate';
+} from '@modules/notification/notification.validate';
 
 /** API 명세: 30초마다 읽지 않은 알림 실시간 수신 */
 const SSE_POLL_INTERVAL_MS = 30000;
@@ -31,10 +31,10 @@ export class NotificationController {
       try {
         const notifications = await this.notificationService.getUnreadNotifications(userId);
         res.write(
-          `data: ${JSON.stringify({ type: 'alarm', data: notifications })}\n\n`,
+          `event: alarm\ndata: ${JSON.stringify(notifications)}\n\n`,
         );
       } catch (err) {
-        res.write(`data: ${JSON.stringify({ type: 'error', message: '알림 조회 실패' })}\n\n`);
+        res.write(`event: error\ndata: ${JSON.stringify({ message: '알림 조회 실패' })}\n\n`);
       }
     };
 

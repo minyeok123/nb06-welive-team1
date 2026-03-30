@@ -1,13 +1,13 @@
 import { Request, Response } from 'express';
-import type { CreatePollDto, UpdatePollDto } from './dto/response.dto';
-import { PollRepo } from './poll.repo';
-import { PollService } from './poll.service';
+import type { CreatePollDto, UpdatePollDto } from '@modules/poll/dto/response.dto';
+import { PollRepo } from '@modules/poll/poll.repo';
+import { PollService } from '@modules/poll/poll.service';
 import {
   createPollSchema,
   listPollsSchema,
   pollIdParamSchema,
   updatePollSchema,
-} from './poll.validate';
+} from '@modules/poll/poll.validate';
 
 /** 투표 API 컨트롤러 - 등록, 목록, 상세, 수정, 삭제 */
 export class PollController {

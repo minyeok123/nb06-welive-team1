@@ -1,14 +1,14 @@
 import express from 'express';
-import asyncHandler from '@/middlewares/asyncHandler';
-import { validate } from '@/middlewares/validate';
-import { authenticate } from '@/middlewares/authenticate';
-import { isNotUser } from '@/middlewares/authorize';
+import asyncHandler from '@middlewares/asyncHandler';
+import { validate } from '@middlewares/validate';
+import { authenticate } from '@middlewares/authenticate';
+import { isNotUser } from '@middlewares/authorize';
 import {
   eventIdParamSchema,
   listEventsQuerySchema,
   putEventQuerySchema,
-} from './event.validate';
-import { eventController } from './event.controller';
+} from '@modules/event/event.validate';
+import { eventController } from '@modules/event/event.controller';
 
 const router = express.Router();
 

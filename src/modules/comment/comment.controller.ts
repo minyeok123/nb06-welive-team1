@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
-import { CommentRepo } from './comment.repo';
-import { CommentService } from './comment.service';
-import { commentIdSchema } from './comment.validate';
+import { CommentRepo } from '@modules/comment/comment.repo';
+import { CommentService } from '@modules/comment/comment.service';
+import { commentIdSchema } from '@modules/comment/comment.validate';
 
 export class CommentController {
   constructor(private commentService: CommentService) {}

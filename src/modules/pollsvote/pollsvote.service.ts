@@ -1,7 +1,7 @@
 import { CustomError } from '@libs/error';
-import { pollsvoteVoteResponseDto, pollsvoteCancelResponseDto } from './dto/response.dto';
-import { PollsvoteRepo } from './pollsvote.repo';
-import { withoutPasswordUser } from '@/types/user.types';
+import { pollsvoteVoteResponseDto, pollsvoteCancelResponseDto } from '@modules/pollsvote/dto/response.dto';
+import { PollsvoteRepo } from '@modules/pollsvote/pollsvote.repo';
+import { withoutPasswordUser } from '@app-types/user.types';
 
 // 투표하기 비즈니스 로직
 export class PollsvoteService {

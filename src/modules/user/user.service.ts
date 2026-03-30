@@ -1,7 +1,7 @@
-import { UserRepo } from './user.repo';
+import { UserRepo } from '@modules/user/user.repo';
 import { CustomError } from '@libs/error';
 import bcrypt from 'bcrypt';
-import { putImage } from './utils/s3.handler';
+import { putImage } from '@modules/user/utils/s3.handler';
 import path from 'path';
 
 export class UserService {

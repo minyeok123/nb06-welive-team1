@@ -1,5 +1,5 @@
 import { Register } from '@prisma/client';
-import { RosterFromUser } from '@/types/resident.types';
+import { RosterFromUser } from '@app-types/resident.types';
 
 /**
  * Register 신청 정보를 명부 복구(Restore)용 DTO로 변환합니다.

@@ -1,13 +1,13 @@
-import { AptRepo } from '@/modules/apartment/apt.repo';
+import { AptRepo } from '@modules/apartment/apt.repo';
 import { Prisma, RegisterStatus, Role } from '@prisma/client';
 import {
   aptListDto,
   aptListForSignUpDto,
   aptDetailDto,
   aptDetailPublicDto,
-} from '@/modules/apartment/dto/response.dto';
-import { CustomError } from '@/libs/error';
-import { withoutPasswordUser } from '@/types/user.types';
+} from '@modules/apartment/dto/response.dto';
+import { CustomError } from '@libs/error';
+import { withoutPasswordUser } from '@app-types/user.types';
 
 export class AptService {
   constructor(private aptRepo: AptRepo) {}

@@ -1,4 +1,4 @@
-import type { PollForList } from '../poll.repo';
+import type { PollForList } from '@modules/poll/poll.repo';
 
 /** 투표 등록 요청 DTO */
 export interface CreatePollDto {

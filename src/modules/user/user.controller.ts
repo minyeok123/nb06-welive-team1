@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
-import { UserService } from './user.service';
-import { UserRepo } from './user.repo';
-import { clearCookies } from '../../libs/cookies';
+import { UserService } from '@modules/user/user.service';
+import { UserRepo } from '@modules/user/user.repo';
+import { clearCookies } from '@libs/cookies';
 
 export class UserController {
   constructor(private userService: UserService) {}

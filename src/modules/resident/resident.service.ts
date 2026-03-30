@@ -1,13 +1,13 @@
 import { Prisma } from '@prisma/client';
-import { ResidentRepo } from '@/modules/resident/resident.repo';
-import { CustomError } from '@/libs/error';
-import { rosterListDto, personalRosterDto } from '@/modules/resident/dto/response.dto';
-import { RosterFromUserDto } from '@/modules/resident/dto/request.dto';
-import { CreateRosterBody, PatchRosterBody, CsvRosterRecord } from '@/types/resident.types';
+import { ResidentRepo } from '@modules/resident/resident.repo';
+import { CustomError } from '@libs/error';
+import { rosterListDto, personalRosterDto } from '@modules/resident/dto/response.dto';
+import { RosterFromUserDto } from '@modules/resident/dto/request.dto';
+import { CreateRosterBody, PatchRosterBody, CsvRosterRecord } from '@app-types/resident.types';
 import { parse } from 'csv-parse/sync';
 import iconv from 'iconv-lite';
-import { withoutPasswordUser } from '@/types/user.types';
-import { makeDong, makeHo } from '@/modules/resident/utils/makeDongHo';
+import { withoutPasswordUser } from '@app-types/user.types';
+import { makeDong, makeHo } from '@modules/resident/utils/makeDongHo';
 
 export class ResidentService {
   constructor(private residentRepo: ResidentRepo) {}
