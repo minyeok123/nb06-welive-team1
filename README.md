@@ -4,9 +4,9 @@ https://www.notion.so/Welive-30c61538a9e281dc87a4c7b97fc9f446?source=copy_link
 
 ## 팀원 구성
 
-김민혁
-이현우
-이주은
+김민혁 - 팀장
+이현우 - 팀원
+이주은 - 팀원
 
 ## 프로젝트 소개
 
