@@ -112,4 +112,11 @@ nb06-welive-team1/
 
 ## 구현 홈페이지
 
+FE:https://welive01-frontend.vercel.app/
+BE:https://welive01.duckdns.org
+
+슈퍼관리자 계정
+id:master1
+pwd:test1234
+
 ## 프로젝트 회고록

@@ -36,8 +36,9 @@ erDiagram
     Apartment {
         String id PK
         String aptName
-        String aptAdress
+        String aptAddress
         String officeNumber
+        String description
         Int startComplexNumber
         Int endComplexNumber
         Int startDongNumber
@@ -72,21 +73,23 @@ erDiagram
         String content
         Status status
         IsPublic is_public
+        Int viewsCount
         DateTime createdAt
         DateTime updatedAt
         DateTime deletedAt
     }
 
-    Vote {
+    Poll {
         String id PK
         String boardId FK
         String authorId FK
         String title
         String content
         Status status
-        String[] targetDong
+        Int targetDong
         DateTime startDate
         DateTime endDate
+        Int viewsCount
         DateTime createdAt
         DateTime updatedAt
         DateTime deletedAt
@@ -102,6 +105,7 @@ erDiagram
         DateTime endDate
         Boolean is_pinned
         NoticeCategory category
+        Int viewsCount
         DateTime createdAt
         DateTime updatedAt
         DateTime deletedAt
@@ -116,13 +120,24 @@ erDiagram
         DateTime deletedAt
     }
 
-    Comment {
+    ComplaintComment {
         String id PK
         String userId FK
-        String boardId FK
+        String complaintId FK
         String content
         DateTime createdAt
         DateTime updatedAt
+        DateTime deletedAt
+    }
+
+    NoticeComment {
+        String id PK
+        String userId FK
+        String noticeId FK
+        String content
+        DateTime createdAt
+        DateTime updatedAt
+        DateTime deletedAt
     }
 
     VoteOption {
@@ -171,6 +186,7 @@ erDiagram
         Boolean is_residence
         DateTime createdAt
         DateTime updatedAt
+        DateTime deletedAt
     }
 
     %% Relationships
@@ -178,27 +194,31 @@ erDiagram
     Apartment ||--o{ Board : "boards"
     Apartment ||--o{ Resident : "residents"
     Apartment ||--o{ residentRoster : "residentRosters"
+    Apartment ||--o{ Register : "registers"
 
-    Register |o--o| User : "creates"
+    Register |o--o| User : "connects"
 
     User ||--o| Resident : "has"
-    User ||--o{ Comment : "writes"
+    User ||--o{ ComplaintComment : "writes"
+    User ||--o{ NoticeComment : "writes"
     User ||--o{ Notification : "receives"
     User |o--o| residentRoster : "matches"
     User ||--o{ residentRoster : "manages_as_admin"
     User ||--o{ Complaint : "authors"
-    User ||--o{ Vote : "authors"
+    User ||--o{ Poll : "authors"
     User ||--o{ Notice : "authors"
 
     Resident ||--o{ VoteParticipation : "participates"
 
-    Board ||--o| Complaint : "has"
-    Board ||--o| Vote : "has"
-    Board ||--o| Notice : "has"
-    Board ||--o{ Comment : "has"
+    Board ||--o{ Complaint : "has"
+    Board ||--o{ Poll : "has"
+    Board ||--o{ Notice : "has"
     Board ||--o{ Notification : "triggers"
 
-    Vote ||--o{ VoteOption : "has"
-    Vote ||--o{ VoteParticipation : "has"
+    Poll ||--o{ VoteOption : "has"
+    Poll ||--o{ VoteParticipation : "has"
     
     VoteOption ||--o{ VoteParticipation : "receives"
+
+    Complaint ||--o{ ComplaintComment : "has"
+    Notice ||--o{ NoticeComment : "has"
