@@ -1,12 +1,12 @@
 import express from 'express';
-import asyncHandler from '@/middlewares/asyncHandler';
-import { validate } from '@/middlewares/validate';
-import { authenticate } from '@/middlewares/authenticate';
-import { notificationController } from './notification.controller';
+import asyncHandler from '@middlewares/asyncHandler';
+import { validate } from '@middlewares/validate';
+import { authenticate } from '@middlewares/authenticate';
+import { notificationController } from '@modules/notification/notification.controller';
 import {
   notificationIdSchema,
   getNotificationsQuerySchema,
-} from './notification.validate';
+} from '@modules/notification/notification.validate';
 
 const router = express.Router();
 

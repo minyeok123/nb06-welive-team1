@@ -1,12 +1,12 @@
 import { Request, Response } from 'express';
-import type { PutEventDto } from './dto/response.dto';
-import { EventRepo } from './event.repo';
-import { EventService } from './event.service';
+import type { PutEventDto } from '@modules/event/dto/response.dto';
+import { EventRepo } from '@modules/event/event.repo';
+import { EventService } from '@modules/event/event.service';
 import {
   eventIdParamSchema,
   listEventsQuerySchema,
   putEventQuerySchema,
-} from './event.validate';
+} from '@modules/event/event.validate';
 
 /** 이벤트 API 컨트롤러 - 목록, 생성/수정, 삭제 */
 export class EventController {

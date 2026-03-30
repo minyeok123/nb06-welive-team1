@@ -1,7 +1,7 @@
-import { CustomError } from '../../../libs/error';
-import { AuthRepo } from '../auth.repo';
+import { CustomError } from '@libs/error';
+import { AuthRepo } from '@modules/auth/auth.repo';
 import { NextFunction, Request, Response } from 'express';
-import token from '../utils/token';
+import token from '@modules/auth/utils/token';
 
 const authRepo = new AuthRepo();
 

@@ -1,17 +1,17 @@
 import { Router } from 'express';
-import { residentController } from './resident.controller';
-import { uploadCsv } from './utils/uploads';
-import asyncHandler from '../../middlewares/asyncHandler';
-import { authenticate } from '@/middlewares/authenticate';
-import { adminAuthorize } from '@/middlewares/authorize';
-import { validate } from '../../middlewares/validate';
+import { residentController } from '@modules/resident/resident.controller';
+import { uploadCsv } from '@modules/resident/utils/uploads';
+import asyncHandler from '@middlewares/asyncHandler';
+import { authenticate } from '@middlewares/authenticate';
+import { adminAuthorize } from '@middlewares/authorize';
+import { validate } from '@middlewares/validate';
 import {
   getResidentListQuerySchema,
   createRosterBodySchema,
   RosterIdParamsSchema,
   patchRosterBodySchema,
   createRosterFromUserParamsSchema,
-} from './resident.validate';
+} from '@modules/resident/resident.validate';
 
 const router = Router();
 

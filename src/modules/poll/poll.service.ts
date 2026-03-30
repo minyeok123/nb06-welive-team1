@@ -8,12 +8,12 @@ import {
   pollListResponseDto,
   pollDeleteResponseDto,
   pollUpdateResponseDto,
-} from './dto/response.dto';
-import { PollRepo } from './poll.repo';
-import type { ListPollsQuery } from './poll.validate';
-import { withoutPasswordUser } from '@/types/user.types';
+} from '@modules/poll/dto/response.dto';
+import { PollRepo } from '@modules/poll/poll.repo';
+import type { ListPollsQuery } from '@modules/poll/poll.validate';
+import { withoutPasswordUser } from '@app-types/user.types';
 import { Prisma } from '@prisma/client';
-import { makeDong } from './utils/apt.dong';
+import { makeDong } from '@modules/poll/utils/apt.dong';
 // 투표 비즈니스 로직
 export class PollService {
   constructor(private repo: PollRepo) {}

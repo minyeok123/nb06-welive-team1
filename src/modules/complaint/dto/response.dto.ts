@@ -1,5 +1,5 @@
 import { IsPublic } from '@prisma/client';
-import { ComplaintWithRelations, ComplaintDetailWithRelations } from '../complaint.repo';
+import { ComplaintWithRelations, ComplaintDetailWithRelations } from '@modules/complaint/complaint.repo';
 
 /** 민원 등록 요청 DTO */
 export interface CreateComplaintDto {

@@ -4,7 +4,7 @@ import {
   ComplaintDetailWithRelations,
   ComplaintRepo,
   ComplaintWithRelations,
-} from './complaint.repo';
+} from '@modules/complaint/complaint.repo';
 import {
   type CreateComplaintDto,
   type UpdateComplaintDto,
@@ -13,8 +13,8 @@ import {
   complaintDeleteResponseDto,
   complaintDetailResponseDto,
   complaintListResponseDto,
-} from './dto/response.dto';
-import { ListComplaintsQuery } from './complaint.validate';
+} from '@modules/complaint/dto/response.dto';
+import { ListComplaintsQuery } from '@modules/complaint/complaint.validate';
 
 export class ComplaintService {
   constructor(private repo: ComplaintRepo) {}

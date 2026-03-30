@@ -1,9 +1,9 @@
 import { CustomError } from '@libs/error';
-import { CommentRepo } from './comment.repo';
+import { CommentRepo } from '@modules/comment/comment.repo';
 import { BoardType } from '@prisma/client';
-import { commentResponseDto } from './dto/Response.dto';
-import { withoutPasswordUser } from '@/types/user.types';
-import { CreateCommentType, UpdateCommentType } from '@/types/comment.type';
+import { commentResponseDto } from '@modules/comment/dto/Response.dto';
+import { withoutPasswordUser } from '@app-types/user.types';
+import { CreateCommentType, UpdateCommentType } from '@app-types/comment.type';
 
 export class CommentService {
   constructor(private repo: CommentRepo) {}

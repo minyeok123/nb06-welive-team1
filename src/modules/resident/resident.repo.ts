@@ -5,7 +5,7 @@ import {
   PatchRosterBody,
   CreateRosterFromUser,
   RosterFromUser,
-} from '@/types/resident.types';
+} from '@app-types/resident.types';
 
 export class ResidentRepo {
   constructor() {}

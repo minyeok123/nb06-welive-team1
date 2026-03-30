@@ -1,9 +1,9 @@
 import { NextFunction, Request, Response } from 'express';
-import { AuthRepo } from './auth.repo';
-import { AuthService } from './auth.service';
-import { setTokensCookies } from '../../libs/cookies';
-import { loginDto } from './dto/Response.dto';
-import { clearCookies } from '../../libs/cookies';
+import { AuthRepo } from '@modules/auth/auth.repo';
+import { AuthService } from '@modules/auth/auth.service';
+import { setTokensCookies } from '@libs/cookies';
+import { loginDto } from '@modules/auth/dto/Response.dto';
+import { clearCookies } from '@libs/cookies';
 import {
   adminIdSchema,
   adminSignupSchema,
@@ -11,7 +11,7 @@ import {
   signupSchema,
   superAdminSignupSchema,
   updateRegisterStatusSchema,
-} from './auth.validate';
+} from '@modules/auth/auth.validate';
 
 export class AuthController {
   constructor(private authService: AuthService) {}
