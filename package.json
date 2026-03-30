@@ -15,9 +15,6 @@
     "db:seed": "npx prisma db seed",
     "deploy": "npx prisma migrate deploy && npx prisma generate"
   },
-  "prisma": {
-    "seed": "ts-node prisma/seed.ts"
-  },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1003.0",
     "@aws-sdk/s3-request-presigner": "^3.1003.0",
