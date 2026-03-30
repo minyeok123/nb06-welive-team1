@@ -31,10 +31,10 @@ export class NotificationController {
       try {
         const notifications = await this.notificationService.getUnreadNotifications(userId);
         res.write(
-          `data: ${JSON.stringify({ type: 'alarm', data: notifications })}\n\n`,
+          `event: alarm\ndata: ${JSON.stringify(notifications)}\n\n`,
         );
       } catch (err) {
-        res.write(`data: ${JSON.stringify({ type: 'error', message: '알림 조회 실패' })}\n\n`);
+        res.write(`event: error\ndata: ${JSON.stringify({ message: '알림 조회 실패' })}\n\n`);
       }
     };
 
