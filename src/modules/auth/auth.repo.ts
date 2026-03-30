@@ -1,7 +1,7 @@
 import { prisma } from '@libs/prisma';
 import { BoardType, Prisma, RegisterStatus, NotificationType } from '@prisma/client';
-import { signupBody, AdminSignupBody, Register, SuperAdminSignupBody } from '@/types/auth.type';
-import { withoutPasswordUser } from '@/types/user.types';
+import { signupBody, AdminSignupBody, Register, SuperAdminSignupBody } from '@app-types/auth.type';
+import { withoutPasswordUser } from '@app-types/user.types';
 export class AuthRepo {
   constructor() {}
 

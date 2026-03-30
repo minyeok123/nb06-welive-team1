@@ -5,7 +5,7 @@ import {
   AWS_SECRET_ACCESS_KEY,
   AWS_S3_BUCKET_NAME,
   AWS_REGION,
-} from '../../../libs/constants';
+} from '@libs/constants';
 
 // S3 클라이언트 초기화
 const s3Client = new S3Client({

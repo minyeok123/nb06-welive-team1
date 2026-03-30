@@ -1,16 +1,16 @@
 import express from 'express';
-import asyncHandler from '../../middlewares/asyncHandler';
-import { validate } from '../../middlewares/validate';
-import { authenticate } from '../../middlewares/authenticate';
+import asyncHandler from '@middlewares/asyncHandler';
+import { validate } from '@middlewares/validate';
+import { authenticate } from '@middlewares/authenticate';
 import {
   complaintIdParamSchema,
   createComplaintSchema,
   listComplaintsSchema,
   updateComplaintSchema,
   updateComplaintStatusSchema,
-} from './complaint.validate';
-import { complaintController } from './complaint.controller';
-import { userAuthorize, isNotSuperAdmin, adminAuthorize } from '../../middlewares/authorize';
+} from '@modules/complaint/complaint.validate';
+import { complaintController } from '@modules/complaint/complaint.controller';
+import { userAuthorize, isNotSuperAdmin, adminAuthorize } from '@middlewares/authorize';
 
 const router = express.Router();
 

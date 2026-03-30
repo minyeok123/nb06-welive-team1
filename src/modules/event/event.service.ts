@@ -4,9 +4,9 @@ import {
   eventListResponseDto,
   eventDeleteNoticeResponseDto,
   eventDeletePollResponseDto,
-} from './dto/response.dto';
-import { EventRepo } from './event.repo';
-import type { ListEventsQuery } from './event.validate';
+} from '@modules/event/dto/response.dto';
+import { EventRepo } from '@modules/event/event.repo';
+import type { ListEventsQuery } from '@modules/event/event.validate';
 
 // 이벤트 비즈니스 로직
 export class EventService {

@@ -1,18 +1,18 @@
 import { Request, Response } from 'express';
-import { ComplaintRepo } from './complaint.repo';
-import { ComplaintService } from './complaint.service';
+import { ComplaintRepo } from '@modules/complaint/complaint.repo';
+import { ComplaintService } from '@modules/complaint/complaint.service';
 import type {
   CreateComplaintDto,
   UpdateComplaintDto,
   UpdateComplaintStatusDto,
-} from './dto/response.dto';
+} from '@modules/complaint/dto/response.dto';
 import {
   complaintIdParamSchema,
   createComplaintSchema,
   listComplaintsSchema,
   updateComplaintSchema,
   updateComplaintStatusSchema,
-} from './complaint.validate';
+} from '@modules/complaint/complaint.validate';
 
 /** 민원 API 컨트롤러 - 등록, 목록, 상세, 수정, 삭제, 상태 변경 */
 export class ComplaintController {

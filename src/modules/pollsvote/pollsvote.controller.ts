@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
-import type { OptionIdParamDto } from './dto/response.dto';
-import { PollsvoteRepo } from './pollsvote.repo';
-import { PollsvoteService } from './pollsvote.service';
-import { optionIdParamSchema } from './pollsvote.validate';
+import type { OptionIdParamDto } from '@modules/pollsvote/dto/response.dto';
+import { PollsvoteRepo } from '@modules/pollsvote/pollsvote.repo';
+import { PollsvoteService } from '@modules/pollsvote/pollsvote.service';
+import { optionIdParamSchema } from '@modules/pollsvote/pollsvote.validate';
 
 /** 투표하기 API 컨트롤러 - 투표, 투표 취소 */
 export class PollsvoteController {

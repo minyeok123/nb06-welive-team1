@@ -1,15 +1,15 @@
 import express from 'express';
-import asyncHandler from '../../middlewares/asyncHandler';
-import { validate } from '../../middlewares/validate';
-import { authenticate } from '@/middlewares/authenticate';
-import { isNotUser } from '@/middlewares/authorize';
+import asyncHandler from '@middlewares/asyncHandler';
+import { validate } from '@middlewares/validate';
+import { authenticate } from '@middlewares/authenticate';
+import { isNotUser } from '@middlewares/authorize';
 import {
   createNoticeSchema,
   updateNoticeSchema,
   noticeIdSchema,
   getNoticesQuerySchema,
-} from './notice.validate';
-import { noticeController } from './notice.controller';
+} from '@modules/notice/notice.validate';
+import { noticeController } from '@modules/notice/notice.controller';
 
 const router = express.Router();
 

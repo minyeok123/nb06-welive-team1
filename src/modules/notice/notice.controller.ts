@@ -1,12 +1,12 @@
 import { Request, Response } from 'express';
-import { NoticeRepo } from './notice.repo';
-import { NoticeService } from './notice.service';
+import { NoticeRepo } from '@modules/notice/notice.repo';
+import { NoticeService } from '@modules/notice/notice.service';
 import {
   createNoticeSchema,
   updateNoticeSchema,
   noticeIdSchema,
   getNoticesQuerySchema,
-} from './notice.validate';
+} from '@modules/notice/notice.validate';
 
 export class NoticeController {
   constructor(private noticeService: NoticeService) {}

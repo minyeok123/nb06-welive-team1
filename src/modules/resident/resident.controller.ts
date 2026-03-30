@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import { ResidentService } from './resident.service';
-import { ResidentRepo } from './resident.repo';
-import { GetRosterListQuery } from '@/types/resident.types';
+import { ResidentService } from '@modules/resident/resident.service';
+import { ResidentRepo } from '@modules/resident/resident.repo';
+import { GetRosterListQuery } from '@app-types/resident.types';
 import {
   getResidentListQuerySchema,
   createRosterFromUserParamsSchema,

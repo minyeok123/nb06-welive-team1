@@ -1,13 +1,13 @@
 import bcrypt from 'bcrypt';
 import { IsHouseHold, RegisterStatus, Prisma } from '@prisma/client';
-import { AuthRepo } from './auth.repo';
+import { AuthRepo } from '@modules/auth/auth.repo';
 import { CustomError } from '@libs/error';
-import { AdminSignupInput, SignupInput, SuperAdminSignupInput } from './auth.validate';
-import { createTokens } from './utils/token';
-import { getImage } from '../user/utils/s3.handler';
-import { withoutPasswordUser } from '@/types/user.types';
-import { makeDong, makeHo } from '@/modules/auth/utils/apt.dong.ho.';
-import { signupDto } from '@/modules/auth/dto/Response.dto';
+import { AdminSignupInput, SignupInput, SuperAdminSignupInput } from '@modules/auth/auth.validate';
+import { signupDto } from '@modules/auth/dto/Response.dto';
+import { createTokens } from '@modules/auth/utils/token';
+import { getImage } from '@modules/user/utils/s3.handler';
+import { withoutPasswordUser } from '@app-types/user.types';
+import { makeDong, makeHo } from '@modules/auth/utils/apt.dong.ho.';
 
 export class AuthService {
   constructor(private repo: AuthRepo) {}

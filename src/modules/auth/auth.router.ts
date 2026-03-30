@@ -1,8 +1,8 @@
 import express from 'express';
-import asyncHandler from '../../middlewares/asyncHandler';
-import { authController } from './auth.controller';
-import { authenticateRefresh } from './utils/refresh.middlewares';
-import { validate } from '../../middlewares/validate';
+import asyncHandler from '@middlewares/asyncHandler';
+import { authController } from '@modules/auth/auth.controller';
+import { authenticateRefresh } from '@modules/auth/utils/refresh.middlewares';
+import { validate } from '@middlewares/validate';
 import {
   loginSchema,
   signupSchema,
@@ -12,9 +12,9 @@ import {
   superAdminSignupSchema,
   adminUpdateSchema,
   adminSignupSchema,
-} from './auth.validate';
-import { authenticate } from '@/middlewares/authenticate';
-import { superAdminAuthorize, adminAuthorize, isNotUser } from '@/middlewares/authorize';
+} from '@modules/auth/auth.validate';
+import { authenticate } from '@middlewares/authenticate';
+import { superAdminAuthorize, adminAuthorize, isNotUser } from '@middlewares/authorize';
 
 const router = express.Router();
 

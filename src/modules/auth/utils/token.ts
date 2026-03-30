@@ -1,4 +1,4 @@
-import { JWT_ACCESS_SECRET, JWT_REFRESH_SECRET } from '../../../libs/constants';
+import { JWT_ACCESS_SECRET, JWT_REFRESH_SECRET } from '@libs/constants';
 import jwt from 'jsonwebtoken';
 
 interface Payload {
